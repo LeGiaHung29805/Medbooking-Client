@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 
 import { FaFacebookF, FaYoutube, FaTiktok } from "react-icons/fa";
 
@@ -11,10 +12,10 @@ export default function Footer() {
                         alt="Bệnh viện Phương Đông"
                         className="w-40 mb-4"
                     />
-                    <p className="text-sm font-semibold">CÔNG TY TNHH TỔ HỢP Y TẾ PHƯƠNG ĐÔNG</p>
+                    <p className="text-sm font-semibold">CÔNG TY TNHH TỔ HỢP Y TẾ</p>
                     <p className="text-sm">ĐKKD số: 0101816147</p>
-                    <p className="text-sm">ĐC: Số 9, Phố Viên, P. Đông Ngạc, Hà Nội</p>
-                    <p className="text-sm">Email: info.benhvienphuongdong@gmail.com</p>
+                    <p className="text-sm">ĐC: P. Phú Diễn, Hà Nội</p>
+                    <p className="text-sm">Email: info.benhvienABCD@gmail.com</p>
                     <p className="text-sm">Tổng đài tư vấn: <span className="font-bold">19001806</span></p>
                 </div>
 

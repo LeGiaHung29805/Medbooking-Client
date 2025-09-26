@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-
+import { useState } from "react"
 import Link from "next/link";
 import {
     DropdownMenu,
@@ -11,9 +11,10 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, Menu, X } from "lucide-react";
 
 export default function Header() {
+    const [mobileOpen, setMobileOpen] = useState(false);
     return (
         <header className="border-b shadow-sm">
             {/* Top green bar */}
@@ -48,7 +49,8 @@ export default function Header() {
                     />
 
                     {/* Search */}
-                    <div className="flex items-center border rounded-full px-3 py-2 w-1/3 bg-gray-100">
+                    {/* Search (ẩn trên mobile) */}
+                    <div className="hidden md:flex items-center border rounded-full px-3 py-2 w-1/3 bg-gray-100">
                         <input
                             type="text"
                             placeholder="Từ khóa tìm kiếm..."
@@ -56,6 +58,14 @@ export default function Header() {
                         />
                         <Search className="text-green-700" size={18} />
                     </div>
+
+                    {/* Hamburger button (chỉ hiện trên mobile) */}
+                    <button
+                        className="md:hidden text-green-700"
+                        onClick={() => setMobileOpen(true)}
+                    >
+                        <Menu size={28} />
+                    </button>
                 </div>
             </div>
 
@@ -63,8 +73,10 @@ export default function Header() {
             <nav className="bg-white border-t border-b">
                 <div className="container mx-auto flex items-center justify-center px-6 py-2">
                     <div className="flex space-x-6">
+                        <Link href="/">Trang chủ</Link>
+                        <Link href="/services">Dịch vụ</Link>
                         {/* Dropdown Dịch vụ y tế */}
-                        <DropdownMenu>
+                        {/* <DropdownMenu>
                             <div className="flex items-center">
                                 <Link href="/services" className="mr-1">
                                     Dịch vụ y tế
@@ -74,9 +86,9 @@ export default function Header() {
                                 </DropdownMenuTrigger>
                             </div>
 
-                            <DropdownMenuContent className="bg-white text-black w-64">
-                                {/* Thai sản & Phụ khoa */}
-                                <DropdownMenuSub>
+                            <DropdownMenuContent className="bg-white text-black w-64"> */}
+                        {/* Thai sản & Phụ khoa */}
+                        {/* <DropdownMenuSub>
                                     <DropdownMenuSubTrigger>
                                         Thai sản & Phụ khoa
                                     </DropdownMenuSubTrigger>
@@ -147,10 +159,10 @@ export default function Header() {
                                             </Link>
                                         </DropdownMenuItem>
                                     </DropdownMenuSubContent>
-                                </DropdownMenuSub>
+                                </DropdownMenuSub> */}
 
-                                {/* Khám sức khỏe */}
-                                <DropdownMenuSub>
+                        {/* Khám sức khỏe */}
+                        {/* <DropdownMenuSub>
                                     <DropdownMenuSubTrigger>
                                         Nghỉ dưỡng trước và sau sinh
                                     </DropdownMenuSubTrigger>
@@ -171,10 +183,10 @@ export default function Header() {
                                             </Link>
                                         </DropdownMenuItem>
                                     </DropdownMenuSubContent>
-                                </DropdownMenuSub>
+                                </DropdownMenuSub> */}
 
-                                {/* Các dịch vụ khác */}
-                                <DropdownMenuItem asChild>
+                        {/* Các dịch vụ khác */}
+                        {/* <DropdownMenuItem asChild>
                                     <Link href="/services/xet-nghiem">Xét nghiệm</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
@@ -184,12 +196,11 @@ export default function Header() {
                                     <Link href="/services/noi-soi">Nội soi</Link>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
-                        </DropdownMenu>
+                        </DropdownMenu> */}
 
                         <Link href="/specialties">Chuyên khoa</Link>
                         <Link href="/doctors">Đội ngũ bác sĩ</Link>
-                        <Link href="/guides">Hướng dẫn thăm khám</Link>
-                        <Link href="">Đặt lịch khám</Link>
+                        <Link href="/login">Đặt lịch khám online</Link>
                         {/* <Link href="/news">Tin tức</Link>
                         <Link href="/about">Về chúng tôi</Link>
                         <Link href="/recruitment">Tuyển dụng</Link>
@@ -203,6 +214,38 @@ export default function Header() {
                     </div> */}
                 </div>
             </nav>
+            {/* Mobile menu overlay */}
+            {mobileOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 md:hidden">
+                    {/* Sidebar */}
+                    <div className="bg-white w-64 h-full p-4 flex flex-col">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-lg font-semibold">Menu</h2>
+                            <button onClick={() => setMobileOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <nav className="flex flex-col space-y-4">
+                            <Link href="/services" onClick={() => setMobileOpen(false)}>
+                                Dịch vụ y tế
+                            </Link>
+                            <Link href="/specialties" onClick={() => setMobileOpen(false)}>
+                                Chuyên khoa
+                            </Link>
+                            <Link href="/doctors" onClick={() => setMobileOpen(false)}>
+                                Đội ngũ bác sĩ
+                            </Link>
+                            <Link href="/guides" onClick={() => setMobileOpen(false)}>
+                                Hướng dẫn thăm khám
+                            </Link>
+                            <Link href="/booking" onClick={() => setMobileOpen(false)}>
+                                Đặt lịch khám
+                            </Link>
+                        </nav>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }
