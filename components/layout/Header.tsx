@@ -189,17 +189,18 @@ export default function Header() {
                         <Link href="/specialties">Chuyên khoa</Link>
                         <Link href="/doctors">Đội ngũ bác sĩ</Link>
                         <Link href="/guides">Hướng dẫn thăm khám</Link>
-                        <Link href="/news">Tin tức</Link>
+                        <Link href="">Đặt lịch khám</Link>
+                        {/* <Link href="/news">Tin tức</Link>
                         <Link href="/about">Về chúng tôi</Link>
                         <Link href="/recruitment">Tuyển dụng</Link>
-                        <Link href="/contact">Liên hệ</Link>
+                        <Link href="/contact">Liên hệ</Link> */}
                     </div>
 
                     {/* Flag + Toggle */}
-                    <div className="flex items-center space-x-2">
+                    {/* <div className="flex items-center space-x-2">
                         <img src="/vn-flag.png" alt="VN" className="h-4" />
                         <button className="ml-2">☰</button>
-                    </div>
+                    </div> */}
                 </div>
             </nav>
         </header>
