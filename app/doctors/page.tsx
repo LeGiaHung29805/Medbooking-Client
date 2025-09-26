@@ -43,13 +43,6 @@ export default function DoctorsPage() {
 
     return (
         <Layout>
-            <div className="bg-yellow-50 py-6 px-4 md:px-10 mb-6 rounded-md">
-                <h1 className="text-2xl font-bold mb-2">Đội ngũ bác sĩ chuyên khoa</h1>
-                <div className="text-sm text-gray-700">
-                    Trang chủ <span className="mx-1">|</span>{" "}
-                    <span className="text-green-600">Danh sách bác sĩ</span>
-                </div>
-            </div>
             <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* Cột bên trái */}
                 <div className="col-span-1 space-y-6">

@@ -5,17 +5,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, Menu, X } from "lucide-react";
-
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, } from "@/components/ui/breadcrumb";
 export default function Header() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const pathname = usePathname();
 
     // Ảnh nền breadcrumb cho từng trang
     const breadcrumbBackgrounds: Record<string, string> = {
-        "/services": "/image/bg-services.jpg",
-        "/specialties": "/image/bg-specialties.jpg",
-        "/doctors": "/image/bg-doctors.jpg",
-        "/login": "/image/bg-login.jpg",
+        "/services": "/image/dich-vu-hong-ngoc.8d6367fa.png",
+        "/specialties": "/image/banner1.jpg",
+        "/doctors": "/image/banner1.jpg",
+        "/login": "/image/banner1.jpg",
     };
 
     // fallback ảnh mặc định nếu không có trong map
@@ -113,22 +113,31 @@ export default function Header() {
                     style={{ backgroundImage: `url(${bgImage})` }}
                 >
                     {/* overlay mờ để chữ dễ đọc */}
-                    <div className="bg-white/80 py-16 md:py-24">
+                    <div className="bg-white/30 py-16 md:py-24">
                         <div className="container mx-auto px-6">
                             {/* Tiêu đề chính */}
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                                 {menu.find((m) => m.path === pathname)?.name}
                             </h1>
-                            {/* Breadcrumb nhỏ bên dưới */}
-                            <p className="text-gray-600 text-sm">
-                                <Link href="/" className="hover:text-green-600">
-                                    Trang chủ
-                                </Link>
-                                {" > "}
-                                <span className="text-green-600 font-medium">
-                                    {menu.find((m) => m.path === pathname)?.name}
-                                </span>
-                            </p>
+
+                            {/* Breadcrumb shadcn */}
+                            <Breadcrumb>
+                                <BreadcrumbList>
+                                    <BreadcrumbItem>
+                                        <BreadcrumbLink asChild>
+                                            <Link href="/">Trang chủ</Link>
+                                        </BreadcrumbLink>
+                                    </BreadcrumbItem>
+
+                                    <BreadcrumbSeparator />
+
+                                    <BreadcrumbItem>
+                                        <BreadcrumbLink>
+                                            {menu.find((m) => m.path === pathname)?.name}
+                                        </BreadcrumbLink>
+                                    </BreadcrumbItem>
+                                </BreadcrumbList>
+                            </Breadcrumb>
                         </div>
                     </div>
                 </div>
