@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import LayoutBook from "@/components/layoutBook";
@@ -14,7 +14,7 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 
-// Kiểu dữ liệu chuyên khoa
+// Kiểu dữ liệu chuyên khoa + dịch vụ
 interface Specialty {
     id: number;
     name: string;
@@ -27,18 +27,28 @@ interface Specialty {
     insurance?: string;
 }
 
-export default function SpecialtyBookingPage() {
+interface ServiceSelection {
+    name: string;
+    price: number;
+    specialtyName: string;
+    avatar: string;
+    schedule: { date: string; times: string[] }[];
+    fee?: number;
+    insurance?: string;
+}
+
+export default function ServiceBookingPage() {
     const router = useRouter();
 
     const [selectedPerson, setSelectedPerson] = useState("Tôi - Lê Gia Hưng");
-    const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(null);
+    const [selectedService, setSelectedService] = useState<ServiceSelection | null>(null);
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedTime, setSelectedTime] = useState("");
     const [reason, setReason] = useState("");
     const [file, setFile] = useState<File | null>(null);
 
-    const [showSpecialtySheet, setShowSpecialtySheet] = useState(false);
-    const [showSpecialtyDetail, setShowSpecialtyDetail] = useState<Specialty | null>(null);
+    const [showServiceSheet, setShowServiceSheet] = useState(false);
+    const [showServiceDetail, setShowServiceDetail] = useState<ServiceSelection | null>(null);
 
     // Tìm kiếm & phân trang
     const [search, setSearch] = useState("");
@@ -75,67 +85,13 @@ export default function SpecialtyBookingPage() {
                 { date: "2025-10-03", times: ["13:00", "14:00", "15:00"] },
             ],
         },
-        {
-            id: 3,
-            name: "Tim mạch",
-            dept: "Khám và điều trị các bệnh lý tim mạch.",
-            room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
-            avatar: "/image/d.png",
-            fee: 350000,
-            insurance: "Có hỗ trợ BHYT",
-            services: [{ name: "Khám Tim mạch", price: 350000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["06:45", "07:00", "07:15"] },
-                { date: "2025-10-01", times: ["07:30", "07:45", "08:00"] },
-            ],
-        },
-        {
-            id: 4,
-            name: "Tiêu hoá",
-            dept: "Khám và điều trị các bệnh lý tiêu hoá.",
-            room: "Phòng 201",
-            avatar: "/image/d.png",
-            fee: 300000,
-            insurance: "Thanh toán trực tiếp bằng BHYT",
-            services: [{ name: "Khám tiêu hoá cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-10-02", times: ["08:00", "09:00", "10:00"] },
-                { date: "2025-10-03", times: ["13:00", "14:00", "15:00"] },
-            ],
-        },
-        {
-            id: 5,
-            name: "Tim mạch",
-            dept: "Khám và điều trị các bệnh lý tim mạch.",
-            room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
-            avatar: "/image/d.png",
-            fee: 350000,
-            insurance: "Có hỗ trợ BHYT",
-            services: [{ name: "Khám Tim mạch", price: 350000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["06:45", "07:00", "07:15"] },
-                { date: "2025-10-01", times: ["07:30", "07:45", "08:00"] },
-            ],
-        },
-        {
-            id: 6,
-            name: "Tiêu hoá",
-            dept: "Khám và điều trị các bệnh lý tiêu hoá.",
-            room: "Phòng 201",
-            avatar: "/image/d.png",
-            fee: 300000,
-            insurance: "Thanh toán trực tiếp bằng BHYT",
-            services: [{ name: "Khám tiêu hoá cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-10-02", times: ["08:00", "09:00", "10:00"] },
-                { date: "2025-10-03", times: ["13:00", "14:00", "15:00"] },
-            ],
-        },
+        // Thêm dữ liệu tương tự...
     ];
 
     // Lọc
     const filteredSpecialties = specialties.filter(
-        (s) => s.name.toLowerCase().includes(search.toLowerCase())
+        (s) => s.name.toLowerCase().includes(search.toLowerCase()) ||
+            s.services.some((srv) => srv.name.toLowerCase().includes(search.toLowerCase()))
     );
 
     // Phân trang
@@ -158,14 +114,14 @@ export default function SpecialtyBookingPage() {
     // Submit
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedSpecialty) return alert("Vui lòng chọn chuyên khoa!");
+        if (!selectedService) return alert("Vui lòng chọn dịch vụ!");
         if (!selectedDate || !selectedTime)
             return alert("Vui lòng chọn thời gian khám!");
 
         console.log({
             patient: selectedPerson,
-            specialty: selectedSpecialty.name,
-            service: selectedSpecialty.services[0],
+            service: selectedService.name,
+            specialty: selectedService.specialtyName,
             date: selectedDate,
             time: selectedTime,
             reason,
@@ -181,7 +137,7 @@ export default function SpecialtyBookingPage() {
             {/* Form đặt lịch */}
             <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
                 <h1 className="text-2xl font-bold text-green-700 text-center mb-6">
-                    Đặt lịch khám theo chuyên khoa
+                    Đặt lịch khám theo dịch vụ
                 </h1>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -199,36 +155,35 @@ export default function SpecialtyBookingPage() {
                         </select>
                     </div>
 
-                    {/* Chuyên khoa */}
+                    {/* Dịch vụ */}
                     <div>
-                        <label className="block font-semibold mb-2">Chuyên khoa</label>
-                        {!selectedSpecialty ? (
+                        <label className="block font-semibold mb-2">Dịch vụ</label>
+                        {!selectedService ? (
                             <div
-                                onClick={() => setShowSpecialtySheet(true)}
+                                onClick={() => setShowServiceSheet(true)}
                                 className="w-full border rounded px-3 py-2 cursor-pointer hover:border-green-600 text-gray-500"
                             >
-                                Chọn chuyên khoa
+                                Chọn dịch vụ
                             </div>
                         ) : (
                             <div
-                                onClick={() => setShowSpecialtySheet(true)}
+                                onClick={() => setShowServiceSheet(true)}
                                 className="w-full border rounded px-3 py-3 cursor-pointer hover:border-green-600"
                             >
                                 <div className="font-semibold text-green-700">
-                                    {selectedSpecialty.name}
+                                    {selectedService.name}
                                 </div>
-                                <div className="text-sm text-gray-600">{selectedSpecialty.dept}</div>
-                                <div className="mt-2 text-sm text-gray-700">
-                                    Dịch vụ: {selectedSpecialty.services[0].name} –{" "}
-                                    <span className="text-red-600">
-                                        {selectedSpecialty.services[0].price.toLocaleString()}đ
-                                    </span>
+                                <div className="text-sm text-gray-600">
+                                    Chuyên khoa: {selectedService.specialtyName}
                                 </div>
                                 {selectedDate && selectedTime && (
                                     <div className="text-sm mt-1 text-blue-600">
                                         Thời gian: {formatDateLabel(selectedDate)} – {selectedTime}
                                     </div>
                                 )}
+                                <div className="text-sm text-red-600 mt-1">
+                                    Giá: {selectedService.price.toLocaleString()}đ
+                                </div>
                             </div>
                         )}
                     </div>
@@ -273,47 +228,56 @@ export default function SpecialtyBookingPage() {
                 </form>
             </div>
 
-            {/* Sheet chọn chuyên khoa */}
-            {showSpecialtySheet && (
+            {/* Sheet chọn dịch vụ */}
+            {showServiceSheet && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white w-[600px] max-h-[85%] rounded-t-2xl p-4 overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold">Chọn chuyên khoa</h2>
-                            <button onClick={() => setShowSpecialtySheet(false)}>✕</button>
+                            <h2 className="text-lg font-semibold">Chọn dịch vụ</h2>
+                            <button onClick={() => setShowServiceSheet(false)}>✕</button>
                         </div>
 
                         {/* Lọc */}
                         <div className="flex justify-center mb-4">
                             <input
                                 type="text"
-                                placeholder="Tìm chuyên khoa..."
+                                placeholder="Tìm dịch vụ..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="border rounded px-2 py-1 w-[500px] text-sm"
                             />
                         </div>
 
-                        {/* Danh sách chuyên khoa */}
-                        {currentSpecialties.map((spec) => (
-                            <div
-                                key={spec.id}
-                                onClick={() => setShowSpecialtyDetail(spec)}
-                                className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100"
-                            >
-                                <Image
-                                    src={spec.avatar}
-                                    alt={spec.name}
-                                    width={60}
-                                    height={60}
-                                    className="rounded-lg object-cover"
-                                />
-                                <div>
-                                    <div className="font-medium">{spec.name}</div>
-                                    <div className="font-medium text-sm text-gray-600">{spec.dept}</div>
-                                    <div className="text-sm text-red-600">Giá: {spec.fee}VNĐ</div>
+                        {/* Danh sách dịch vụ */}
+                        {currentSpecialties.map((spec) =>
+                            spec.services.map((srv, idx) => (
+                                <div
+                                    key={`${spec.id}-${idx}`}
+                                    onClick={() => setShowServiceDetail({
+                                        ...srv,
+                                        specialtyName: spec.name,
+                                        avatar: spec.avatar,
+                                        schedule: spec.schedule,
+                                        fee: spec.fee,
+                                        insurance: spec.insurance,
+                                    })}
+                                    className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100"
+                                >
+                                    <Image
+                                        src={spec.avatar}
+                                        alt={srv.name}
+                                        width={60}
+                                        height={60}
+                                        className="rounded-lg object-cover"
+                                    />
+                                    <div>
+                                        <div className="font-medium">{srv.name}</div>
+                                        <div className="text-sm text-gray-600">Chuyên khoa: {spec.name}</div>
+                                        <div className="text-sm text-red-600">{srv.price.toLocaleString()} VNĐ</div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
 
                         {/* Phân trang */}
                         {totalPages > 1 && (
@@ -354,39 +318,44 @@ export default function SpecialtyBookingPage() {
                 </div>
             )}
 
-            {/* Sheet chi tiết chuyên khoa */}
-            {showSpecialtyDetail && (
+            {/* Sheet chi tiết dịch vụ */}
+            {showServiceDetail && (
                 <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
                     <div className="bg-white w-[50%] max-h-[90%] rounded-t-2xl p-6 overflow-y-auto">
                         {/* Header */}
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-semibold text-green-700">
-                                Lịch chuyên khoa
+                                Lịch dịch vụ
                             </h2>
-                            <button onClick={() => setShowSpecialtyDetail(null)}>✕</button>
+                            <button onClick={() => setShowServiceDetail(null)}>✕</button>
                         </div>
 
                         {/* Info */}
                         <div className="flex gap-4 border-b pb-4 mb-4">
                             <Image
-                                src={showSpecialtyDetail.avatar}
-                                alt={showSpecialtyDetail.name}
+                                src={showServiceDetail.avatar}
+                                alt={showServiceDetail.name}
                                 width={80}
                                 height={80}
                                 className="rounded-lg object-cover"
                             />
                             <div>
                                 <h3 className="text-lg font-semibold text-blue-700">
-                                    {showSpecialtyDetail.name}
+                                    {showServiceDetail.name}
                                 </h3>
-                                <p className="text-sm text-gray-600">{showSpecialtyDetail.dept}</p>
+                                <p className="text-sm text-gray-600">
+                                    Chuyên khoa: {showServiceDetail.specialtyName}
+                                </p>
+                                <p className="text-sm text-red-600">
+                                    Giá: {showServiceDetail.price.toLocaleString()} VNĐ
+                                </p>
                             </div>
                         </div>
 
                         {/* Chọn ngày */}
                         <h4 className="font-semibold mb-2">Chọn ngày khám</h4>
                         <div className="flex gap-2 overflow-x-auto mb-4">
-                            {[...showSpecialtyDetail.schedule]
+                            {showServiceDetail.schedule
                                 .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                                 .map((sch) => (
                                     <button
@@ -408,7 +377,7 @@ export default function SpecialtyBookingPage() {
                         {/* Chọn giờ */}
                         {selectedDate && (
                             <div className="grid grid-cols-3 gap-2 mb-4">
-                                {showSpecialtyDetail.schedule
+                                {showServiceDetail.schedule
                                     .find((s) => s.date === selectedDate)
                                     ?.times.map((t) => (
                                         <button
@@ -428,22 +397,22 @@ export default function SpecialtyBookingPage() {
                         <div className="border-t pt-4 mt-4 text-sm text-gray-700 space-y-3">
                             <p>
                                 <span className="font-semibold">Giá khám:</span>{" "}
-                                {showSpecialtyDetail.fee
-                                    ? `${showSpecialtyDetail.fee.toLocaleString()} VNĐ`
+                                {showServiceDetail.fee
+                                    ? `${showServiceDetail.fee.toLocaleString()} VNĐ`
                                     : "Chưa có"}
                             </p>
                             <p>
                                 <span className="font-semibold">Bảo hiểm:</span>{" "}
-                                {showSpecialtyDetail.insurance || "Chưa cập nhật"}
+                                {showServiceDetail.insurance || "Chưa cập nhật"}
                             </p>
                         </div>
 
                         <button
                             disabled={!selectedDate || !selectedTime}
                             onClick={() => {
-                                setSelectedSpecialty(showSpecialtyDetail);
-                                setShowSpecialtyDetail(null);
-                                setShowSpecialtySheet(false);
+                                setSelectedService(showServiceDetail);
+                                setShowServiceDetail(null);
+                                setShowServiceSheet(false);
                             }}
                             className="w-full bg-green-600 text-white py-2 rounded mt-4 disabled:opacity-50"
                         >
