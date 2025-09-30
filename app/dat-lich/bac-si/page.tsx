@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import LayoutBook from "@/components/layoutBook";
 
@@ -14,8 +14,6 @@ interface Doctor {
 
 export default function DoctorBookingPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const doctorFromQuery = searchParams.get("name") || "";
 
     // STATE
     const [selectedPerson, setSelectedPerson] = useState("Tôi - Lê Gia Hưng");
@@ -38,38 +36,28 @@ export default function DoctorBookingPage() {
             room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
             services: [{ name: "Khám Nội [PK1]", price: 350000 }],
             schedule: [
-                { date: "02/10", times: ["06:45", "07:00", "07:15", "07:30", "07:45", "08:00"] },
-                { date: "03/10", times: ["07:00", "07:30", "08:00", "08:30"] },
+                { date: "2025-10-02", times: ["06:45", "07:00", "07:15", "07:30", "07:45", "08:00"] },
+                { date: "2025-10-03", times: ["07:00", "07:30", "08:00", "08:30"] },
             ],
         },
         {
-            name: "BS. Nguyễn Văn A",
+            name: "BS. Nguyễn Văn C",
             dept: "Tim mạch",
             room: "Phòng 201",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
             schedule: [
-                { date: "02/10", times: ["08:00", "09:00", "10:00"] },
-                { date: "03/10", times: ["13:00", "14:00", "15:00"] },
-            ],
-        },
-        {
-            name: "PGSTS Trần Ngọc C",
-            dept: "Tiêu hoá",
-            room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
-            services: [{ name: "Khám Nội [PK1]", price: 350000 }],
-            schedule: [
-                { date: "02/10", times: ["06:45", "07:00", "07:15", "07:30", "07:45", "08:00"] },
-                { date: "03/10", times: ["07:00", "07:30", "08:00", "08:30"] },
+                { date: "2025-10-02", times: ["08:00", "09:00", "10:00"] },
+                { date: "2025-10-03", times: ["13:00", "14:00", "15:00"] },
             ],
         },
         {
             name: "BS. Nguyễn Văn D",
             dept: "Tim mạch",
-            room: "Phòng 204",
+            room: "Phòng 201",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
             schedule: [
-                { date: "02/10", times: ["08:00", "09:00", "10:00"] },
-                { date: "03/10", times: ["13:00", "14:00", "15:00"] },
+                { date: "2025-10-01", times: ["08:00", "09:00", "10:00"] },
+                { date: "2025-09-30", times: ["13:00", "14:00", "15:00"] },
             ],
         },
     ];
@@ -77,8 +65,15 @@ export default function DoctorBookingPage() {
     const filteredDoctors = doctors.filter(d =>
         d.name.toLowerCase().includes(search.toLowerCase())
     );
+    const weekdayNames = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+    const formatDateLabel = (dateStr: string) => {
+        const d = new Date(dateStr);
+        const weekday = weekdayNames[d.getDay()];
+        const day = d.getDate().toString().padStart(2, "0");
+        const month = (d.getMonth() + 1).toString().padStart(2, "0");
+        return `${weekday} ${day}/${month}`;
+    };
 
-    // submit
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedDoctor) return alert("Vui lòng chọn bác sĩ!");
@@ -146,7 +141,7 @@ export default function DoctorBookingPage() {
                                 </div>
                                 {selectedDate && selectedTime && (
                                     <div className="text-sm mt-1 text-blue-600">
-                                        Thời gian: {selectedDate} – {selectedTime}
+                                        Thời gian: {formatDateLabel(selectedDate)} – {selectedTime}
                                     </div>
                                 )}
                             </div>
@@ -222,49 +217,47 @@ export default function DoctorBookingPage() {
                 <div className="fixed inset-0 bg-black/40 flex items-end z-50">
                     <div className="bg-white w-full max-h-[90%] rounded-t-2xl p-6 overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold">Chọn thời gian khám</h2>
+                            <h2 className="text-lg font-semibold">Lịch bác sĩ</h2>
                             <button onClick={() => setShowDoctorDetail(null)}>✕</button>
                         </div>
-
                         <h3 className="text-xl font-bold">{showDoctorDetail.name}</h3>
                         <p className="text-gray-700">{showDoctorDetail.dept}</p>
                         <p className="mb-3">{showDoctorDetail.room}</p>
 
                         {/* Chọn ngày */}
                         <div className="flex gap-2 overflow-x-auto mb-4">
-                            {showDoctorDetail.schedule.map((sch) => (
-                                <button
-                                    key={sch.date}
-                                    onClick={() => {
-                                        setSelectedDate(sch.date);
-                                        setSelectedTime("");
-                                    }}
-                                    className={`px-4 py-2 rounded-lg border min-w-[80px]
-                    ${selectedDate === sch.date ? "bg-blue-600 text-white" : "bg-white"}`}
-                                >
-                                    {sch.date}
-                                </button>
-                            ))}
+                            {[...showDoctorDetail.schedule]
+                                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                .map((sch) => (
+                                    <button
+                                        key={sch.date}
+                                        onClick={() => {
+                                            setSelectedDate(sch.date);
+                                            setSelectedTime("");
+                                        }}
+                                        className={`px-3 py-2 rounded-lg border min-w-[100px] text-sm text-center ${selectedDate === sch.date ? "bg-blue-600 text-white" : "bg-white"}`}
+                                    >
+                                        {formatDateLabel(sch.date)}
+                                    </button>
+                                ))}
                         </div>
 
                         {/* Chọn giờ */}
                         {selectedDate && (
                             <div className="grid grid-cols-3 gap-2 mb-4">
                                 {showDoctorDetail.schedule
-                                    .find(s => s.date === selectedDate)
+                                    .find((s) => s.date === selectedDate)
                                     ?.times.map((t) => (
                                         <button
                                             key={t}
                                             onClick={() => setSelectedTime(t)}
-                                            className={`border rounded py-2 
-                        ${selectedTime === t ? "bg-green-600 text-white" : ""}`}
+                                            className={`border rounded py-2 ${selectedTime === t ? "bg-green-600 text-white" : ""}`}
                                         >
                                             {t}
                                         </button>
                                     ))}
                             </div>
                         )}
-
                         <button
                             disabled={!selectedDate || !selectedTime}
                             onClick={() => {

@@ -8,7 +8,6 @@ import {
     FaUsers,
     FaCalendarAlt,
     FaFileMedical,
-    FaPills,
     FaStethoscope,
     FaFilePrescription,
     FaShieldAlt,
