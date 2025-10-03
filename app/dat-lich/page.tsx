@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
 import { FaHospitalUser } from "react-icons/fa";
 import Image from "next/image";
-
+import Link from "next/link";
 export default function BookingPage() {
     const router = useRouter();
     const [isChecking, setIsChecking] = useState(true);
@@ -76,10 +76,9 @@ export default function BookingPage() {
                     </select>
                 </div>
 
-                {/* 2 lựa chọn */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
-                    <div
-                        onClick={() => router.push("/dat-lich/bac-si")}
+                    <Link
+                        href="/dat-lich/bac-si"
                         className="border rounded-lg p-6 shadow hover:shadow-lg cursor-pointer transition"
                     >
                         <h2 className="text-xl font-bold text-green-700 mb-2">
@@ -88,11 +87,11 @@ export default function BookingPage() {
                         <p className="text-gray-600">
                             Chọn bác sĩ yêu thích của bạn để đặt lịch khám nhanh chóng.
                         </p>
-                    </div>
+                    </Link>
 
-                    <div
-                        onClick={() => router.push("/dat-lich/chuyen-khoa")}
-                        className="border rounded-lg p-6 shadow hover:shadow-lg cursor-pointer transition"
+                    <Link
+                        href="/dat-lich/chuyen-khoa"
+                        className="border rounded-lg p-6 shadow hover:shadow-lg cursor-pointer transition max-w-md block"
                     >
                         <h2 className="text-xl font-bold text-green-700 mb-2">
                             Đặt lịch khám theo chuyên khoa
@@ -100,7 +99,18 @@ export default function BookingPage() {
                         <p className="text-gray-600">
                             Chọn chuyên khoa phù hợp với tình trạng sức khỏe của bạn.
                         </p>
-                    </div>
+                    </Link>
+                    <Link
+                        href="/dat-lich/dich-vu"
+                        className="border rounded-lg p-6 shadow hover:shadow-lg cursor-pointer transition max-w-md block"
+                    >
+                        <h2 className="text-xl font-bold text-green-700 mb-2">
+                            Đặt lịch khám theo dịch vụ
+                        </h2>
+                        <p className="text-gray-600">
+                            Chọn dịch vụ phù hợp với tình trạng sức khỏe và nhu cầu của bạn.
+                        </p>
+                    </Link>
                 </div>
 
                 {/* Danh sách bác sĩ nổi bật */}
