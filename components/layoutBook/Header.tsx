@@ -56,7 +56,7 @@ export default function Header() {
                     <div className="flex justify-center">
                         <Image
                             src="/image/vi-suc-khoe-toan-dan.jpg"
-                            alt="Vì sức khoẻ nhân dân"
+                            alt="Vì sức khỏe nhân dân - Đồng hành trọn đời sức khỏe"
                             width={260}
                             height={80}
                             className="object-contain"
