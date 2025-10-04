@@ -81,7 +81,7 @@ export default function Header() {
 
                             <button className="flex items-center space-x-1 hover:underline">
                                 <Image
-                                    src="/flags/en.png"
+                                    src="/image/lang_en.png"
                                     alt="English"
                                     width={20}
                                     height={20}

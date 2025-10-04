@@ -20,19 +20,19 @@ export default function BookingPage() {
             id: 1,
             name: "BS. Nguyễn Văn A",
             specialty: "Tim mạch",
-            image: "/doctor1.jpg",
+            image: "/image/doctors/doctor1.jpg",
         },
         {
             id: 2,
             name: "BS. Trần Thị B",
             specialty: "Nhi khoa",
-            image: "/doctor2.jpg",
+            image: "/image/doctors/doctor2.jpg",
         },
         {
             id: 3,
             name: "BS. Lê Văn C",
             specialty: "Da liễu",
-            image: "/doctor3.jpg",
+            image: "/image/doctors/doctor3.jpg",
         },
     ];
 
@@ -127,7 +127,7 @@ export default function BookingPage() {
                                 }
                                 className="border rounded-lg shadow hover:shadow-lg cursor-pointer transition p-3"
                             >
-                                <div className="relative w-full h-40 mb-3">
+                                <div className="relative w-full h-60 mb-3">
                                     <Image
                                         src={doc.image}
                                         alt={doc.name}

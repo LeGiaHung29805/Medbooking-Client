@@ -55,7 +55,7 @@ export default function DoctorBookingPage() {
             name: "PGSTS Trần Ngọc Ánh",
             dept: "Tiêu hoá",
             room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
-            avatar: "/image/d.png",
+            avatar: "/image/doctors/doctor5.jpg",
             fee: 350000,
             insurance: "Có hỗ trợ BHYT",
             services: [{ name: "Khám Nội [PK1]", price: 350000 }],
@@ -67,10 +67,10 @@ export default function DoctorBookingPage() {
         },
         {
             id: 2,
-            name: "BS. Nguyễn Văn C",
+            name: "BS. Vũ Mạnh Tiến",
             dept: "Tim mạch",
             room: "Phòng 201",
-            avatar: "/image/d.png",
+            avatar: "/image/doctors/doctor4.jpg",
             fee: 300000,
             insurance: "Thanh toán trực tiếp bằng BHYT",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
@@ -84,7 +84,7 @@ export default function DoctorBookingPage() {
             name: "BS. Nguyễn Văn D",
             dept: "Tim mạch",
             room: "Phòng 201",
-            avatar: "/image/c-549.jpg",
+            avatar: "/image/doctors/doctor8.jpg",
             fee: 320000,
             insurance: "Hỗ trợ thanh toán bảo hiểm",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
@@ -98,7 +98,7 @@ export default function DoctorBookingPage() {
             name: "BS. Nguyễn Văn D",
             dept: "Tim mạch",
             room: "Phòng 201",
-            avatar: "/image/c-549.jpg",
+            avatar: "/image/doctors/doctor10.jpg",
             fee: 320000,
             insurance: "Hỗ trợ thanh toán bảo hiểm",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
@@ -112,7 +112,7 @@ export default function DoctorBookingPage() {
             name: "BS. Nguyễn Văn D",
             dept: "Tim mạch",
             room: "Phòng 201",
-            avatar: "/image/c-549.jpg",
+            avatar: "/image/doctors/doctor12.jpg",
             fee: 320000,
             insurance: "Hỗ trợ thanh toán bảo hiểm",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
@@ -126,7 +126,7 @@ export default function DoctorBookingPage() {
             name: "BS. Nguyễn Văn D",
             dept: "Tim mạch",
             room: "Phòng 201",
-            avatar: "/image/c-549.jpg",
+            avatar: "/image/doctors/doctor2.jpg",
             fee: 320000,
             insurance: "Hỗ trợ thanh toán bảo hiểm",
             services: [{ name: "Khám tim cơ bản", price: 300000 }],
@@ -142,7 +142,7 @@ export default function DoctorBookingPage() {
         (d) =>
             d.name.toLowerCase().includes(search.toLowerCase()) &&
             (!deptFilter || d.dept.toLowerCase().includes(deptFilter.toLowerCase()))
-    );
+    ); 
 
     // Phân trang
     const totalPages = Math.ceil(filteredDoctors.length / pageSize);
@@ -209,7 +209,7 @@ export default function DoctorBookingPage() {
                             onChange={(e) => setSelectedPerson(e.target.value)}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600"
                         >
-                            <option value="Tôi - Lê Gia Hưng">Tôi - Lê Gia Hưng</option>
+                            <option value="Tôi - Lê Gia Hưng">Tôi</option>
                             <option value="Nguyễn Văn A">Nguyễn Văn A</option>
                             <option value="Trần Thị B">Trần Thị B</option>
                         </select>
