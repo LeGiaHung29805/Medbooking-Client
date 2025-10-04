@@ -73,7 +73,6 @@ export default function Header() {
                     />
                 </div>
 
-<<<<<<< HEAD
                 {/* Search */}
                 <div className="flex justify-end w-full mx-auto">
                     <div className="relative w-5/6">
@@ -85,18 +84,6 @@ export default function Header() {
                         <Button className="absolute right-0 top-0 h-14 w-14 bg-green-700 rounded-r-full flex items-center justify-center hover:bg-green-800 transition">
                             <Search size={22} className="text-white" />
                         </Button>
-=======
-                    {/* Search */}
-                    <div className="hidden md:block w-1/3">
-                        <div className="relative">
-                            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-green-700" size={18} />
-                            <Input
-                                type="text"
-                                placeholder="Từ khóa tìm kiếm..."
-                                className="pl-9 pr-3 bg-gray-100 rounded-full text-sm border-0 focus-visible:ring-0 shadow-none"
-                            /> */}
-                        </div>
->>>>>>> c4ad1d1cd44793bf326f314457e5f87f4dfc6b5a
                     </div>
                 </div>
 

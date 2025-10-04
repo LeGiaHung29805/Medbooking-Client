@@ -11,6 +11,8 @@ export default function ProfilePage() {
         email: "",
         address: "",
         username: "",
+        country: "",
+        job: "",
     });
 
     useEffect(() => {
@@ -22,6 +24,8 @@ export default function ProfilePage() {
             email: localStorage.getItem("email") || "",
             address: localStorage.getItem("address") || "",
             username: localStorage.getItem("username") || "",
+            country: localStorage.getItem("country") || "",
+            job: localStorage.getItem("job") || "",
         };
         setProfile(storedProfile);
     }, []);
@@ -108,11 +112,29 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium mb-1">Tên đăng nhập</label>
                             <input
                                 name="username"
                                 value={profile.username}
+                                onChange={handleChange}
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                            />
+                        </div> */}
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Nghề nghiệp</label>
+                            <input
+                                name="address"
+                                value={profile.job}
+                                onChange={handleChange}
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Quốc gia</label>
+                            <input
+                                name="address"
+                                value={profile.country}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                             />
