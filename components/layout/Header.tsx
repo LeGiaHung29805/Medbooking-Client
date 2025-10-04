@@ -70,12 +70,12 @@ export default function Header() {
                     {/* Search */}
                     <div className="hidden md:block w-1/3">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-green-700" size={18} />
+                            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-green-700" size={18} />
                             <Input
                                 type="text"
                                 placeholder="Từ khóa tìm kiếm..."
                                 className="pl-9 pr-3 bg-gray-100 rounded-full text-sm border-0 focus-visible:ring-0 shadow-none"
-                            />
+                            /> */}
                         </div>
                     </div>
                 </div>
