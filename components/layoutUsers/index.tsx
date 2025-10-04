@@ -34,7 +34,7 @@ export default function LayoutUser({ children, user }: LayoutUserProps) {
         name: "Khách",
         gender: "Nam",
         dob: "01/01/2000",
-        avatarUrl: "/default-avatar.png",
+        avatarUrl: "/image/images.jpg",
     };
 
     const menuItems = [
