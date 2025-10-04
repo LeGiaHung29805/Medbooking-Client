@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Layout from "@/components/layoutBook";
+import Layout from "@/components/layout";
 
 export default function HomePage() {
   const [banners] = useState<string[]>([
@@ -201,109 +201,109 @@ export default function HomePage() {
 
   return (
     <Layout>
-    <div className="container">
-      {/* Banner */}
-      {banners.length > 0 && (
-        <section className="banner-section">
-          {banners.map((banner, index) => (
-            <img
-              key={index}
-              src={banner}
-              alt={`Banner ${index + 1}`}
-              className={`banner-image ${index === currentBanner ? "active" : ""}`}
-            />
-          ))}
-          <div className="banner-dots">
-            {banners.map((_, index) => (
-              <button
+      <div className="container">
+        {/* Banner */}
+        {banners.length > 0 && (
+          <section className="banner-section">
+            {banners.map((banner, index) => (
+              <img
                 key={index}
-                onClick={() => setCurrentBanner(index)}
-                className={`dot ${index === currentBanner ? "active" : ""}`}
+                src={banner}
+                alt={`Banner ${index + 1}`}
+                className={`banner-image ${index === currentBanner ? "active" : ""}`}
               />
             ))}
-          </div>
-        </section>
-      )}
+            <div className="banner-dots">
+              {banners.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentBanner(index)}
+                  className={`dot ${index === currentBanner ? "active" : ""}`}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* Slideshow bác sĩ */}
-      <div className="slideShowBacSi">
-        <h2 className="slideshow-title">🏥 Đội Ngũ Bác Sĩ Chuyên Nghiệp 🏥</h2>
-        <h4>Hơn 1.000 bác sĩ, đội ngũ hàng đầu cùng với hơn 4.300 nhân viên y tế tận tâm,</h4>
-        <h5>sẵn sàng phục vụ và chăm sóc sức khỏe cho mỗi bệnh nhân.</h5>
-        <br /><br />
-        <div className="doctors-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-          <div 
-            ref={trackRef}
-            className="doctors-track"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeaveTrack}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {[...doctors, ...doctors, ...doctors].map((doctor, index) => (
-              <div key={index} className="doctor-card">
-                <div className="doctor-image">
-                  <img src={doctor.image} alt={doctor.name} loading="lazy"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }} draggable={false} />
+        {/* Slideshow bác sĩ */}
+        <div className="slideShowBacSi">
+          <h2 className="slideshow-title">🏥 Đội Ngũ Bác Sĩ Chuyên Nghiệp 🏥</h2>
+          <h4>Hơn 1.000 bác sĩ, đội ngũ hàng đầu cùng với hơn 4.300 nhân viên y tế tận tâm,</h4>
+          <h5>sẵn sàng phục vụ và chăm sóc sức khỏe cho mỗi bệnh nhân.</h5>
+          <br /><br />
+          <div className="doctors-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <div
+              ref={trackRef}
+              className="doctors-track"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeaveTrack}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {[...doctors, ...doctors, ...doctors].map((doctor, index) => (
+                <div key={index} className="doctor-card">
+                  <div className="doctor-image">
+                    <img src={doctor.image} alt={doctor.name} loading="lazy"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }} draggable={false} />
+                  </div>
+                  <div className="doctor-name">{doctor.name}</div>
+                  <div className="doctor-specialty">{doctor.specialty}</div>
+                  <div className="doctor-experience">{doctor.experience}</div>
                 </div>
-                <div className="doctor-name">{doctor.name}</div>
-                <div className="doctor-specialty">{doctor.specialty}</div>
-                <div className="doctor-experience">{doctor.experience}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Phần Chuyên khoa & Dịch vụ */}
+        <div className="services-section">
+          <h2 className="services-title">Đa Dạng Chuyên Khoa Dịch Vụ</h2>
+          <div className="services-grid">
+            {services.map((service) => (
+              <div key={service.id} className="service-card">
+                <div className="service-image-wrapper">
+                  <img src={service.image} alt={service.title} className="service-image" />
+                </div>
+                <h3 className="service-title">{service.title}</h3>
+                <p className="service-description">{service.description}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Phần Chuyên khoa & Dịch vụ */}
-      <div className="services-section">
-        <h2 className="services-title">Đa Dạng Chuyên Khoa Dịch Vụ</h2>
-        <div className="services-grid">
-          {services.map((service) => (
-            <div key={service.id} className="service-card">
-              <div className="service-image-wrapper">
-                <img src={service.image} alt={service.title} className="service-image" />
+        {/* Phần Hệ thống máy móc */}
+        <div className="equipment-section">
+          <h2 className="equipment-title">HỆ THỐNG MÁY MÓC,<br />TRANG THIẾT BỊ HIỆN ĐẠI</h2>
+
+          <div className="equipment-container">
+            <div className="equipment-left">
+              <div className="equipment-description">
+                <p>Trang thiết bị phòng mổ: Phòng mổ vô khuẩn 1 chiều, máy gây mê kèm thở Drager – Fabius Plus (Đức), máy bơm tiêm điện điều chỉnh liều mê, máy phẫu thuật đúc thủy tinh thể - Phaco (Thụy Sỹ)...</p>
               </div>
-              <h3 className="service-title">{service.title}</h3>
-              <p className="service-description">{service.description}</p>
+              <div className="equipment-description">
+                <p>Chẩn đoán hình ảnh & tầm soát chuyên sâu: Máy MRI nguyên lý H2, hệ thống chụp CT da lát cắt, hệ thống siêu âm 4D, 5D sắc nét, siêu âm đàn hồi mô gan thế hệ mới, máy do loãng xương DEXUM T...</p>
+              </div>
+              <div className="equipment-description">
+                <p>Nội soi, tím mạch và tiêu hóa cao cấp: Nội soi tiêu hóa công nghệ MCU, NBI 5P phát hiện sớm ung thư đường tiêu hóa, điện tim 3 cần, tầm soát vi khuẩn HP qua hơi thở...</p>
+              </div>
+              <div className="equipment-description">
+                <p>Hệ thống máy móc xét nghiệm chuyên sâu: xét nghiệm tự động Power Express, phòng lab vi sinh & sinh học phân tử hiện đại, máy phân tích thành phần cơ thể Tanita (Nhật Bản)... Cùng nhiều máy móc công nghệ hiện đại khác.</p>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Phần Hệ thống máy móc */}
-      <div className="equipment-section">
-        <h2 className="equipment-title">HỆ THỐNG MÁY MÓC,<br />TRANG THIẾT BỊ HIỆN ĐẠI</h2>
-        
-        <div className="equipment-container">
-          <div className="equipment-left">
-            <div className="equipment-description">
-              <p>Trang thiết bị phòng mổ: Phòng mổ vô khuẩn 1 chiều, máy gây mê kèm thở Drager – Fabius Plus (Đức), máy bơm tiêm điện điều chỉnh liều mê, máy phẫu thuật đúc thủy tinh thể - Phaco (Thụy Sỹ)...</p>
-            </div>
-            <div className="equipment-description">
-              <p>Chẩn đoán hình ảnh & tầm soát chuyên sâu: Máy MRI nguyên lý H2, hệ thống chụp CT da lát cắt, hệ thống siêu âm 4D, 5D sắc nét, siêu âm đàn hồi mô gan thế hệ mới, máy do loãng xương DEXUM T...</p>
-            </div>
-            <div className="equipment-description">
-              <p>Nội soi, tím mạch và tiêu hóa cao cấp: Nội soi tiêu hóa công nghệ MCU, NBI 5P phát hiện sớm ung thư đường tiêu hóa, điện tim 3 cần, tầm soát vi khuẩn HP qua hơi thở...</p>
-            </div>
-            <div className="equipment-description">
-              <p>Hệ thống máy móc xét nghiệm chuyên sâu: xét nghiệm tự động Power Express, phòng lab vi sinh & sinh học phân tử hiện đại, máy phân tích thành phần cơ thể Tanita (Nhật Bản)... Cùng nhiều máy móc công nghệ hiện đại khác.</p>
-            </div>
-          </div>
-          
-          <div className="equipment-right">
-            <div className="equipment-single-image">
-              <img src="/image/thietbihiendai.webp" alt="Hệ thống máy móc hiện đại" />
+            <div className="equipment-right">
+              <div className="equipment-single-image">
+                <img src="/image/thietbihiendai.webp" alt="Hệ thống máy móc hiện đại" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* CSS */}
-      <style jsx>{`
+        {/* CSS */}
+        <style jsx>{`
         .container {
           max-width: 1400px;
           margin: 0 auto;
@@ -594,8 +594,8 @@ export default function HomePage() {
           }
         }
       `}</style>
-    </div>
- </Layout>
-    
+      </div>
+    </Layout>
+
   );
 }

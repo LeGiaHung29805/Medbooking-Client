@@ -8,7 +8,7 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
                     <Image
-                        src="/image/HUNRE_Logo.png"
+                        src="/image/HUNRE_LOGO.svg"
                         alt="Bệnh viện HUNRE"
                         width={160}
                         height={64}
@@ -62,7 +62,7 @@ export default function Footer() {
                 </div>
             </div>
 
-            <div className="mt-8 flex justify-center space-x-4">
+            {/* <div className="mt-8 flex justify-center space-x-4">
                 <a
                     href="tel:19001806"
                     className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700"
@@ -75,7 +75,7 @@ export default function Footer() {
                 >
                     Đặt lịch khám
                 </a>
-            </div>
+            </div> */}
         </footer>
     );
 }

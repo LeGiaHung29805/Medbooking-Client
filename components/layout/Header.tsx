@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Menu, X } from "lucide-react";
+import { Search, Menu, X, Phone } from "lucide-react";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, } from "@/components/ui/breadcrumb";
+import { Button } from "../ui/button";
 
 export default function Header() {
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,50 +36,58 @@ export default function Header() {
             {/* Top green bar */}
             <div className="bg-green-700 text-white">
                 <div className="container mx-auto flex justify-end items-center space-x-4 py-2 px-6 text-sm">
-                    <button className="border border-white px-4 py-1 rounded-full hover:bg-white hover:text-green-700 transition">
-                        Gọi tổng đài 1900.888.866
+                    <button
+                        className="flex items-center space-x-2 bg-red-400 text-black px-4 py-2 rounded-full active:bg-red-500 transition">
+                        <Phone size={20} />
+                        <span>1900.888.866</span>
                     </button>
-                    <button className="border border-white px-4 py-1 rounded-full hover:bg-white hover:text-green-700 transition">
+
+
+                    <Link href={"/login"} className="border border-white px-4 py-2 rounded-full hover:bg-white hover:text-green-700 transition">
                         Đặt lịch khám
-                    </button>
+                    </Link>
                 </div>
             </div>
 
             {/* Logo + slogan + search */}
-            <div className="bg-white">
-                <div className="container mx-auto flex justify-between items-center py-4 px-6">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center">
-                        <Image
-                            src="/image/HUNRE_Logo.png"
-                            alt="Bệnh viện HUNRE"
-                            width={100}
-                            height={80}
-                            priority
-                        />
-                    </Link>
+            <div className="container mx-auto grid grid-cols-3 items-center py-4 px-6 gap-4">
+                {/* Logo */}
+                <Link href="/" className="flex justify-start">
+                    <Image
+                        src="/image/HUNRE_LOGO.svg"
+                        alt="Bệnh viện HUNRE"
+                        width={400}
+                        height={150}
+                    // className="h-16 w-auto object-contain"
+                    />
+                </Link>
 
-                    {/* Slogan */}
+                {/* Slogan */}
+                <div className="flex justify-center">
                     <Image
                         src="/image/Vi-suc-khoe-toan-dan.jpg"
                         alt="Vì sức khoẻ toàn dân"
-                        width={160}
-                        height={40}
-                        className="h-10 w-auto"
+                        width={600}
+                        height={50}
+                    // className="h-12 w-auto object-contain"
                     />
+                </div>
 
-                    {/* Search */}
-                    <div className="hidden md:block w-1/3">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-green-700" size={18} />
-                            <Input
-                                type="text"
-                                placeholder="Từ khóa tìm kiếm..."
-                                className="pl-9 pr-3 bg-gray-100 rounded-full text-sm border-0 focus-visible:ring-0 shadow-none"
-                            />
-                        </div>
+                {/* Search */}
+                <div className="flex justify-end w-full mx-auto">
+                    <div className="relative w-5/6">
+                        <Input
+                            type="text"
+                            placeholder="Từ khóa tìm kiếm..."
+                            className="pl-5 pr-14 h-14 bg-gray-100 rounded-full text-lg border border-gray-300 focus:ring-2 focus:ring-green-600 w-full"
+                        />
+                        <Button className="absolute right-0 top-0 h-14 w-14 bg-green-700 rounded-r-full flex items-center justify-center hover:bg-green-800 transition">
+                            <Search size={22} className="text-white" />
+                        </Button>
                     </div>
                 </div>
+
+
             </div>
 
             {/* Hamburger button */}
@@ -99,7 +108,7 @@ export default function Header() {
                                 <Link
                                     key={item.path}
                                     href={item.path}
-                                    className={`font-medium transition hover:text-green-600 ${active
+                                    className={`font-medium text-lg transition hover:text-green-600 ${active
                                         ? "text-green-600 border-b-2 border-green-600"
                                         : "text-gray-800"
                                         }`}
@@ -113,35 +122,37 @@ export default function Header() {
             </nav>
 
             {/* Breadcrumb với ảnh nền */}
-            {pathname !== "/" && (
-                <div
-                    className="relative bg-cover bg-center"
-                    style={{ backgroundImage: `url(${bgImage})` }}
-                >
-                    <div className="bg-white/10 py-16 md:py-24">
-                        <div className="container mx-auto px-6">
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                                {menu.find((m) => m.path === pathname)?.name}
-                            </h1>
-                            <Breadcrumb>
-                                <BreadcrumbList>
-                                    <BreadcrumbItem>
-                                        <BreadcrumbLink asChild>
-                                            <Link href="/">Trang chủ</Link>
-                                        </BreadcrumbLink>
-                                    </BreadcrumbItem>
-                                    <BreadcrumbSeparator />
-                                    <BreadcrumbItem>
-                                        <BreadcrumbLink>
-                                            {menu.find((m) => m.path === pathname)?.name}
-                                        </BreadcrumbLink>
-                                    </BreadcrumbItem>
-                                </BreadcrumbList>
-                            </Breadcrumb>
+            <section className="relative mb-6 rounded-lg overflow-hidden shadow-lg">
+                {pathname !== "/" && (
+                    <div
+                        className="relative bg-cover bg-center"
+                        style={{ backgroundImage: `url(${bgImage})` }}
+                    >
+                        <div className="bg-white/10 py-16 md:py-24">
+                            <div className="container mx-auto px-6">
+                                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                                    {menu.find((m) => m.path === pathname)?.name}
+                                </h1>
+                                <Breadcrumb>
+                                    <BreadcrumbList>
+                                        <BreadcrumbItem>
+                                            <BreadcrumbLink asChild>
+                                                <Link href="/">Trang chủ</Link>
+                                            </BreadcrumbLink>
+                                        </BreadcrumbItem>
+                                        <BreadcrumbSeparator />
+                                        <BreadcrumbItem>
+                                            <BreadcrumbLink>
+                                                {menu.find((m) => m.path === pathname)?.name}
+                                            </BreadcrumbLink>
+                                        </BreadcrumbItem>
+                                    </BreadcrumbList>
+                                </Breadcrumb>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </section>
 
             {/* Mobile menu overlay */}
             {mobileOpen && (
