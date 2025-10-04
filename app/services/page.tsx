@@ -961,20 +961,27 @@ export default function ServicesPage() {
           )}
 
 {/* Background Image Section - dich_vu_kham.jpg */}
-<div className="mt-8 w-screen -mx-4 overflow-hidden h-150">
-  <div 
-    className="w-full h-full bg-cover bg-center"
-    style={{ backgroundImage: 'url("/image/dich_vu_kham.jpg")' }} 
-  ></div>
+<div className="mt-8 max-w-5xl mx-auto rounded-2xl overflow-hidden group">
+  <Image 
+    src="/image/dich_vu_kham.jpg"
+    alt="Dịch vụ khám"
+    width={1200}
+    height={500}
+    className="w-full h-auto object-contain transform transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
+  />
 </div>
 
-{/* Background Image Section - my_home.jpg - GIẢM KHOẢNG CÁCH */}
-<div className="mt-8 w-screen -mx-4 overflow-hidden h-100">
-  <div 
-    className="w-full h-full bg-cover bg-center"
-    style={{ backgroundImage: 'url("/image/my_home.jpg")' }} 
-  ></div>
+{/* Background Image Section - my_home.jpg */}
+<div className="mt-8 max-w-5xl mx-auto rounded-2xl overflow-hidden group">
+  <Image 
+    src="/image/my_home.jpg"
+    alt="My Home"
+    width={1200}
+    height={500}
+    className="w-full h-auto object-contain transform transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-1"
+  />
 </div>
+
         </section>
       </div>
 
