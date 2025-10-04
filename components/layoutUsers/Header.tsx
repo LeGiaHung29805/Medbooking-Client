@@ -36,7 +36,7 @@ export default function Header() {
                     {/* Logo */}
                     <div className="flex items-center space-x-3">
                         <Image
-                            src="/image/HUNRE_Logo.png"
+                            src="/image/HUNRE_LOGO.svg"
                             alt="Bệnh viện Bạch Mai"
                             width={100}
                             height={50}
