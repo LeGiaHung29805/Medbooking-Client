@@ -10,9 +10,9 @@ export default function Footer() {
                     <Image
                         src="/image/HUNRE_LOGO.svg"
                         alt="Bệnh viện HUNRE"
-                        width={160}
-                        height={64}
-                        className="mb-4 object-contain"
+                        width={400}
+                        height={150}
+                    // className="h-16 w-auto object-contain"
                     />
                     <p className="text-sm font-semibold">CÔNG TY TNHH TỔ HỢP Y TẾ</p>
                     <p className="text-sm">ĐKKD số: 0101816147</p>

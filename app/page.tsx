@@ -7,6 +7,7 @@ export default function HomePage() {
   const [banners] = useState<string[]>([
     "/image/banner1.jpg",
     "/image/banner-doctor1.jpg",
+    "/image/banner2.jpg",
   ]);
 
   const [currentBanner, setCurrentBanner] = useState(0);

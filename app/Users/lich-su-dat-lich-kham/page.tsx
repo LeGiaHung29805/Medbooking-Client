@@ -36,9 +36,9 @@ export default function LichSuDatLich() {
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: 1,
-      doctor: "BS. Nguyễn Văn A",
-      specialty: "Nội khoa",
-      date: "2025-10-05 14:00",
+      doctor: "BS. Vũ Mạnh Tiến",
+      specialty: "Tim mạch",
+      date: "2025-10-02 9:00",
       status: "Đã xác nhận",
       note: "Mang theo kết quả xét nghiệm cũ.",
     },
@@ -97,13 +97,12 @@ export default function LichSuDatLich() {
                     <td className="py-3 px-4">{a.date}</td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-1 rounded-md text-sm ${
-                          a.status === "Đã xác nhận"
-                            ? "bg-green-100 text-green-700"
-                            : a.status === "Đang chờ"
+                        className={`px-2 py-1 rounded-md text-sm ${a.status === "Đã xác nhận"
+                          ? "bg-green-100 text-green-700"
+                          : a.status === "Đang chờ"
                             ? "bg-yellow-100 text-yellow-700"
                             : "bg-red-100 text-red-700"
-                        }`}
+                          }`}
                       >
                         {a.status}
                       </span>

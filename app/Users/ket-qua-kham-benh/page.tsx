@@ -38,9 +38,9 @@ export default function KetQuaKhamBenh() {
     {
       id: 1,
       member: "me",
-      doctor: "BS. Nguyễn Văn A",
-      specialty: "Nội khoa",
-      date: "2025-09-28",
+      doctor: "BS. Vũ Mạnh Tiến",
+      specialty: "Tim mạch",
+      date: "2025-10-02",
       diagnosis: "Viêm họng cấp",
       severity: "Nhẹ",
       note: "Uống thuốc 7 ngày, tái khám nếu không đỡ.",

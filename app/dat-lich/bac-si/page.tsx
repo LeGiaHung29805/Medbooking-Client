@@ -142,7 +142,7 @@ export default function DoctorBookingPage() {
         (d) =>
             d.name.toLowerCase().includes(search.toLowerCase()) &&
             (!deptFilter || d.dept.toLowerCase().includes(deptFilter.toLowerCase()))
-    ); 
+    );
 
     // Phân trang
     const totalPages = Math.ceil(filteredDoctors.length / pageSize);
@@ -209,7 +209,7 @@ export default function DoctorBookingPage() {
                             onChange={(e) => setSelectedPerson(e.target.value)}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600"
                         >
-                            <option value="Tôi - Lê Gia Hưng">Tôi</option>
+                            <option value="Tôi - Lê Gia Hưng">Tôi - Lê Gia Hưng</option>
                             <option value="Nguyễn Văn A">Nguyễn Văn A</option>
                             <option value="Trần Thị B">Trần Thị B</option>
                         </select>

@@ -333,14 +333,14 @@ export default function DoctorsBookingPage() {
     } else {
       setSelectedCategories([...selectedCategories, cat]);
     }
-    setCurrentPage(1); // ✅ reset phân trang khi đổi filter
+    setCurrentPage(1);
   };
 
   // Lọc
   const filtered = doctors.filter((d) => {
     const matchName = d.name
       .toLowerCase()
-      .includes(searchTrigger.toLowerCase()); // ✅ dùng searchTrigger
+      .includes(searchTrigger.toLowerCase());
     const matchDept =
       selectedCategories.length === 0 ||
       selectedCategories.includes(d.department);
@@ -380,14 +380,14 @@ export default function DoctorsBookingPage() {
             <button
               className="px-4 py-2 bg-white rounded-md font-medium hover:bg-gray-100"
               onClick={() => {
-                setSearchTrigger(searchTerm); // ✅ bấm mới lọc
+                setSearchTrigger(searchTerm);
                 setCurrentPage(1);
               }}
             >
               Tìm kiếm
             </button>
 
-            {/* ✅ Nút reset filter */}
+            {/* Nút reset filter */}
             <button
               className="p-2 bg-green-500 text-white rounded-md hover:bg-green-700 flex items-center justify-center"
               onClick={() => {
@@ -423,11 +423,10 @@ export default function DoctorsBookingPage() {
                       <button
                         key={cat}
                         onClick={() => toggleCategory(cat)}
-                        className={`px-3 py-2 rounded-lg border ${
-                          selectedCategories.includes(cat)
-                            ? "bg-green-500 border-green-600 text-white"
-                            : "bg-gray-100"
-                        }`}
+                        className={`px-3 py-2 rounded-lg border ${selectedCategories.includes(cat)
+                          ? "bg-green-500 border-green-600 text-white"
+                          : "bg-gray-100"
+                          }`}
                       >
                         {cat}
                       </button>
@@ -472,11 +471,10 @@ export default function DoctorsBookingPage() {
                           setPriceRange(p.value);
                           setCurrentPage(1);
                         }}
-                        className={`px-3 py-2 rounded-lg border ${
-                          priceRange === p.value
-                            ? "bg-green-500 border-green-600 text-white"
-                            : "bg-gray-100"
-                        }`}
+                        className={`px-3 py-2 rounded-lg border ${priceRange === p.value
+                          ? "bg-green-500 border-green-600 text-white"
+                          : "bg-gray-100"
+                          }`}
                       >
                         {p.label}
                       </button>
@@ -584,11 +582,10 @@ export default function DoctorsBookingPage() {
                               [doc.id]: time,
                             }))
                           }
-                          className={`border px-2 py-1 rounded ${
-                            selectedTimes[doc.id] === time
-                              ? "bg-green-500 text-white"
-                              : "hover:bg-green-100"
-                          }`}
+                          className={`border px-2 py-1 rounded ${selectedTimes[doc.id] === time
+                            ? "bg-green-500 text-white"
+                            : "hover:bg-green-100"
+                            }`}
                         >
                           {time}
                         </button>
@@ -682,11 +679,10 @@ export default function DoctorsBookingPage() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
+              className={`px-3 py-1 rounded ${currentPage === i + 1
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+                }`}
             >
               {i + 1}
             </button>
