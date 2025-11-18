@@ -135,7 +135,7 @@ export const bookAppointment = async (
   slotId: number,
   symptoms: string,
   file?: File
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("SlotID", slotId.toString());
   if (symptoms) formData.append("InitialSymptoms", symptoms);
@@ -147,7 +147,9 @@ export const bookAppointment = async (
   return response.data;
 };
 
-export const cancelAppointment = async (id: number): Promise<any> => {
+export const cancelAppointment = async (
+  id: number
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(
     `/appointments/${id}/cancel`,
     {},
@@ -184,7 +186,7 @@ export const doctorGetQueue = async (): Promise<Model.Appointment[]> => {
 export const doctorCreateSlot = async (
   start: string,
   end: string
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("StartTime", start);
   formData.append("EndTime", end);
@@ -202,7 +204,7 @@ export const doctorDeleteSlot = async (id: number): Promise<void> => {
 
 export const doctorCreateMedicalRecord = async (
   formData: FormData
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/doctor/medical-records", formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
@@ -213,7 +215,7 @@ export const doctorUploadResult = async (
   recordId: number,
   file: File,
   desc: string
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("description", desc);
@@ -238,7 +240,9 @@ export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
   return response.data;
 };
 
-export const confirmAppointment = async (id: number): Promise<any> => {
+export const confirmAppointment = async (
+  id: number
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(
     `/staff/appointments/${id}/confirm`,
     {},
@@ -247,7 +251,9 @@ export const confirmAppointment = async (id: number): Promise<any> => {
   return response.data;
 };
 
-export const checkInAppointment = async (id: number): Promise<any> => {
+export const checkInAppointment = async (
+  id: number
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(
     `/staff/appointments/${id}/check-in`,
     {},
@@ -263,7 +269,9 @@ export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
   return response.data;
 };
 
-export const adminCreateDoctor = async (formData: FormData): Promise<any> => {
+export const adminCreateDoctor = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/doctors", formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
@@ -274,7 +282,7 @@ export const adminCreateDoctor = async (formData: FormData): Promise<any> => {
 export const adminUpdateDoctor = async (
   id: number,
   formData: FormData
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/doctors/${id}`, formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
@@ -285,7 +293,7 @@ export const adminUpdateDoctor = async (
 export const adminUploadDoctorImage = async (
   id: number,
   file: File
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("imageURL", file);
   const response = await apiClient.post(
