@@ -130,186 +130,186 @@ export default function AdminDoctorsPage() {
       price: 400000,
       lastActive: "2024-01-05"
     },
-{
-  id: 6,
-  name: "Ngô Thị F",
-  position: "Bác sĩ nội trú",
-  department: "Nhi",
-  hospital: "Bệnh viện Nhi Đồng 1",
-  location: "Hồ Chí Minh",
-  status: "active",
-  appointments: 187,
-  revenue: 37400000,
-  rating: 4.7,
-  experience: "6 năm kinh nghiệm",
-  image: "/image/doctors/doctor6.jpg",
-  price: 200000,
-  lastActive: "2024-01-14"
-},
-{
-  id: 7,
-  name: "Vũ Văn G",
-  position: "Thạc sĩ, Bác sĩ chuyên khoa II",
-  department: "Da liễu",
-  hospital: "Bệnh viện Da Liễu Trung ương",
-  location: "Hà Nội",
-  status: "active",
-  appointments: 245,
-  revenue: 73500000,
-  rating: 4.8,
-  experience: "18 năm kinh nghiệm",
-  image: "/image/doctors/doctor7.jpg",
-  price: 300000,
-  lastActive: "2024-01-15"
-},
-{
-  id: 8,
-  name: "Bùi Thị H",
-  position: "Bác sĩ chuyên khoa II",
-  department: "Cơ Xương Khớp",
-  hospital: "Bệnh viện Bạch Mai",
-  location: "Hà Nội",
-  status: "on_leave",
-  appointments: 198,
-  revenue: 63360000,
-  rating: 4.9,
-  experience: "22 năm kinh nghiệm",
-  image: "/image/doctors/doctor8.jpg",
-  price: 320000,
-  lastActive: "2024-01-10"
-},
-{
-  id: 9,
-  name: "Đặng Văn I",
-  position: "Bác sĩ chuyên khoa I",
-  department: "Tiết niệu",
-  hospital: "Bệnh viện Việt Đức",
-  location: "Hà Nội",
-  status: "active",
-  appointments: 89,
-  revenue: 31150000,
-  rating: 4.5,
-  experience: "11 năm kinh nghiệm",
-  image: "/image/doctors/doctor9.jpg",
-  price: 350000,
-  lastActive: "2024-01-13"
-},
-{
-  id: 10,
-  name: "Phan Thị K",
-  position: "Bác sĩ chuyên khoa II",
-  department: "Mắt",
-  hospital: "Bệnh viện Mắt Trung ương",
-  location: "Hà Nội",
-  status: "active",
-  appointments: 167,
-  revenue: 61790000,
-  rating: 4.7,
-  experience: "16 năm kinh nghiệm",
-  image: "/image/doctors/doctor10.jpg",
-  price: 370000,
-  lastActive: "2024-01-15"
-},
-{
-  id: 11,
-  name: "Trương Văn L",
-  position: "Thạc sĩ",
-  department: "Truyền nhiễm",
-  hospital: "Bệnh viện Bệnh Nhiệt Đới",
-  location: "Hồ Chí Minh",
-  status: "active",
-  appointments: 134,
-  revenue: 37520000,
-  rating: 4.8,
-  experience: "14 năm kinh nghiệm",
-  image: "/image/doctors/doctor11.jpg",
-  price: 280000,
-  lastActive: "2024-01-15"
-},
-{
-  id: 12,
-  name: "Nguyễn Thị M",
-  position: "Bác sĩ chuyên khoa I",
-  department: "Thần kinh",
-  hospital: "Bệnh viện Chợ Rẫy",
-  location: "Hồ Chí Minh",
-  status: "inactive",
-  appointments: 76,
-  revenue: 22800000,
-  rating: 4.6,
-  experience: "9 năm kinh nghiệm",
-  image: "/image/doctors/doctor12.jpg",
-  price: 300000,
-  lastActive: "2024-01-08"
-},
-{
-  id: 13,
-  name: "Lý Văn N",
-  position: "TS.BS, Bác sĩ chuyên khoa II",
-  department: "Ung bướu",
-  hospital: "Bệnh viện K",
-  location: "Hà Nội",
-  status: "active",
-  appointments: 312,
-  revenue: 171600000,
-  rating: 4.9,
-  experience: "28 năm kinh nghiệm",
-  image: "/image/doctors/doctor13.jpg",
-  price: 550000,
-  lastActive: "2024-01-15"
-},
-{
-  id: 14,
-  name: "Phùng Thị O",
-  position: "Bác sĩ chuyên khoa I",
-  department: "Ngoại Tổng quát",
-  hospital: "Bệnh viện Đa khoa tỉnh Bắc Ninh",
-  location: "Bắc Ninh",
-  status: "active",
-  appointments: 123,
-  revenue: 31980000,
-  rating: 4.4,
-  experience: "13 năm kinh nghiệm",
-  image: "/image/doctors/doctor14.jpg",
-  price: 260000,
-  lastActive: "2024-01-14"
-},
-{
-  id: 15,
-  name: "Đỗ Văn P",
-  position: "Bác sĩ Gây mê hồi sức",
-  department: "Gây mê hồi sức",
-  hospital: "Bệnh viện Trung ương Huế",
-  location: "Huế",
-  status: "active",
-  appointments: 156,
-  revenue: 51480000,
-  rating: 4.7,
-  experience: "12 năm kinh nghiệm",
-  image: "/image/doctors/doctor15.jpg",
-  price: 330000,
-  lastActive: "2024-01-12"
-},
-{
-  id: 16,
-  name: "Hà Thị Q",
-  position: "Bác sĩ Chẩn đoán hình ảnh",
-  department: "Chẩn đoán hình ảnh",
-  hospital: "Bệnh viện Đa khoa Đà Nẵng",
-  location: "Đà Nẵng",
-  status: "active",
-  appointments: 98,
-  revenue: 23520000,
-  rating: 4.5,
-  experience: "8 năm kinh nghiệm",
-  image: "/image/doctors/doctor16.jpg",
-  price: 240000,
-  lastActive: "2024-01-15"
-}
+    {
+      id: 6,
+      name: "Ngô Thị F",
+      position: "Bác sĩ nội trú",
+      department: "Nhi",
+      hospital: "Bệnh viện Nhi Đồng 1",
+      location: "Hồ Chí Minh",
+      status: "active",
+      appointments: 187,
+      revenue: 37400000,
+      rating: 4.7,
+      experience: "6 năm kinh nghiệm",
+      image: "/image/doctors/doctor6.jpg",
+      price: 200000,
+      lastActive: "2024-01-14"
+    },
+    {
+      id: 7,
+      name: "Vũ Văn G",
+      position: "Thạc sĩ, Bác sĩ chuyên khoa II",
+      department: "Da liễu",
+      hospital: "Bệnh viện Da Liễu Trung ương",
+      location: "Hà Nội",
+      status: "active",
+      appointments: 245,
+      revenue: 73500000,
+      rating: 4.8,
+      experience: "18 năm kinh nghiệm",
+      image: "/image/doctors/doctor7.jpg",
+      price: 300000,
+      lastActive: "2024-01-15"
+    },
+    {
+      id: 8,
+      name: "Bùi Thị H",
+      position: "Bác sĩ chuyên khoa II",
+      department: "Cơ Xương Khớp",
+      hospital: "Bệnh viện Bạch Mai",
+      location: "Hà Nội",
+      status: "on_leave",
+      appointments: 198,
+      revenue: 63360000,
+      rating: 4.9,
+      experience: "22 năm kinh nghiệm",
+      image: "/image/doctors/doctor8.jpg",
+      price: 320000,
+      lastActive: "2024-01-10"
+    },
+    {
+      id: 9,
+      name: "Đặng Văn I",
+      position: "Bác sĩ chuyên khoa I",
+      department: "Tiết niệu",
+      hospital: "Bệnh viện Việt Đức",
+      location: "Hà Nội",
+      status: "active",
+      appointments: 89,
+      revenue: 31150000,
+      rating: 4.5,
+      experience: "11 năm kinh nghiệm",
+      image: "/image/doctors/doctor9.jpg",
+      price: 350000,
+      lastActive: "2024-01-13"
+    },
+    {
+      id: 10,
+      name: "Phan Thị K",
+      position: "Bác sĩ chuyên khoa II",
+      department: "Mắt",
+      hospital: "Bệnh viện Mắt Trung ương",
+      location: "Hà Nội",
+      status: "active",
+      appointments: 167,
+      revenue: 61790000,
+      rating: 4.7,
+      experience: "16 năm kinh nghiệm",
+      image: "/image/doctors/doctor10.jpg",
+      price: 370000,
+      lastActive: "2024-01-15"
+    },
+    {
+      id: 11,
+      name: "Trương Văn L",
+      position: "Thạc sĩ",
+      department: "Truyền nhiễm",
+      hospital: "Bệnh viện Bệnh Nhiệt Đới",
+      location: "Hồ Chí Minh",
+      status: "active",
+      appointments: 134,
+      revenue: 37520000,
+      rating: 4.8,
+      experience: "14 năm kinh nghiệm",
+      image: "/image/doctors/doctor11.jpg",
+      price: 280000,
+      lastActive: "2024-01-15"
+    },
+    {
+      id: 12,
+      name: "Nguyễn Thị M",
+      position: "Bác sĩ chuyên khoa I",
+      department: "Thần kinh",
+      hospital: "Bệnh viện Chợ Rẫy",
+      location: "Hồ Chí Minh",
+      status: "inactive",
+      appointments: 76,
+      revenue: 22800000,
+      rating: 4.6,
+      experience: "9 năm kinh nghiệm",
+      image: "/image/doctors/doctor12.jpg",
+      price: 300000,
+      lastActive: "2024-01-08"
+    },
+    {
+      id: 13,
+      name: "Lý Văn N",
+      position: "TS.BS, Bác sĩ chuyên khoa II",
+      department: "Ung bướu",
+      hospital: "Bệnh viện K",
+      location: "Hà Nội",
+      status: "active",
+      appointments: 312,
+      revenue: 171600000,
+      rating: 4.9,
+      experience: "28 năm kinh nghiệm",
+      image: "/image/doctors/doctor13.jpg",
+      price: 550000,
+      lastActive: "2024-01-15"
+    },
+    {
+      id: 14,
+      name: "Phùng Thị O",
+      position: "Bác sĩ chuyên khoa I",
+      department: "Ngoại Tổng quát",
+      hospital: "Bệnh viện Đa khoa tỉnh Bắc Ninh",
+      location: "Bắc Ninh",
+      status: "active",
+      appointments: 123,
+      revenue: 31980000,
+      rating: 4.4,
+      experience: "13 năm kinh nghiệm",
+      image: "/image/doctors/doctor14.jpg",
+      price: 260000,
+      lastActive: "2024-01-14"
+    },
+    {
+      id: 15,
+      name: "Đỗ Văn P",
+      position: "Bác sĩ Gây mê hồi sức",
+      department: "Gây mê hồi sức",
+      hospital: "Bệnh viện Trung ương Huế",
+      location: "Huế",
+      status: "active",
+      appointments: 156,
+      revenue: 51480000,
+      rating: 4.7,
+      experience: "12 năm kinh nghiệm",
+      image: "/image/doctors/doctor15.jpg",
+      price: 330000,
+      lastActive: "2024-01-12"
+    },
+    {
+      id: 16,
+      name: "Hà Thị Q",
+      position: "Bác sĩ Chẩn đoán hình ảnh",
+      department: "Chẩn đoán hình ảnh",
+      hospital: "Bệnh viện Đa khoa Đà Nẵng",
+      location: "Đà Nẵng",
+      status: "active",
+      appointments: 98,
+      revenue: 23520000,
+      rating: 4.5,
+      experience: "8 năm kinh nghiệm",
+      image: "/image/doctors/doctor16.jpg",
+      price: 240000,
+      lastActive: "2024-01-15"
+    }
 
   ];
 
-const filteredDoctors = useMemo(() => {
+  const filteredDoctors = useMemo(() => {
     return doctors.filter((doctor) => {
       const matchesSearch =
         doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -585,41 +585,40 @@ const filteredDoctors = useMemo(() => {
             </div>
 
             <div className="mt-6 border-t pt-4 flex items-center justify-center gap-4">
-  <div className="flex items-center gap-2">
-    <button
-      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-      disabled={currentPage === 1}
-      className="p-2 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
-    >
-      <ChevronLeft className="w-4 h-4" />
-    </button>
-    <div className="flex gap-2">
-      {Array.from({ length: totalPages }).map((_, i) => {
-        const page = i + 1
-        return (
-          <button
-            key={page}
-            onClick={() => setCurrentPage(page)}
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
-              page === currentPage
-                ? "bg-blue-600 text-white shadow-md"
-                : "border border-slate-200 text-slate-700 hover:bg-slate-50"
-            }`}
-          >
-            {page}
-          </button>
-        )
-      })}
-    </div>
-    <button
-      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-      disabled={currentPage === totalPages}
-      className="p-2 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
-    >
-      <ChevronRight className="w-4 h-4" />
-    </button>
-  </div>
-</div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const page = i + 1
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${page === currentPage
+                            ? "bg-blue-600 text-white shadow-md"
+                            : "border border-slate-200 text-slate-700 hover:bg-slate-50"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </main>
       </div>
