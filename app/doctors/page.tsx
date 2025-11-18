@@ -423,10 +423,11 @@ export default function DoctorsBookingPage() {
                       <button
                         key={cat}
                         onClick={() => toggleCategory(cat)}
-                        className={`px-3 py-2 rounded-lg border ${selectedCategories.includes(cat)
-                          ? "bg-green-500 border-green-600 text-white"
-                          : "bg-gray-100"
-                          }`}
+                        className={`px-3 py-2 rounded-lg border ${
+                          selectedCategories.includes(cat)
+                            ? "bg-green-500 border-green-600 text-white"
+                            : "bg-gray-100"
+                        }`}
                       >
                         {cat}
                       </button>
@@ -471,10 +472,11 @@ export default function DoctorsBookingPage() {
                           setPriceRange(p.value);
                           setCurrentPage(1);
                         }}
-                        className={`px-3 py-2 rounded-lg border ${priceRange === p.value
-                          ? "bg-green-500 border-green-600 text-white"
-                          : "bg-gray-100"
-                          }`}
+                        className={`px-3 py-2 rounded-lg border ${
+                          priceRange === p.value
+                            ? "bg-green-500 border-green-600 text-white"
+                            : "bg-gray-100"
+                        }`}
                       >
                         {p.label}
                       </button>
@@ -582,10 +584,11 @@ export default function DoctorsBookingPage() {
                               [doc.id]: time,
                             }))
                           }
-                          className={`border px-2 py-1 rounded ${selectedTimes[doc.id] === time
-                            ? "bg-green-500 text-white"
-                            : "hover:bg-green-100"
-                            }`}
+                          className={`border px-2 py-1 rounded ${
+                            selectedTimes[doc.id] === time
+                              ? "bg-green-500 text-white"
+                              : "hover:bg-green-100"
+                          }`}
                         >
                           {time}
                         </button>
@@ -679,10 +682,11 @@ export default function DoctorsBookingPage() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${currentPage === i + 1
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-                }`}
+              className={`px-3 py-1 rounded ${
+                currentPage === i + 1
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
             >
               {i + 1}
             </button>
