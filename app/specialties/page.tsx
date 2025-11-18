@@ -96,7 +96,7 @@ export default function HospitalPage() {
                             <div className="flex-1 flex flex-col justify-center">
                                 <h2 className="text-4xl font-bold mb-6">Giới thiệu về các khoa</h2>
                                 <p className="text-gray-700 mb-6 leading-relaxed">
-                                    Trải qua hơn 20 năm phát triển không ngừng, Bệnh viện Hồng Ngọc đã
+                                    Trải qua hơn 20 năm phát triển không ngừng, Bệnh viện HUNRE đã
                                     khẳng định vị thế là địa chỉ y tế tin cậy của hàng triệu khách hàng.
                                     Với hệ thống 25 chuyên khoa chất lượng cao, Hồng Ngọc đáp ứng mọi nhu
                                     cầu khám chữa bệnh cho mọi độ tuổi.
@@ -141,7 +141,7 @@ export default function HospitalPage() {
                         <div className="flex-1 max-w-md space-y-4">
                             <h2 className="text-3xl font-bold">Thư viện</h2>
                             <p>
-                                Thăm khám và điều trị tại Bệnh viện Đa khoa Hồng Ngọc, khách hàng sẽ
+                                Thăm khám và điều trị tại Bệnh viện Đa khoa HUNRE, khách hàng sẽ
                                 được trải nghiệm các dịch vụ chăm sóc sức khỏe chất lượng cao đạt tiêu
                                 chuẩn quốc tế.
                             </p>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200">
+  <!-- trái tim -->
+  <path d="M150,80 C150,40 210,40 210,80 C210,40 270,40 270,80 C270,120 210,160 210,160 C210,160 150,120 150,80Z" fill="#0B86C9"></path>
+  <!-- lá mọc từ tim -->
+  <path d="M230,50 C260,30 300,60 280,100 C260,140 220,120 230,50Z" fill="#0D6E3D"></path>
+  <path d="M240,60 C250,70 250,90 240,110" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"></path>
+  
+  <!-- text -->
+  <text x="320" y="95" font-family="Montserrat, sans-serif" font-size="60" font-weight="700" fill="#0D6E3D">HUNRE</text>
+  <text x="320" y="135" font-family="Montserrat, sans-serif" font-size="22" fill="#555">Hospital of Natural Resources</text>
+</svg>

@@ -78,7 +78,7 @@ export default function Header() {
           />
         </div>
 
-        {/* Search (giữ bản của bạn) */}
+        {/* Search */}
         <div className="flex justify-end w-full mx-auto">
           <div className="relative w-5/6">
             <Input

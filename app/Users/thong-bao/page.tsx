@@ -118,33 +118,30 @@ export default function ThongBao() {
           <Button
             variant={filter === "all" ? "default" : "outline"}
             onClick={() => setFilter("all")}
-            className={`${
-              filter === "all"
+            className={`${filter === "all"
                 ? "bg-green-600 text-white hover:bg-green-700"
                 : "border-green-600 text-green-700 hover:bg-green-50"
-            }`}
+              }`}
           >
             Tất cả
           </Button>
           <Button
             variant={filter === "unread" ? "default" : "outline"}
             onClick={() => setFilter("unread")}
-            className={`${
-              filter === "unread"
+            className={`${filter === "unread"
                 ? "bg-green-600 text-white hover:bg-green-700"
                 : "border-green-600 text-green-700 hover:bg-green-50"
-            }`}
+              }`}
           >
             Chưa đọc
           </Button>
           <Button
             variant={filter === "important" ? "default" : "outline"}
             onClick={() => setFilter("important")}
-            className={`flex items-center gap-1 ${
-              filter === "important"
+            className={`flex items-center gap-1 ${filter === "important"
                 ? "bg-green-600 text-white hover:bg-green-700"
                 : "border-green-600 text-green-700 hover:bg-green-50"
-            }`}
+              }`}
           >
             <AlertTriangle className="w-4 h-4" />
             Quan trọng
@@ -191,7 +188,7 @@ export default function ThongBao() {
                       setSelected(n);
                       markAsRead(n.id);
                     }}
-                    //   className="text-green-700 border-green-600 hover:bg-green-50"   //màu cái mắt xem chi tiết
+                  //   className="text-green-700 border-green-600 hover:bg-green-50"   //màu cái mắt xem chi tiết
                   >
                     <Eye className="w-4 h-4 mr-1" />
                     Xem
@@ -238,13 +235,12 @@ export default function ThongBao() {
                 <p>
                   <span className="font-medium">Mức độ:</span>{" "}
                   <span
-                    className={`px-2 py-1 rounded-md text-xs font-medium ${
-                      selected.severity === "Nghiêm trọng"
+                    className={`px-2 py-1 rounded-md text-xs font-medium ${selected.severity === "Nghiêm trọng"
                         ? "bg-red-100 text-red-700"
                         : selected.severity === "Trung bình"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
                   >
                     {selected.severity}
                   </span>

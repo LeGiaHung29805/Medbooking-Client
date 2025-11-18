@@ -32,25 +32,25 @@ export default function Header() {
     return (
         <header className="w-full bg-white">
             <div className="w-full border-b">
-                <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
+                <div className="container mx-auto grid grid-cols-3 items-center py-4 px-6 gap-4">
                     {/* Logo */}
-                    <div className="flex items-center space-x-3">
+                    <Link href="/" className="flex justify-start">
                         <Image
-                            src="/image/HUNRE_Logo.png"
-                            alt="Bệnh viện Bạch Mai"
-                            width={100}
-                            height={50}
-                            className="object-contain"
+                            src="/image/HUNRE_LOGO.svg"
+                            alt="Bệnh viện HUNRE"
+                            width={400}
+                            height={150}
+                        // className="h-16 w-auto object-contain"
                         />
-                    </div>
+                    </Link>
 
                     {/* Banner */}
                     <div className="flex justify-center">
                         <Image
                             src="/image/vi-suc-khoe-toan-dan.jpg"
                             alt="Vì sức khoẻ nhân dân"
-                            width={260}
-                            height={80}
+                            width={400}
+                            height={50}
                             className="object-contain"
                         />
                     </div>
@@ -81,7 +81,7 @@ export default function Header() {
 
                             <button className="flex items-center space-x-1 hover:underline">
                                 <Image
-                                    src="/flags/en.png"
+                                    src="/image/lang_en.png"
                                     alt="English"
                                     width={20}
                                     height={20}

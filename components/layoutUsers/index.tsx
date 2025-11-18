@@ -31,9 +31,9 @@ type LayoutUserProps = {
 export default function LayoutUser({ children, user }: LayoutUserProps) {
     // Nếu không có user, dùng dữ liệu mặc định
     const displayUser: User = user || {
-        name: "Khách",
+        name: "Lê Gia Hưng",
         gender: "Nam",
-        dob: "01/01/2000",
+        dob: "29/01/2000",
         avatarUrl: "/default-avatar.png",
     };
 

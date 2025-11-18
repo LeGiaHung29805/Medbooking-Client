@@ -3,10 +3,12 @@
 import Link from "next/link";
 
 const cards = [
-    { title: "Banner", href: "/admin/banner" },
-    { title: "Thương hiệu", href: "/admin/brand" },
-    { title: "Danh mục", href: "/admin/category" },
-    { title: "Sản phẩm", href: "/admin/product" },
+    { title: "Quản lí người dùng", href: "/admin/users" },
+    { title: "Quản lí bác sĩ", href: "/admin/doctor" },
+    { title: "Quản lí chuyên khoa", href: "/admin/specialties" },
+    { title: "Quản lí dịch vụ khám", href: "/admin/services" },
+    { title: "Quản lí hồ sơ bệnh án", href: "/admin/medicalrecord" },
+    { title: "Quản lí thống kê báo cáo", href: "/admin/manager" },
 ];
 
 export default function AdminPage() {

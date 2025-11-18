@@ -333,14 +333,14 @@ export default function DoctorsBookingPage() {
     } else {
       setSelectedCategories([...selectedCategories, cat]);
     }
-    setCurrentPage(1); // ✅ reset phân trang khi đổi filter
+    setCurrentPage(1);
   };
 
   // Lọc
   const filtered = doctors.filter((d) => {
     const matchName = d.name
       .toLowerCase()
-      .includes(searchTrigger.toLowerCase()); // ✅ dùng searchTrigger
+      .includes(searchTrigger.toLowerCase());
     const matchDept =
       selectedCategories.length === 0 ||
       selectedCategories.includes(d.department);
@@ -380,14 +380,14 @@ export default function DoctorsBookingPage() {
             <button
               className="px-4 py-2 bg-white rounded-md font-medium hover:bg-gray-100"
               onClick={() => {
-                setSearchTrigger(searchTerm); // ✅ bấm mới lọc
+                setSearchTrigger(searchTerm);
                 setCurrentPage(1);
               }}
             >
               Tìm kiếm
             </button>
 
-            {/* ✅ Nút reset filter */}
+            {/* Nút reset filter */}
             <button
               className="p-2 bg-green-500 text-white rounded-md hover:bg-green-700 flex items-center justify-center"
               onClick={() => {

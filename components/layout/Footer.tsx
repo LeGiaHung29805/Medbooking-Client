@@ -1,6 +1,8 @@
 
 import Image from "next/image";
 import { FaFacebookF, FaYoutube, FaTiktok } from "react-icons/fa";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 export default function Footer() {
     return (
@@ -8,10 +10,10 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
                     <Image
-                        src="/image/HUNRE_Logo.png"
+                        src="/image/HUNRE_LOGO.svg"
                         alt="Bệnh viện HUNRE"
-                        width={160}
-                        height={64}
+                        width={400}
+                        height={150}
                         className="mb-4 object-contain"
                     />
                     <p className="text-sm font-semibold">CÔNG TY TNHH TỔ HỢP Y TẾ</p>
@@ -47,17 +49,17 @@ export default function Footer() {
                 <div>
                     <h3 className="font-bold mb-2">Đăng ký nhận ưu đãi</h3>
                     <form className="flex">
-                        <input
+                        <Input
                             type="email"
                             placeholder="Nhập email"
                             className="flex-1 px-3 py-2 border rounded-l-lg focus:outline-none"
                         />
-                        <button
+                        <Button
                             type="submit"
                             className="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700"
                         >
                             Gửi
-                        </button>
+                        </Button>
                     </form>
                 </div>
             </div>

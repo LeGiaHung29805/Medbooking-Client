@@ -17,22 +17,28 @@ export default function Header() {
         <header className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-md sticky top-0 z-50">
             <div className="max-w-8xl mx-auto flex justify-between items-center p-4">
                 <Link href="/" className="hover:opacity-60">
-                    <h1 className="text-xl font-bold">Minh Quân Store</h1>
+                    <h1 className="text-xl font-bold">HUNRE Hospital</h1>
                 </Link>
                 <div className="flex items-center space-x-6">
                     <Link href="/admin" className="hover:opacity-80">
                         Admin
-                    </Link> <Link href="/admin/banner" className="hover:opacity-80">
-                        Banner
+                    </Link> <Link href="/admin/users" className="hover:opacity-80">
+                        Quản lí người dùng
                     </Link>
-                    <Link href="/admin/brand" className="hover:opacity-80">
-                        Thương hiệu
+                    <Link href="/admin/doctor" className="hover:opacity-80">
+                        Quản lí bác sĩ
                     </Link>
-                    <Link href="/admin/category" className="hover:opacity-80">
-                        Danh mục
+                    <Link href="/admin/specialties" className="hover:opacity-80">
+                        Quản lí chuyên khoa
                     </Link>
-                    <Link href="/admin/product" className="hover:opacity-80">
-                        Sản phẩm
+                    <Link href="/admin/services" className="hover:opacity-80">
+                        Quản lí dịch vụ khám
+                    </Link>
+                    <Link href="/admin/medicalrecord" className="hover:opacity-80">
+                        Quản lí hồ sơ bệnh án
+                    </Link>
+                    <Link href="/admin/manager" className="hover:opacity-80">
+                        Quản lí thống kê - báo cáo
                     </Link>
                 </div>
             </div>
