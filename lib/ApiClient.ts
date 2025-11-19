@@ -305,3 +305,138 @@ export const adminUploadDoctorImage = async (
   );
   return response.data;
 };
+export const adminDeleteDoctor = async (id: number): Promise<void> => {
+  await apiClient.delete(`/admin/doctors/${id}`, {
+    headers: getAuthHeaders(),
+  });
+};
+// ==========================================
+// === 6. CÁC API BỔ SUNG (CHO ADMIN & TRA CỨU) ===
+// ==========================================
+
+// --- Quản lý Tài khoản (Admin) ---
+export const adminGetUsers = async (
+  role?: string,
+  search?: string
+): Promise<Model.User[]> => {
+  const params = { role, search };
+  const response = await apiClient.get("/admin/users", {
+    headers: getAuthHeaders(),
+    params,
+  });
+  return response.data;
+};
+
+export const adminUpdateUser = async (
+  id: number,
+  data: { Role?: string; Status?: string }
+): Promise<any> => {
+  // Dùng POST + _method: PUT
+  const formData = new FormData();
+  formData.append("_method", "PUT");
+  if (data.Role) formData.append("Role", data.Role);
+  if (data.Status) formData.append("Status", data.Status);
+  // (Cần gửi thêm FullName, Username... nếu Backend yêu cầu required,
+  // hoặc sửa Backend để nullable. Tạm thời giả định Admin chỉ sửa Role/Status)
+
+  // Lưu ý: API update user hiện tại của chúng ta yêu cầu FullName...
+  // Nếu chỉ sửa Role, Frontend cần gửi lại cả thông tin cũ.
+
+  const response = await apiClient.post(`/admin/users/${id}`, formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// --- Quản lý Chuyên khoa (Admin) ---
+export const adminCreateSpecialty = async (
+  formData: FormData
+): Promise<any> => {
+  const response = await apiClient.post("/admin/specialties", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const adminUpdateSpecialty = async (
+  id: number,
+  formData: FormData
+): Promise<any> => {
+  formData.append("_method", "PUT");
+  const response = await apiClient.post(`/admin/specialties/${id}`, formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const adminDeleteSpecialty = async (id: number): Promise<void> => {
+  await apiClient.delete(`/admin/specialties/${id}`, {
+    headers: getAuthHeaders(),
+  });
+};
+
+// --- Quản lý Dịch vụ (Admin) ---
+export const adminCreateService = async (formData: FormData): Promise<any> => {
+  const response = await apiClient.post("/admin/services", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const adminDeleteService = async (id: number): Promise<void> => {
+  await apiClient.delete(`/admin/services/${id}`, {
+    headers: getAuthHeaders(),
+  });
+};
+
+// --- Tra cứu & Lịch sử (Bác sĩ / Admin) ---
+export const getDoctorMyMedicalRecords = async (): Promise<
+  Model.MedicalRecord[]
+> => {
+  const response = await apiClient.get("/doctor/my-medical-records", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const getPatientHistory = async (
+  patientId: number
+): Promise<Model.MedicalRecord[]> => {
+  const response = await apiClient.get(`/doctor/patient-history/${patientId}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
+  const response = await apiClient.get("/admin/feedbacks", {
+    headers: getAuthHeaders(),
+  }); // Admin/Staff dùng chung
+  return response.data;
+};
+
+export const getAllMedicalRecords = async (
+  patientId?: number
+): Promise<Model.MedicalRecord[]> => {
+  const params = patientId ? { patient_id: patientId } : {};
+  const response = await apiClient.get("/admin/medical-records", {
+    headers: getAuthHeaders(),
+    params,
+  });
+  return response.data;
+};
+
+export const getMedicalRecordDetail = async (
+  id: number
+): Promise<Model.MedicalRecord> => {
+  const response = await apiClient.get(`/admin/medical-records/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const adminDeleteMedicalRecord = async (id: number): Promise<void> => {
+  await apiClient.delete(`/admin/medical-records/${id}`, {
+    headers: getAuthHeaders(),
+  });
+};
