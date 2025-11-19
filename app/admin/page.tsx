@@ -1,27 +1,38 @@
 "use client";
 
 import Link from "next/link";
-
+import { FaUserMd, FaHospital, FaUsers, FaClipboardList, FaDollarSign, FaStar, FaCog, FaChartLine } from 'react-icons/fa';
 const cards = [
-    { title: "Quản lí người dùng", href: "/admin/users" },
-    { title: "Quản lí bác sĩ", href: "/admin/doctor" },
-    { title: "Quản lí chuyên khoa", href: "/admin/specialties" },
-    { title: "Quản lí dịch vụ khám", href: "/admin/services" },
-    { title: "Quản lí hồ sơ bệnh án", href: "/admin/medicalrecord" },
-    { title: "Quản lí thống kê báo cáo", href: "/admin/manager" },
+    { title: "Quản lí Tài khoản", href: "/admin/users", icon: FaUsers, description: "Tạo, sửa, vô hiệu hóa tài khoản bác sĩ, nhân viên và bệnh nhân." },
+    { title: "Quản lí Bác sĩ", href: "/admin/doctor", icon: FaUserMd, description: "Quản lí hồ sơ, bằng cấp, và phân công chuyên khoa cho bác sĩ." },
+
+    { title: "Quản lí Chuyên khoa", href: "/admin/specialties", icon: FaHospital, description: "Thêm, sửa, xóa các khoa/bộ phận trong phòng khám." },
+    { title: "Quản lí Dịch vụ & Giá", href: "/admin/services", icon: FaDollarSign, description: "Thiết lập danh sách dịch vụ, giá tiền, và thời gian khám." },
+
+    { title: "Quản lí Phản hồi & Đánh giá", href: "/admin/feedbacks", icon: FaStar, description: "Duyệt, ẩn hoặc xóa các đánh giá của bệnh nhân." },
+    { title: "Quản lí Lịch hẹn Chung", href: "/admin/appointments", icon: FaClipboardList, description: "Giám sát tất cả các cuộc hẹn để giải quyết tranh chấp." },
+
+    { title: "Cài đặt Phòng khám", href: "/admin/settings", icon: FaCog, description: "Cập nhật thông tin, logo, và địa chỉ phòng khám." },
+
 ];
 
 export default function AdminPage() {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="grid grid-cols-2 gap-6">
+        <main className="min-h-screen bg-gray-50 p-8">
+            <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">Cổng Quản Trị Hệ Thống</h1>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {cards.map((card, index) => (
                     <Link
                         key={index}
                         href={card.href}
-                        className="flex h-40 w-60 items-center justify-center rounded-2xl bg-white shadow-lg hover:shadow-2xl hover:scale-105 transition-transform duration-300"
+                        className="flex flex-col items-start p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-transform duration-300 border-t-4 border-blue-600 group"
                     >
-                        <span className="text-xl font-semibold">{card.title}</span>
+                        <div className="flex items-center mb-3">
+                            <card.icon className="w-6 h-6 mr-3 text-blue-600 group-hover:text-blue-700" />
+                            <span className="text-xl font-bold text-gray-800">{card.title}</span>
+                        </div>
+                        <p className="text-sm text-gray-500">{card.description}</p>
                     </Link>
                 ))}
             </div>
