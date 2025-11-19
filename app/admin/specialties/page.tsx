@@ -2,10 +2,16 @@
 
 import React, { useState, useMemo } from 'react';
 
+// ===============================================
+// 1. INTERFACE & MOCK DATA
+// ===============================================
+
+// KHỚP DB: SpecialtyID, SpecialtyName, Description, ImageURL
 interface Specialty {
     SpecialtyID: number;
     SpecialtyName: string;
     Description: string;
+    ImageURL?: string; // KHỚP DB: Thêm Link ảnh
 }
 
 interface SpecialtyFormProps {
@@ -14,20 +20,26 @@ interface SpecialtyFormProps {
     onSuccess: (updatedSpecialty: Specialty) => void;
 }
 
+// Dữ liệu giả lập (Đã thêm ImageURL)
 const INITIAL_SPECIALTIES: Specialty[] = [
-    { SpecialtyID: 1, SpecialtyName: 'Nội Tổng Quát', Description: 'Khám và điều trị các bệnh lý nội khoa thông thường.' },
-    { SpecialtyID: 2, SpecialtyName: 'Da Liễu', Description: 'Chẩn đoán và điều trị các bệnh về da, tóc, móng và thẩm mỹ da.' },
-    { SpecialtyID: 3, SpecialtyName: 'Tim Mạch', Description: 'Chẩn đoán, điều trị và phòng ngừa các bệnh tim và mạch máu.' },
-    { SpecialtyID: 4, SpecialtyName: 'Răng Hàm Mặt', Description: 'Khám, chữa các bệnh về răng, miệng, hàm và vùng mặt.' },
-    { SpecialtyID: 5, SpecialtyName: 'Sản Phụ Khoa', Description: 'Chăm sóc sức khỏe phụ nữ, thai sản và sinh sản.' },
-    { SpecialtyID: 6, SpecialtyName: 'Nhi Khoa', Description: 'Chăm sóc sức khỏe trẻ em và thanh thiếu niên.' },
+    { SpecialtyID: 1, SpecialtyName: 'Nội Tổng Quát', Description: 'Khám và điều trị các bệnh lý nội khoa thông thường.', ImageURL: 'https://placehold.co/40x40/4CAF50/FFFFFF?text=NTQ' },
+    { SpecialtyID: 2, SpecialtyName: 'Da Liễu', Description: 'Chẩn đoán và điều trị các bệnh về da, tóc, móng và thẩm mỹ da.', ImageURL: 'https://placehold.co/40x40/FF3B30/FFFFFF?text=DL' },
+    { SpecialtyID: 3, SpecialtyName: 'Tim Mạch', Description: 'Chẩn đoán, điều trị và phòng ngừa các bệnh tim và mạch máu.', ImageURL: 'https://placehold.co/40x40/007AFF/FFFFFF?text=TM' },
+    { SpecialtyID: 4, SpecialtyName: 'Răng Hàm Mặt', Description: 'Khám, chữa các bệnh về răng, miệng, hàm và vùng mặt.', ImageURL: 'https://placehold.co/40x40/FF9500/FFFFFF?text=RHM' },
+    { SpecialtyID: 5, SpecialtyName: 'Sản Phụ Khoa', Description: 'Chăm sóc sức khỏe phụ nữ, thai sản và sinh sản.', ImageURL: 'https://placehold.co/40x40/5856D6/FFFFFF?text=SPK' },
+    { SpecialtyID: 6, SpecialtyName: 'Nhi Khoa', Description: 'Chăm sóc sức khỏe trẻ em và thanh thiếu niên.', ImageURL: 'https://placehold.co/40x40/A2845E/FFFFFF?text=NK' },
 ];
+
+// ===============================================
+// 2. MODAL THÊM/SỬA CHUYÊN KHOA (ĐÃ GỘP VÀO)
+// ===============================================
 
 const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({ specialty, onClose, onSuccess }) => {
     const isEdit = !!specialty;
     const [formData, setFormData] = useState({
         SpecialtyName: specialty?.SpecialtyName || '',
         Description: specialty?.Description || '',
+        ImageURL: specialty?.ImageURL || '', // KHỚP DB: ImageURL
     });
     const [loading, setLoading] = useState(false);
 
@@ -40,25 +52,27 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({ specialty, onClose, 
         e.preventDefault();
         setLoading(true);
 
-
+        // Simulate API call (thay thế cho việc gọi ApiClient)
         await new Promise(resolve => setTimeout(resolve, 800));
 
         const updatedSpecialty: Specialty = {
             ...specialty,
-            SpecialtyID: specialty?.SpecialtyID || Date.now(),
+            SpecialtyID: specialty?.SpecialtyID || Date.now(), // Tạo ID mới nếu là tạo mới
             SpecialtyName: formData.SpecialtyName,
             Description: formData.Description,
+            ImageURL: formData.ImageURL, // LƯU DB
         };
 
         console.log(isEdit ? "Cập nhật chuyên khoa:" : "Tạo chuyên khoa:", updatedSpecialty);
-
+        // Logic gọi API: if (isEdit) ApiClient.adminUpdateSpecialty(...) else ApiClient.adminCreateSpecialty(...)
 
         setLoading(false);
         onClose();
-        onSuccess(updatedSpecialty);
+        onSuccess(updatedSpecialty); // Truyền dữ liệu mới về component cha
     };
 
     return (
+        // Modal Backdrop: Sử dụng opacity thấp để nhìn thấy nội dung phía sau
         <div className="fixed inset-0 bg-gray-400 bg-opacity-30 flex justify-center items-center z-50 p-4">
             <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
                 <div className="flex justify-between items-center mb-4 border-b pb-2">
@@ -83,6 +97,27 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({ specialty, onClose, 
                                 required
                                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                             />
+                        </div>
+
+                        {/* Link Ảnh (ImageURL) - KHỚP DB */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Link Ảnh Minh Họa (ImageURL)</label>
+                            <input
+                                type="url"
+                                name="ImageURL"
+                                value={formData.ImageURL}
+                                onChange={handleChange}
+                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                placeholder='VD: https://placehold.co/40x40/007AFF/FFFFFF?text=ICON'
+                            />
+                            {formData.ImageURL && (
+                                <img
+                                    src={formData.ImageURL}
+                                    alt="Preview"
+                                    className='w-12 h-12 rounded-full object-cover mt-2 border border-gray-200'
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/40x40/FEE2E2/000?text=Loi'; }}
+                                />
+                            )}
                         </div>
 
                         {/* Mô tả */}
@@ -218,6 +253,7 @@ export default function SpecialtyManagementPage() {
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">ID</th>
+                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">Ảnh</th> {/* KHỚP DB: Cột Ảnh */}
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/4">Tên Chuyên khoa</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-auto">Mô tả</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Hành động</th>
@@ -227,6 +263,15 @@ export default function SpecialtyManagementPage() {
                             {filteredSpecialties.map((specialty) => (
                                 <tr key={specialty.SpecialtyID} className="hover:bg-gray-50">
                                     <td className="py-3 px-4 text-sm text-gray-700 font-semibold">{specialty.SpecialtyID}</td>
+                                    {/* Cột Ảnh */}
+                                    <td className="py-3 px-4 text-sm text-gray-700">
+                                        <img
+                                            src={specialty.ImageURL || 'https://placehold.co/40x40/E0E0E0/000?text=CK'}
+                                            alt={specialty.SpecialtyName}
+                                            className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/40x40/E0E0E0/000?text=CK'; }}
+                                        />
+                                    </td>
                                     <td className="py-3 px-4 text-sm text-gray-800 font-medium">{specialty.SpecialtyName}</td>
                                     <td className="py-3 px-4 text-sm text-gray-600">{specialty.Description}</td>
                                     <td className="py-3 px-4 text-sm flex space-x-2">
@@ -249,7 +294,7 @@ export default function SpecialtyManagementPage() {
                             ))}
                             {filteredSpecialties.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="py-8 text-center text-gray-500">
                                         Không tìm thấy chuyên khoa nào.
                                     </td>
                                 </tr>

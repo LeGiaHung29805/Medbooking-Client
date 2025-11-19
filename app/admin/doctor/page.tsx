@@ -2,6 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 
+// ===============================================
+// 1. INTERFACE & MOCK DATA
+// ===============================================
 
 interface Specialty {
     id: number;
@@ -19,6 +22,7 @@ interface DoctorUser {
     Degree: string;
     YearsOfExperience: number;
     ProfileDescription: string;
+    ImageURL?: string; // Link ảnh
 }
 
 interface DoctorFormProps {
@@ -31,6 +35,7 @@ interface DoctorFormProps {
 const DOCTORS_PER_PAGE = 10;
 const STATUSES = ['Active', 'Inactive'];
 
+// Dữ liệu giả lập Chuyên khoa
 const MOCK_SPECIALTIES: Specialty[] = [
     { id: 1, name: 'Nội Tổng Quát' },
     { id: 2, name: 'Da Liễu' },
@@ -38,24 +43,17 @@ const MOCK_SPECIALTIES: Specialty[] = [
     { id: 4, name: 'Răng Hàm Mặt' },
 ];
 
-// Dữ liệu giả lập Bác sĩ
+// Dữ liệu giả lập Bác sĩ (Đã thêm ImageURL)
 const INITIAL_DOCTORS: DoctorUser[] = [
-    { UserID: 201, FullName: 'Trần Thị B (Nội)', Email: 'dr.b@hunre.com', PhoneNumber: '0912345679', Status: 'Active', SpecialtyID: 1, Degree: 'Thạc sĩ', YearsOfExperience: 15, ProfileDescription: 'Chuyên gia khám và chữa trị các bệnh nội khoa cấp tính.' },
-    { UserID: 202, FullName: 'Hoàng Văn E (Da Liễu)', Email: 'dr.e@hunre.com', PhoneNumber: '0912345682', Status: 'Inactive', SpecialtyID: 2, Degree: 'Tiến sĩ', YearsOfExperience: 8, ProfileDescription: 'Có kinh nghiệm lâu năm trong điều trị mụn trứng cá và các bệnh tự miễn.' },
-    { UserID: 203, FullName: 'Lý Văn I (Tim Mạch)', Email: 'dr.i@hunre.com', PhoneNumber: '0912345686', Status: 'Active', SpecialtyID: 3, Degree: 'Bác sĩ CKII', YearsOfExperience: 22, ProfileDescription: 'Giám đốc chuyên môn khoa Tim mạch, chuyên về can thiệp mạch vành.' },
-    { UserID: 204, FullName: 'Phạm Thị K (RHM)', Email: 'dr.k@hunre.com', PhoneNumber: '0912345687', Status: 'Active', SpecialtyID: 4, Degree: 'Bác sĩ', YearsOfExperience: 5, ProfileDescription: 'Chuyên về chỉnh nha và thẩm mỹ nụ cười.' },
-    ...Array.from({ length: 7 }, (_, i) => ({
-        UserID: 205 + i,
-        FullName: `Bác sĩ Test ${i + 1}`,
-        Email: `dr.test${i + 1}@hunre.com`,
-        PhoneNumber: `098765432${i}`,
-        Status: 'Active' as const,
-        SpecialtyID: (i % 4) + 1,
-        Degree: 'Bác sĩ',
-        YearsOfExperience: 3 + i,
-        ProfileDescription: `Mô tả ngắn gọn về kinh nghiệm bác sĩ Test ${i + 1}`,
-    }))
+    { UserID: 201, FullName: 'Trần Thị B (Nội)', Email: 'dr.b@hunre.com', PhoneNumber: '0912345679', Status: 'Active', SpecialtyID: 1, Degree: 'Thạc sĩ', YearsOfExperience: 15, ProfileDescription: 'Chuyên gia khám và chữa trị các bệnh nội khoa cấp tính.', ImageURL: 'https://placehold.co/100x100/1E88E5/FFFFFF?text=TB' },
+    { UserID: 202, FullName: 'Hoàng Văn E (Da Liễu)', Email: 'dr.e@hunre.com', PhoneNumber: '0912345682', Status: 'Inactive', SpecialtyID: 2, Degree: 'Tiến sĩ', YearsOfExperience: 8, ProfileDescription: 'Có kinh nghiệm lâu năm trong điều trị mụn trứng cá và các bệnh tự miễn.', ImageURL: 'https://placehold.co/100x100/FFB300/FFFFFF?text=HE' },
+    { UserID: 203, FullName: 'Lý Văn I (Tim Mạch)', Email: 'dr.i@hunre.com', PhoneNumber: '0912345686', Status: 'Active', SpecialtyID: 3, Degree: 'Bác sĩ CKII', YearsOfExperience: 22, ProfileDescription: 'Giám đốc chuyên môn khoa Tim mạch, chuyên về can thiệp mạch vành.', ImageURL: 'https://placehold.co/100x100/4CAF50/FFFFFF?text=LI' },
+    { UserID: 204, FullName: 'Phạm Thị K (RHM)', Email: 'dr.k@hunre.com', PhoneNumber: '0912345687', Status: 'Active', SpecialtyID: 4, Degree: 'Bác sĩ', YearsOfExperience: 5, ProfileDescription: 'Chuyên về chỉnh nha và thẩm mỹ nụ cười.', ImageURL: 'https://placehold.co/100x100/8E24AA/FFFFFF?text=PK' },
 ];
+
+// ===============================================
+// 2. DOCTOR FORM MODAL
+// ===============================================
 
 const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClose, onSuccess }) => {
     const isEdit = !!doctor;
@@ -70,8 +68,14 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClo
         ProfileDescription: doctor?.ProfileDescription || '',
         Status: doctor?.Status || 'Active',
         Password: '',
+        ImageURL: doctor?.ImageURL || '', // Link ảnh hiện tại
     });
+    // State mới để lưu trữ File được chọn (Cho Input File)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // Tạo URL xem trước (Ưu tiên File, sau đó là URL trong Form)
+    const previewUrl = selectedFile ? URL.createObjectURL(selectedFile) : formData.ImageURL;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -80,6 +84,25 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClo
             [name]: (name === 'SpecialtyID' || name === 'YearsOfExperience') ? parseInt(value) : value
         }));
     };
+
+    // Xử lý khi chọn File (Chỉ dùng cho input type="file")
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        } else {
+            setSelectedFile(null);
+        }
+    };
+
+    // Hàm xóa ảnh (reset cả file và URL trong form data)
+    const handleRemoveImage = () => {
+        setSelectedFile(null);
+        setFormData(prev => ({ ...prev, ImageURL: '' }));
+        // Reset input file để có thể chọn lại file cũ
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,8 +114,17 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClo
             return;
         }
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // --- BƯỚC 1: XỬ LÝ UPLOAD ẢNH ---
+        let finalImageUrl = formData.ImageURL;
+        if (selectedFile) {
+            // Trong thực tế: Gọi API upload file, chờ URL trả về
+            await new Promise(resolve => setTimeout(resolve, 500));
+            finalImageUrl = `https://hunre.com/uploads/DR_${doctor?.UserID || Date.now()}_${selectedFile.name.slice(0, 10)}.jpg`;
+            console.log(`[UPLOAD] Đã upload file mới. URL: ${finalImageUrl}`);
+        }
+
+        // --- BƯỚC 2: XỬ LÝ LƯU HỒ SƠ ---
+        await new Promise(resolve => setTimeout(resolve, 300)); // Giả lập lưu hồ sơ
 
         const updatedDoctor: DoctorUser = {
             ...doctor,
@@ -105,13 +137,12 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClo
             YearsOfExperience: parseInt(formData.YearsOfExperience),
             ProfileDescription: formData.ProfileDescription,
             Status: formData.Status as DoctorUser['Status'],
+            ImageURL: finalImageUrl, // SỬ DỤNG URL CUỐI CÙNG
         };
 
         if (isEdit) {
-            // GỌI API CẬP NHẬT: ApiClient.adminUpdateDoctor(updatedDoctor.UserID, formData);
             console.log(`[API UPDATE] Bác sĩ ID ${updatedDoctor.UserID}.`);
         } else {
-            // GỌI API TẠO MỚI: ApiClient.adminCreateDoctor(formData);
             console.log(`[API CREATE] Tạo mới Bác sĩ: ${updatedDoctor.FullName}.`);
         }
 
@@ -121,8 +152,10 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClo
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-400 bg-opacity-30 flex justify-center items-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-3xl my-8">
+        // Lớp phủ bên ngoài:
+        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50 p-4">
+            {/* Container chính của Modal */}
+            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-3xl my-8 overflow-y-auto max-h-[90vh]">
                 <div className="flex justify-between items-center mb-4 border-b pb-2">
                     <h2 className="text-2xl font-semibold text-gray-800">
                         {isEdit ? 'Sửa hồ sơ Bác sĩ' : 'Thêm Bác sĩ mới'}
@@ -185,6 +218,57 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClo
 
                         {/* THÔNG TIN CHUYÊN MÔN (Doctors Table) */}
                         <h3 className="col-span-full text-lg font-bold mt-4 border-b pb-1">Thông tin Chuyên môn</h3>
+
+                        {/* INPUT ẢNH: Sử dụng File Input (Ưu tiên) */}
+                        <div className='col-span-1 md:col-span-2'>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh Đại Diện (Profile Picture)</label>
+                            <div className="flex items-start space-x-4">
+
+                                {/* Preview Image */}
+                                <img
+                                    src={previewUrl || 'https://placehold.co/64x64/E0E0E0/000?text=👤'}
+                                    alt="Avatar Preview"
+                                    className="w-16 h-16 rounded-full object-cover border border-gray-300 flex-shrink-0"
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/64x64/E0E0E0/000?text=👤'; }}
+                                />
+
+                                {/* File Input */}
+                                <div className='flex flex-col space-y-2 flex-grow'>
+                                    <input
+                                        type="file"
+                                        name="avatarFile"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+
+                                    {/* URL Input (Fallback/Nếu cần nhập trực tiếp) */}
+                                    <input
+                                        type="url"
+                                        name="ImageURL"
+                                        value={formData.ImageURL}
+                                        onChange={handleChange}
+                                        className="block w-full p-2 border border-gray-300 rounded-md text-sm"
+                                        placeholder="Hoặc dán Link URL ảnh vào đây"
+                                        disabled={!!selectedFile} // Tắt nếu có file đang được chọn
+                                    />
+                                </div>
+
+                                {/* Nút xóa ảnh */}
+                                {(previewUrl || formData.ImageURL) && (
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveImage}
+                                        className='text-red-500 hover:text-red-700 text-sm ml-auto flex-shrink-0'
+                                    >
+                                        Xóa
+                                    </button>
+                                )}
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">Kích thước gợi ý: 1:1, dưới 1MB.</p>
+                        </div>
+                        {/* END INPUT ẢNH */}
+
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Bằng cấp</label>
@@ -379,7 +463,7 @@ export default function DoctorManagementPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ảnh</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Họ và Tên</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Chuyên khoa</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Bằng cấp/KN</th>
@@ -391,7 +475,17 @@ export default function DoctorManagementPage() {
                         <tbody className="divide-y divide-gray-200">
                             {currentDoctors.map((doctor) => (
                                 <tr key={doctor.UserID} className="hover:bg-gray-50">
-                                    <td className="py-3 px-4 text-sm text-gray-700">{doctor.UserID}</td>
+                                    {/* Cột mới: Ảnh đại diện - Dùng thẻ <img> */}
+                                    <td className="py-3 px-4 text-sm text-gray-700">
+                                        <div className='relative w-10 h-10'>
+                                            <img
+                                                src={doctor.ImageURL || 'https://placehold.co/40x40/E0E0E0/000?text=👤'}
+                                                alt={doctor.FullName}
+                                                className="w-full h-full rounded-full object-cover border border-gray-300"
+                                                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/40x40/E0E0E0/000?text=👤'; }}
+                                            />
+                                        </div>
+                                    </td>
                                     <td className="py-3 px-4 text-sm text-gray-700 font-medium">{doctor.FullName}</td>
                                     <td className="py-3 px-4 text-sm font-semibold text-blue-600">
                                         {specialtyMap.get(doctor.SpecialtyID)}
@@ -406,8 +500,8 @@ export default function DoctorManagementPage() {
                                     </td>
                                     <td className="py-3 px-4 text-sm">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded ${doctor.Status === 'Active' ? 'bg-green-100 text-green-700' :
-                                                doctor.Status === 'Inactive' ? 'bg-gray-200 text-gray-700' :
-                                                    'bg-orange-100 text-orange-700'
+                                            doctor.Status === 'Inactive' ? 'bg-gray-200 text-gray-700' :
+                                                'bg-orange-100 text-orange-700'
                                             }`}>
                                             {doctor.Status}
                                         </span>

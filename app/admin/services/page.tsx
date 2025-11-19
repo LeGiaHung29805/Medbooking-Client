@@ -2,6 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 
+// ===============================================
+// 1. INTERFACE & MOCK DATA
+// ===============================================
+
 interface Specialty {
     SpecialtyID: number;
     SpecialtyName: string;
@@ -11,14 +15,15 @@ interface Service {
     ServiceID: number;
     ServiceName: string;
     Description: string;
-    EstimatedDuration: number;
-    Price: number;
+    EstimatedDuration: number; // Phút
+    Price: number; // Giá tham khảo
     SpecialtyID: number;
+    ImageURL?: string; // KHỚP DB: Đã thêm trường Link ảnh
 }
 
 interface ServiceFormProps {
-    service: Service | null;
-    specialties: Specialty[];
+    service: Service | null; // Null khi tạo mới
+    specialties: Specialty[]; // Danh sách chuyên khoa để chọn
     onClose: () => void;
     onSuccess: (updatedService: Service) => void;
 }
@@ -36,20 +41,16 @@ const MOCK_SPECIALTIES: Specialty[] = [
 
 // Dữ liệu giả lập Dịch vụ (Lấy từ bảng Services)
 const INITIAL_SERVICES: Service[] = [
-    { ServiceID: 101, ServiceName: 'Khám tổng quát', Description: 'Kiểm tra sức khỏe cơ bản, đo huyết áp, nhịp tim.', EstimatedDuration: 15, Price: 250000, SpecialtyID: 1 },
-    { ServiceID: 102, ServiceName: 'Tư vấn Da Liễu', Description: 'Tư vấn chuyên sâu về các vấn đề da liễu.', EstimatedDuration: 25, Price: 400000, SpecialtyID: 2 },
-    { ServiceID: 103, ServiceName: 'Siêu âm tim', Description: 'Dùng sóng siêu âm để kiểm tra cấu trúc tim.', EstimatedDuration: 40, Price: 850000, SpecialtyID: 3 },
-    { ServiceID: 104, ServiceName: 'Lấy cao răng', Description: 'Làm sạch vôi răng và đánh bóng.', EstimatedDuration: 30, Price: 300000, SpecialtyID: 4 },
-    // Thêm nhiều dữ liệu hơn để thấy rõ phân trang
-    ...Array.from({ length: 18 }, (_, i) => ({
-        ServiceID: 105 + i,
-        ServiceName: `Dịch vụ Test ${i + 1}`,
-        Description: `Mô tả cho dịch vụ test số ${i + 1}.`,
-        EstimatedDuration: 20,
-        Price: 150000 + i * 1000,
-        SpecialtyID: (i % 4) + 1,
-    }))
+    { ServiceID: 101, ServiceName: 'Khám tổng quát', Description: 'Kiểm tra sức khỏe cơ bản, đo huyết áp, nhịp tim.', EstimatedDuration: 15, Price: 250000, SpecialtyID: 1, ImageURL: 'https://placehold.co/40x40/007AFF/FFFFFF?text=KT' },
+    { ServiceID: 102, ServiceName: 'Tư vấn Da Liễu', Description: 'Tư vấn chuyên sâu về các vấn đề da liễu.', EstimatedDuration: 25, Price: 400000, SpecialtyID: 2, ImageURL: 'https://placehold.co/40x40/FF3B30/FFFFFF?text=DL' },
+    { ServiceID: 103, ServiceName: 'Siêu âm tim', Description: 'Dùng sóng siêu âm để kiểm tra cấu trúc tim.', EstimatedDuration: 40, Price: 850000, SpecialtyID: 3, ImageURL: 'https://placehold.co/40x40/34C759/FFFFFF?text=SA' },
+    { ServiceID: 104, ServiceName: 'Lấy cao răng', Description: 'Làm sạch vôi răng và đánh bóng.', EstimatedDuration: 30, Price: 300000, SpecialtyID: 4, ImageURL: 'https://placehold.co/40x40/FF9500/FFFFFF?text=CR' },
+
 ];
+
+// ===============================================
+// 2. MODAL THÊM/SỬA DỊCH VỤ
+// ===============================================
 
 const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, onClose, onSuccess }) => {
     const isEdit = !!service;
@@ -59,6 +60,7 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, on
         EstimatedDuration: service?.EstimatedDuration.toString() || '15',
         Price: service?.Price.toString() || '0',
         SpecialtyID: service?.SpecialtyID || specialties[0]?.SpecialtyID,
+        ImageURL: service?.ImageURL || '', // KHỚP DB: ImageURL
     });
     const [loading, setLoading] = useState(false);
 
@@ -85,7 +87,8 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, on
             Description: formData.Description,
             EstimatedDuration: parseFloat(formData.EstimatedDuration),
             Price: parseFloat(formData.Price),
-            SpecialtyID: parseFloat(formData.SpecialtyID as any), //any Cần API
+            SpecialtyID: parseFloat(formData.SpecialtyID as any),
+            ImageURL: formData.ImageURL, // KHỚP DB: ImageURL
         };
 
         console.log(isEdit ? "Cập nhật dịch vụ:" : "Tạo dịch vụ:", updatedService);
@@ -137,6 +140,27 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, on
                                     <option key={s.SpecialtyID} value={s.SpecialtyID}>{s.SpecialtyName}</option>
                                 ))}
                             </select>
+                        </div>
+
+                        {/* Link Ảnh (ImageURL) - KHỚP DB */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Link Ảnh (ImageURL)</label>
+                            <input
+                                type="url"
+                                name="ImageURL"
+                                value={formData.ImageURL}
+                                onChange={handleChange}
+                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                placeholder='VD: https://placehold.co/60x60'
+                            />
+                            {formData.ImageURL && (
+                                <img
+                                    src={formData.ImageURL}
+                                    alt="Preview"
+                                    className='w-12 h-12 rounded-full object-cover mt-2 border border-gray-200'
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/48x48/FEE2E2/000?text=Loi'; }}
+                                />
+                            )}
                         </div>
 
                         {/* Giá */}
@@ -202,6 +226,11 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, on
         </div>
     );
 };
+
+
+// ===============================================
+// 3. MAIN COMPONENT
+// ===============================================
 
 export default function ServiceManagementPage() {
     const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
@@ -315,7 +344,7 @@ export default function ServiceManagementPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ảnh</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tên Dịch vụ</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Chuyên khoa</th>
                                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Giá (VNĐ)</th>
@@ -327,7 +356,15 @@ export default function ServiceManagementPage() {
                             {/* 3. SỬ DỤNG DỮ LIỆU ĐÃ PHÂN TRANG */}
                             {currentServices.map((service) => (
                                 <tr key={service.ServiceID} className="hover:bg-gray-50">
-                                    <td className="py-3 px-4 text-sm text-gray-700 font-semibold">{service.ServiceID}</td>
+                                    {/* Cột Ảnh */}
+                                    <td className="py-3 px-4 text-sm text-gray-700">
+                                        <img
+                                            src={service.ImageURL || 'https://placehold.co/40x40/E0E0E0/000?text=DV'}
+                                            alt={service.ServiceName}
+                                            className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/40x40/E0E0E0/000?text=DV'; }}
+                                        />
+                                    </td>
                                     <td className="py-3 px-4 text-sm text-gray-800 font-medium">{service.ServiceName}</td>
                                     <td className="py-3 px-4 text-sm text-blue-600">
                                         {specialtyMap.get(service.SpecialtyID) || 'Không rõ'}
