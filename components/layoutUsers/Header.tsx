@@ -147,16 +147,16 @@ export default function Header() {
                                     <Link href="/Users/profile">Thông tin cá nhân</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/quan-ly-gia-dinh">Quản lý gia đình</Link>
+                                    <Link href="/Users/quan-ly-gia-dinh">Quản lý gia đình</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/ket-qua-benh-kham">Kết quả bệnh khám</Link>
+                                    <Link href="/Users/ket-qua-benh-kham">Kết quả bệnh khám</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/lich-su-kham">Lịch sử đặt lịch khám</Link>
+                                    <Link href="/Users/lich-su-kham">Lịch sử đặt lịch khám</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/thay-doi-mat-khau">Thay đổi mật khẩu</Link>
+                                    <Link href="/Users/thay-doi-mat-khau">Thay đổi mật khẩu</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout}>
