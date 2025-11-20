@@ -1,55 +1,39 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
+import * as Api from '@/lib/ApiClient';
+import * as Model '@/lib/model';
 
 // ===============================================
-// 1. INTERFACE & MOCK DATA
+// 1.MODAL FORM (form tao moi/cap nhat)
 // ===============================================
 
-interface Specialty {
-    id: number;
-    name: string;
-}
+// interface Specialty {
+//     id: number;
+//     name: string;
+// // }
 
-interface DoctorUser {
-    UserID: number;
-    FullName: string;
-    Email: string;
-    PhoneNumber: string;
-    Status: 'Active' | 'Inactive' | 'Pending'; // Từ bảng Users
-    // Các trường từ bảng Doctors
-    SpecialtyID: number;
-    Degree: string;
-    YearsOfExperience: number;
-    ProfileDescription: string;
-    ImageURL?: string; // Link ảnh
-}
+// interface DoctorUser {
+//     UserID: number;
+//     FullName: string;
+//     Email: string;
+//     PhoneNumber: string;
+//     Status: 'Active' | 'Inactive' | 'Pending'; // Từ bảng Users
+//     // Các trường từ bảng Doctors
+//     SpecialtyID: number;
+//     Degree: string;
+//     YearsOfExperience: number;
+//     ProfileDescription: string;
+//     ImageURL?: string; // Link ảnh
+// }
 
 interface DoctorFormProps {
-    doctor: DoctorUser | null; // Null khi tạo mới
-    specialties: Specialty[];
+    doctor: Model.Doctor | null; // Null khi tạo mới, co object = sua
+    specialties: Model.Specialty[];//list chuyen khoa de chon
     onClose: () => void;
-    onSuccess: (updatedDoctor: DoctorUser) => void;
+    onSuccess: () => void;
 }
 
-const DOCTORS_PER_PAGE = 10;
-const STATUSES = ['Active', 'Inactive'];
-
-// Dữ liệu giả lập Chuyên khoa
-const MOCK_SPECIALTIES: Specialty[] = [
-    { id: 1, name: 'Nội Tổng Quát' },
-    { id: 2, name: 'Da Liễu' },
-    { id: 3, name: 'Tim Mạch' },
-    { id: 4, name: 'Răng Hàm Mặt' },
-];
-
-// Dữ liệu giả lập Bác sĩ (Đã thêm ImageURL)
-const INITIAL_DOCTORS: DoctorUser[] = [
-    { UserID: 201, FullName: 'Trần Thị B (Nội)', Email: 'dr.b@hunre.com', PhoneNumber: '0912345679', Status: 'Active', SpecialtyID: 1, Degree: 'Thạc sĩ', YearsOfExperience: 15, ProfileDescription: 'Chuyên gia khám và chữa trị các bệnh nội khoa cấp tính.', ImageURL: 'https://placehold.co/100x100/1E88E5/FFFFFF?text=TB' },
-    { UserID: 202, FullName: 'Hoàng Văn E (Da Liễu)', Email: 'dr.e@hunre.com', PhoneNumber: '0912345682', Status: 'Inactive', SpecialtyID: 2, Degree: 'Tiến sĩ', YearsOfExperience: 8, ProfileDescription: 'Có kinh nghiệm lâu năm trong điều trị mụn trứng cá và các bệnh tự miễn.', ImageURL: 'https://placehold.co/100x100/FFB300/FFFFFF?text=HE' },
-    { UserID: 203, FullName: 'Lý Văn I (Tim Mạch)', Email: 'dr.i@hunre.com', PhoneNumber: '0912345686', Status: 'Active', SpecialtyID: 3, Degree: 'Bác sĩ CKII', YearsOfExperience: 22, ProfileDescription: 'Giám đốc chuyên môn khoa Tim mạch, chuyên về can thiệp mạch vành.', ImageURL: 'https://placehold.co/100x100/4CAF50/FFFFFF?text=LI' },
-    { UserID: 204, FullName: 'Phạm Thị K (RHM)', Email: 'dr.k@hunre.com', PhoneNumber: '0912345687', Status: 'Active', SpecialtyID: 4, Degree: 'Bác sĩ', YearsOfExperience: 5, ProfileDescription: 'Chuyên về chỉnh nha và thẩm mỹ nụ cười.', ImageURL: 'https://placehold.co/100x100/8E24AA/FFFFFF?text=PK' },
-];
 
 // ===============================================
 // 2. DOCTOR FORM MODAL
@@ -57,18 +41,19 @@ const INITIAL_DOCTORS: DoctorUser[] = [
 
 const DoctorFormModal: React.FC<DoctorFormProps> = ({ doctor, specialties, onClose, onSuccess }) => {
     const isEdit = !!doctor;
-    const [isResettingPassword, setIsResettingPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    //khoi tao form
+    // --- KHỞI TẠO FORM ---
+    // Lấy dữ liệu từ doctor (nếu sửa) hoặc để trống (nếu tạo mới)
     const [formData, setFormData] = useState({
-        FullName: doctor?.FullName || '',
-        Email: doctor?.Email || '',
-        PhoneNumber: doctor?.PhoneNumber || '',
-        SpecialtyID: doctor?.SpecialtyID || specialties[0]?.id,
-        Degree: doctor?.Degree || '',
-        YearsOfExperience: doctor?.YearsOfExperience.toString() || '1',
+        FullName: doctor?.user?.FullName || '',
+        Email: doctor?.user?.Email || '',
+        Password: '', // Mật khẩu để trống, chỉ nhập khi cần đổi
+        PhoneNumber: doctor?.user?.PhoneNumber || '',
+        SpecialtyID: doctor?.SpecialtyID || (specialties[0]?.SpecialtyID || 0),
+        Degree: doctor?.Degree || 'Bác sĩ', 
+        YearsOfExperience: doctor?.YearsOfExperience || 1,
         ProfileDescription: doctor?.ProfileDescription || '',
-        Status: doctor?.Status || 'Active',
-        Password: '',
-        ImageURL: doctor?.ImageURL || '', // Link ảnh hiện tại
     });
     // State mới để lưu trữ File được chọn (Cho Input File)
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
