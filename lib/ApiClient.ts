@@ -330,7 +330,7 @@ export const adminGetUsers = async (
 export const adminUpdateUser = async (
   id: number,
   data: { Role?: string; Status?: string }
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   // Dùng POST + _method: PUT
   const formData = new FormData();
   formData.append("_method", "PUT");
@@ -351,7 +351,7 @@ export const adminUpdateUser = async (
 // --- Quản lý Chuyên khoa (Admin) ---
 export const adminCreateSpecialty = async (
   formData: FormData
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/specialties", formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
@@ -361,7 +361,7 @@ export const adminCreateSpecialty = async (
 export const adminUpdateSpecialty = async (
   id: number,
   formData: FormData
-): Promise<any> => {
+): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/specialties/${id}`, formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
@@ -376,7 +376,9 @@ export const adminDeleteSpecialty = async (id: number): Promise<void> => {
 };
 
 // --- Quản lý Dịch vụ (Admin) ---
-export const adminCreateService = async (formData: FormData): Promise<any> => {
+export const adminCreateService = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/services", formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
