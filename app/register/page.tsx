@@ -40,10 +40,6 @@ export default function RegisterPage() {
         try {
             const formData = new FormData();
 
-            // --- SỬA LỖI TẠI ĐÂY ---
-            // Đổi các key quan trọng (Username, Password, Email) về chữ thường
-            // Backend Laravel thường bắt buộc các field này phải là lowercase
-
             formData.append("FullName", name);
             formData.append("DateOfBirth", dob);
             formData.append("Gender", gender);
