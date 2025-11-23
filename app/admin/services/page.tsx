@@ -82,7 +82,7 @@ const INITIAL_SERVICES: Service[] = [
         EstimatedDuration: 40, 
         Price: 850000, 
         SpecialtyID: 3, 
-        ImageURL: '/image/doctors/doctor3.jpg', // hoặc dùng doctor1.jpg nếu chưa có
+        ImageURL: '/image/doctors/doctor3.jpg', 
         DoctorNames: 'BS. Lý Văn I' 
     },
     { 
@@ -497,7 +497,6 @@ useEffect(() => {
     // Xử lý xóa (vô hiệu hóa)
     const handleDelete = (serviceId: number) => {
         if (confirm("Bạn có chắc chắn muốn xóa dịch vụ này? Việc này sẽ ảnh hưởng đến các cuộc hẹn đã đặt.")) {
-            // Logic gọi API: ApiClient.adminDeleteService(serviceId);
             setServices(prev => prev.filter(s => s.ServiceID !== serviceId));
             console.log(`Đã xóa ServiceID: ${serviceId}`);
         }
