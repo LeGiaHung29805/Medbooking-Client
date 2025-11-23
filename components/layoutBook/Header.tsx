@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Phone, MapPin, User, ChevronDown } from "lucide-react";
+import { logout } from "@/lib/ApiClient"; // 1. Import hàm logout
 
-// ✨ import dropdown của shadcn/ui
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -21,18 +21,35 @@ export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        // 2. SỬA: Kiểm tra 'api_token' (quan trọng nhất)
+        const token = localStorage.getItem("api_token");
         setIsLoggedIn(!!token);
     }, [pathname]);
 
     const handleBookingClick = () => {
-        const token = localStorage.getItem("token"); // kiểm tra token trực tiếp
+        // 3. SỬA: Kiểm tra 'api_token' khi bấm đặt lịch
+        const token = localStorage.getItem("api_token");
         if (!token) router.push("/login");
         else router.push("/dat-lich");
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            // 4. Gọi API báo server đăng xuất
+            await logout();
+        } catch (e) {
+            console.error("Logout API error", e);
+        }
+
+        // 5. Xóa sạch các loại token
+        localStorage.removeItem("api_token");
         localStorage.removeItem("token");
+        localStorage.removeItem("user_role");
+
+        // Xóa cả cookie nếu có
+        document.cookie = "token=; path=/; max-age=0";
+        document.cookie = "api_token=; path=/; max-age=0";
+
         setIsLoggedIn(false);
         router.push("/login");
     };
@@ -138,8 +155,8 @@ export default function Header() {
                                     {/* Phần chữ: click sẽ đi tới /profile */}
                                     <span
                                         onClick={(e) => {
-                                            e.stopPropagation(); // Ngăn DropdownMenuTrigger bắt sự kiện
-                                            router.push("/profile"); // hoặc window.location.href = "/profile"
+                                            e.stopPropagation();
+                                            router.push("/Users/profile");
                                         }}
                                         className="hover:underline cursor-pointer"
                                     >
