@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 // ===============================================
 // 1. INTERFACE & MOCK DATA
@@ -19,6 +19,8 @@ interface Service {
     Price: number; // Giá tham khảo
     SpecialtyID: number;
     ImageURL?: string; // KHỚP DB: Đã thêm trường Link ảnh
+    DoctorIDs?: number[]; 
+    DoctorNames?: string; 
 }
 
 interface ServiceFormProps {
@@ -37,15 +39,194 @@ const MOCK_SPECIALTIES: Specialty[] = [
     { SpecialtyID: 2, SpecialtyName: 'Da Liễu' },
     { SpecialtyID: 3, SpecialtyName: 'Tim Mạch' },
     { SpecialtyID: 4, SpecialtyName: 'Răng Hàm Mặt' },
+    { SpecialtyID: 5, SpecialtyName: 'Nhi Khoa' },
+    { SpecialtyID: 6, SpecialtyName: 'Phụ Sản' },   
+    { SpecialtyID: 7, SpecialtyName: 'Tai Mũi Họng' },
+    { SpecialtyID: 8, SpecialtyName: 'Cơ Xương Khớp' },
+    { SpecialtyID: 9, SpecialtyName: 'Tiết Niệu' },
+    { SpecialtyID: 10, SpecialtyName: 'Mắt' },
+    { SpecialtyID: 11, SpecialtyName: 'Truyền Nhiễm' },
+    { SpecialtyID: 12, SpecialtyName: 'Thần Kinh' },
+    { SpecialtyID: 13, SpecialtyName: 'Ung Bướu' },
+    { SpecialtyID: 14, SpecialtyName: 'Ngoại Tổng Quát' },
+    { SpecialtyID: 15, SpecialtyName: 'Gây Mê Hồi Sức' },
+    { SpecialtyID: 16, SpecialtyName: 'Chẩn Đoán Hình Ảnh' },
 ];
 
 // Dữ liệu giả lập Dịch vụ (Lấy từ bảng Services)
 const INITIAL_SERVICES: Service[] = [
-    { ServiceID: 101, ServiceName: 'Khám tổng quát', Description: 'Kiểm tra sức khỏe cơ bản, đo huyết áp, nhịp tim.', EstimatedDuration: 15, Price: 250000, SpecialtyID: 1, ImageURL: 'https://placehold.co/40x40/007AFF/FFFFFF?text=KT' },
-    { ServiceID: 102, ServiceName: 'Tư vấn Da Liễu', Description: 'Tư vấn chuyên sâu về các vấn đề da liễu.', EstimatedDuration: 25, Price: 400000, SpecialtyID: 2, ImageURL: 'https://placehold.co/40x40/FF3B30/FFFFFF?text=DL' },
-    { ServiceID: 103, ServiceName: 'Siêu âm tim', Description: 'Dùng sóng siêu âm để kiểm tra cấu trúc tim.', EstimatedDuration: 40, Price: 850000, SpecialtyID: 3, ImageURL: 'https://placehold.co/40x40/34C759/FFFFFF?text=SA' },
-    { ServiceID: 104, ServiceName: 'Lấy cao răng', Description: 'Làm sạch vôi răng và đánh bóng.', EstimatedDuration: 30, Price: 300000, SpecialtyID: 4, ImageURL: 'https://placehold.co/40x40/FF9500/FFFFFF?text=CR' },
+    { 
+        ServiceID: 101, 
+        ServiceName: 'Khám tổng quát', 
+        Description: 'Kiểm tra sức khỏe cơ bản, đo huyết áp, nhịp tim.', 
+        EstimatedDuration: 15, 
+        Price: 250000, 
+        SpecialtyID: 1, 
+        ImageURL: '/image/doctors/doctor1.jpg', // ← DÙNG ẢNH THẬT TỪ TRANG ADMIN/DOCTOR
+        DoctorNames: 'BS. Nguyễn Hoàng A, BS. Trần Thị B' 
+    },
+    { 
+        ServiceID: 102, 
+        ServiceName: 'Tư vấn Da Liễu', 
+        Description: 'Tư vấn chuyên sâu về các vấn đề da liễu.', 
+        EstimatedDuration: 25, 
+        Price: 400000, 
+        SpecialtyID: 2, 
+        ImageURL: '/image/doctors/doctor2.jpg', 
+        DoctorNames: 'BS. Hoàng Văn E' 
+    },
+    { 
+        ServiceID: 103, 
+        ServiceName: 'Siêu âm tim', 
+        Description: 'Dùng sóng siêu âm để kiểm tra cấu trúc tim.', 
+        EstimatedDuration: 40, 
+        Price: 850000, 
+        SpecialtyID: 3, 
+        ImageURL: '/image/doctors/doctor3.jpg', // hoặc dùng doctor1.jpg nếu chưa có
+        DoctorNames: 'BS. Lý Văn I' 
+    },
+    { 
+        ServiceID: 104, 
+        ServiceName: 'Lấy cao răng', 
+        Description: 'Làm sạch vôi răng và đánh bóng.', 
+        EstimatedDuration: 30, 
+        Price: 300000, 
+        SpecialtyID: 4, 
+        ImageURL: '/image/doctors/doctor4.jpg', 
+        DoctorNames: 'BS. Phạm Thị K' 
+    },
 
+    {
+        ServiceID: 105,
+        ServiceName: 'Khám Nhi Khoa',
+        Description: 'Khám và tư vấn sức khỏe cho trẻ em.',
+        EstimatedDuration: 20,
+        Price: 300000,
+        SpecialtyID: 5,
+        ImageURL: '/image/doctors/doctor5.jpg',
+        DoctorNames: 'BS. Lê Thị M'
+    },
+
+    {
+        ServiceID: 106,
+        ServiceName: 'Khám Phụ Sản',
+        Description: 'Khám và tư vấn sức khỏe phụ nữ mang thai.',
+        EstimatedDuration: 30,
+        Price: 500000,
+        SpecialtyID: 6,
+        ImageURL: '/image/doctors/doctor6.jpg',
+        DoctorNames: 'BS. Trần Thị N'
+    },
+
+    {
+        ServiceID: 107,
+        ServiceName: 'Khám Tai Mũi Họng',
+        Description: 'Khám và điều trị các bệnh về tai, mũi, họng.',
+        EstimatedDuration: 25,
+        Price: 350000,
+        SpecialtyID: 7,
+        ImageURL: '/image/doctors/doctor7.jpg',
+        DoctorNames: 'BS. Nguyễn Văn O'
+    },
+
+    {
+        ServiceID: 108,
+        ServiceName: 'Khám Cơ Xương Khớp',
+        Description: 'Khám và điều trị các bệnh về cơ xương khớp.',
+        EstimatedDuration: 30,
+        Price: 400000,
+        SpecialtyID: 8,
+        ImageURL: '/image/doctors/doctor8.jpg',
+        DoctorNames: 'BS. Lê Văn P'
+    },
+
+    {
+        ServiceID: 109,
+        ServiceName: 'Khám Tiết Niệu',
+        Description: 'Khám và điều trị các bệnh về hệ tiết niệu.',
+        EstimatedDuration: 20,
+        Price: 300000,
+        SpecialtyID: 9,
+        ImageURL: '/image/doctors/doctor9.jpg',
+        DoctorNames: 'BS. Phạm Thị Q'
+    },
+
+    {
+        ServiceID: 110,
+        ServiceName: 'Khám Mắt',
+        Description: 'Khám và tư vấn các vấn đề về mắt.',
+        EstimatedDuration: 15,
+        Price: 250000,
+        SpecialtyID: 10,
+        ImageURL: '/image/doctors/doctor10.jpg',
+        DoctorNames: 'BS. Hoàng Văn R'
+    },
+
+    {
+        ServiceID: 111,
+        ServiceName: 'Khám Truyền Nhiễm',
+        Description: 'Khám và điều trị các bệnh truyền nhiễm.',
+        EstimatedDuration: 30,
+        Price: 450000,
+        SpecialtyID: 11,
+        ImageURL: '/image/doctors/doctor11.jpg',
+        DoctorNames: 'BS. Lý Thị S'
+    },
+
+    {
+        ServiceID: 112,
+        ServiceName: 'Khám Thần Kinh',
+        Description: 'Khám và điều trị các bệnh về thần kinh.',
+        EstimatedDuration: 40,
+        Price: 600000,
+        SpecialtyID: 12,
+        ImageURL: '/image/doctors/doctor12.jpg',
+        DoctorNames: 'BS. Trần Văn T'
+    },
+
+    {
+        ServiceID: 113,
+        ServiceName: 'Khám Ung Bướu',
+        Description: 'Khám và tư vấn các bệnh ung bướu.',
+        EstimatedDuration: 45,
+        Price: 700000,
+        SpecialtyID: 13,
+        ImageURL: '/image/doctors/doctor13.jpg',
+        DoctorNames: 'BS. Nguyễn Thị U'
+    },
+
+    {
+        ServiceID: 114,
+        ServiceName: 'Khám Ngoại Tổng Quát',
+        Description: 'Khám và điều trị các bệnh ngoại khoa tổng quát.',
+        EstimatedDuration: 35,
+        Price: 550000,
+        SpecialtyID: 14,
+        ImageURL: '/image/doctors/doctor14.jpg',
+        DoctorNames: 'BS. Lê Văn V'
+    },  
+
+    {
+        ServiceID: 115,
+        ServiceName: 'Gây Mê Hồi Sức',  
+        Description: 'Dịch vụ gây mê và hồi sức cho các ca phẫu thuật.',    
+        EstimatedDuration: 60,
+        Price: 1200000,
+        SpecialtyID: 15,
+        ImageURL: '/image/doctors/doctor15.jpg',
+        DoctorNames: 'BS. Phạm Thị W'
+    },
+
+    {
+        ServiceID: 116,
+        ServiceName: 'Chẩn Đoán Hình Ảnh',
+        Description: 'Dịch vụ chẩn đoán hình ảnh bằng X-quang, CT, MRI.',
+        EstimatedDuration: 50,
+        Price: 900000,
+        SpecialtyID: 16,
+        ImageURL: '/image/doctors/doctor16.jpg',
+        DoctorNames: 'BS. Hoàng Văn X'
+    },
 ];
 
 // ===============================================
@@ -92,7 +273,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, on
         };
 
         console.log(isEdit ? "Cập nhật dịch vụ:" : "Tạo dịch vụ:", updatedService);
-        // Logic gọi API: if (isEdit) ApiClient.adminUpdateService(...) else ApiClient.adminCreateService(...)
 
         setLoading(false);
         onClose();
@@ -233,10 +413,18 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, on
 // ===============================================
 
 export default function ServiceManagementPage() {
-    const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+    const [services, setServices] = useState<Service[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [filterSpecialty, setFilterSpecialty] = useState('ALL');
     const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+
+    useEffect(() => {
+        setServices(INITIAL_SERVICES);
+        setLoading(false);
+    }, []);
 
     // 1. STATE VÀ LOGIC PHÂN TRANG MỚI
     const [currentPage, setCurrentPage] = useState(1);
@@ -250,16 +438,29 @@ export default function ServiceManagementPage() {
     }, []);
 
     // Giả lập hàm tìm kiếm (Filtering)
-    const filteredServices = useMemo(() => {
-        setCurrentPage(1); // Reset trang khi tìm kiếm
-        if (!searchQuery) return services;
+const filteredServices = useMemo(() => {
+    let filtered = services;
+
+    if (filterSpecialty !== 'ALL') {
+        filtered = filtered.filter(s => s.SpecialtyID === parseInt(filterSpecialty));
+    }
+
+    if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        return services.filter(s =>
+        filtered = filtered.filter(s =>
             s.ServiceName.toLowerCase().includes(query) ||
             s.Description.toLowerCase().includes(query) ||
             specialtyMap.get(s.SpecialtyID)?.toLowerCase().includes(query)
         );
-    }, [services, searchQuery, specialtyMap]);
+    }
+
+    return filtered;
+}, [services, searchQuery, filterSpecialty, specialtyMap]);
+
+// Reset trang khi filter/search thay đổi – ĐÚNG VỊ TRÍ!
+useEffect(() => {
+    setCurrentPage(1);
+}, [searchQuery, filterSpecialty]);
 
     // 2. TÍNH TOÁN DỮ LIỆU HIỆN TẠI VÀ PHÂN TRANG
     const totalPages = Math.ceil(filteredServices.length / SERVICES_PER_PAGE);
@@ -313,20 +514,41 @@ export default function ServiceManagementPage() {
             <div className="bg-white p-4 rounded-xl shadow-md mb-6">
                 <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
 
-                    {/* Tìm kiếm */}
-                    <div className="relative flex-grow max-w-md">
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm theo tên dịch vụ, chuyên khoa..."
-                            className="p-2 pl-10 border border-gray-300 rounded-lg w-full focus:ring-blue-500 focus:border-blue-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            🔍
-                        </span>
-                    </div>
+                    <div className="flex space-x-3 items-center w-full md:w-auto">
+            {/* Tìm kiếm */}
+            <div className="relative flex-grow">
+                <input
+                    type="text"
+                    placeholder="Tìm kiếm theo tên dịch vụ, mô tả..."
+                    className="p-2 pl-10 border border-gray-300 rounded-lg w-full md:w-80 focus:ring-blue-500 focus:border-blue-500"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    🔍
+                </span>
+            </div>
 
+            {/* THÊM FILTER CHUYÊN KHOA */}
+            <div className="relative">
+                <select
+                    value={filterSpecialty}
+                    onChange={(e) => {
+                        setFilterSpecialty(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    className="p-2 border border-gray-300 rounded-lg appearance-none bg-white pr-8 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="ALL">Tất cả chuyên khoa</option>
+                    {MOCK_SPECIALTIES.map(s => (
+                        <option key={s.SpecialtyID} value={s.SpecialtyID}>{s.SpecialtyName}</option>
+                    ))}
+                </select>
+            </div>
+        </div>
                     {/* Nút Thêm mới */}
                     <button
                         onClick={() => handleOpenModal()}
@@ -342,40 +564,56 @@ export default function ServiceManagementPage() {
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ảnh</th>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tên Dịch vụ</th>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Chuyên khoa</th>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Giá (VNĐ)</th>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Thời gian (Phút)</th>
-                                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {/* 3. SỬ DỤNG DỮ LIỆU ĐÃ PHÂN TRANG */}
-                            {currentServices.map((service) => (
-                                <tr key={service.ServiceID} className="hover:bg-gray-50">
-                                    {/* Cột Ảnh */}
-                                    <td className="py-3 px-4 text-sm text-gray-700">
-                                        <img
-                                            src={service.ImageURL || 'https://placehold.co/40x40/E0E0E0/000?text=DV'}
-                                            alt={service.ServiceName}
-                                            className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/40x40/E0E0E0/000?text=DV'; }}
-                                        />
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-gray-800 font-medium">{service.ServiceName}</td>
-                                    <td className="py-3 px-4 text-sm text-blue-600">
-                                        {specialtyMap.get(service.SpecialtyID) || 'Không rõ'}
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-green-700 font-bold">
-                                        {service.Price.toLocaleString('vi-VN')}
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-gray-700">
-                                        {service.EstimatedDuration} phút
-                                    </td>
-                                    <td className="py-3 px-4 text-sm flex space-x-2">
+    <thead className="bg-gray-100">
+        <tr>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ảnh</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tên Dịch vụ</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Chuyên khoa</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Bác sĩ phụ trách</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Giá (VNĐ)</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Thời gian (Phút)</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
+        </tr>
+    </thead>
+    <tbody className="divide-y divide-gray-200">
+        {currentServices.map((service) => (
+            <tr key={service.ServiceID} className="hover:bg-gray-50">
+                {/* 1. Ảnh */}
+                <td className="py-3 px-4">
+                    <img
+                        src={service.ImageURL || 'https://placehold.co/40x40/E0E0E0/000?text=DV'}
+                        alt={service.ServiceName}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/40x40/E0E0E0/000?text=DV'; }}
+                    />
+                </td>
+
+                {/* 2. Tên Dịch vụ */}
+                <td className="py-3 px-4 text-sm font-medium text-gray-800">
+                    {service.ServiceName}
+                </td>
+
+                {/* 3. Chuyên khoa */}
+                <td className="py-3 px-4 text-sm text-blue-600">
+                    {specialtyMap.get(service.SpecialtyID) || 'Không rõ'}
+                </td>
+
+                {/* 4. Bác sĩ phụ trách */}
+                <td className="py-3 px-4 text-sm text-gray-700">
+                    {service.DoctorNames || 'Tất cả bác sĩ'}
+                </td>
+
+                {/* 5. Giá */}
+                <td className="py-3 px-4 text-sm font-bold text-green-700">
+                    {service.Price.toLocaleString('vi-VN')}đ
+                </td>
+
+                {/* 6. Thời gian */}
+                <td className="py-3 px-4 text-sm text-gray-700">
+                    {service.EstimatedDuration} phút
+                </td>
+
+                <td className="py-3 px-4 text-sm flex space-x-2">
                                         <button
                                             onClick={() => handleOpenModal(service)}
                                             className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
@@ -391,17 +629,10 @@ export default function ServiceManagementPage() {
                                             🗑️
                                         </button>
                                     </td>
-                                </tr>
-                            ))}
-                            {currentServices.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-500">
-                                        Không tìm thấy dịch vụ nào.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            </tr>
+        ))}
+    </tbody>
+</table>
                 </div>
             </div>
 
