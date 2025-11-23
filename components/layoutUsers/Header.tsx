@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { logout } from "@/lib/ApiClient"; // Import hàm logout từ API
 
 export default function Header() {
   const router = useRouter();
@@ -19,19 +20,33 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    // SỬA ĐỔI: Kiểm tra 'api_token' thay vì 'token' để khớp với ApiClient
+    const token = localStorage.getItem("api_token");
     setIsLoggedIn(!!token);
   }, [pathname]);
 
   const handleBookingClick = () => {
-    const token = localStorage.getItem("token"); // kiểm tra token trực tiếp
+    const token = localStorage.getItem("api_token"); // Kiểm tra api_token
     if (!token) router.push("/login");
     else router.push("/dat-lich");
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    try {
+      // Gọi API logout để server hủy token (nếu cần)
+      await logout();
+    } catch (error) {
+      console.error("Lỗi khi gọi API logout:", error);
+    }
+
+    // Xóa sạch các key liên quan đến phiên đăng nhập
+    localStorage.removeItem("api_token");
+    localStorage.removeItem("user_role");
+    localStorage.removeItem("token"); // Xóa cả key cũ nếu có
+
     setIsLoggedIn(false);
+
+    // Chuyển về trang login hoặc trang chủ
     router.push("/login");
   };
 
@@ -46,7 +61,7 @@ export default function Header() {
               alt="Bệnh viện HUNRE"
               width={400}
               height={150}
-              // className="h-16 w-auto object-contain"
+            // className="h-16 w-auto object-contain"
             />
           </Link>
 
@@ -76,6 +91,7 @@ export default function Header() {
                   <span>Đăng nhập</span>
                 </Link>
               ) : (
+                // SỬA ĐỔI: Nút Đăng xuất gọi hàm handleLogout mới
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-1 text-gray-800 hover:text-green-700"
@@ -133,11 +149,11 @@ export default function Header() {
                   type="button"
                   className="flex items-center space-x-1 hover:underline focus:outline-none"
                 >
-                  {/* Phần chữ: click sẽ đi tới /profile */}
+                  {/* Phần chữ: click sẽ đi tới /Users/profile cho đồng bộ */}
                   <span
                     onClick={(e) => {
                       e.stopPropagation(); // Ngăn DropdownMenuTrigger bắt sự kiện
-                      router.push("/profile"); // hoặc window.location.href = "/profile"
+                      router.push("/Users/profile");
                     }}
                     className="hover:underline cursor-pointer"
                   >

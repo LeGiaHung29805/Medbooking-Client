@@ -12,8 +12,8 @@ const cards = [
     { title: "Quản lí Phản hồi & Đánh giá", href: "/admin/feedbacks", icon: FaStar, description: "Duyệt, ẩn hoặc xóa các đánh giá của bệnh nhân." },
     { title: "Quản lí Lịch hẹn Chung", href: "/admin/appointments", icon: FaClipboardList, description: "Giám sát tất cả các cuộc hẹn để giải quyết tranh chấp." },
 
-    { title: "Cài đặt Phòng khám", href: "/admin/settings", icon: FaCog, description: "Cập nhật thông tin, logo, và địa chỉ phòng khám." },
-
+    { title: "Quản lí thông báo", href: "/admin/notifications", icon: FaCog, description: "Cập nhật thông báo và quản lí các thông báo với các bệnh nhân." },
+    { title: "Quản lí thời gian làm việc", href: "/admin/doctor_available", icon: FaCog, description: "Cập nhật lịch rảnh của bác sĩ." },
 ];
 
 export default function AdminPage() {

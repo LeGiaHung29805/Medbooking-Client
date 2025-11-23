@@ -50,6 +50,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
   const [formData, setFormData] = useState({
     FullName: user?.FullName || "",
     Email: user?.Email || "",
+    Username: user?.Username || "",
     PhoneNumber: user?.PhoneNumber || "",
     Role: user?.Role || "BenhNhan",
     Status: user?.Status || "HoatDong",
@@ -99,10 +100,18 @@ const UserFormModal: React.FC<UserFormProps> = ({
       return;
     }
 
+    // Validate Username
+    if (!formData.Username.trim()) {
+      alert("Vui lòng nhập Tên đăng nhập.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = new FormData();
       data.append("FullName", formData.FullName);
       data.append("Email", formData.Email);
+      data.append("Username", formData.Username); // [QUAN TRỌNG] Đã bổ sung dòng này
       data.append("PhoneNumber", formData.PhoneNumber);
       data.append("Role", formData.Role);
       data.append("Status", formData.Status);
@@ -124,7 +133,6 @@ const UserFormModal: React.FC<UserFormProps> = ({
         await Api.adminUpdateUser(user.UserID, data);
         alert("✅ Cập nhật thành công!");
       } else {
-        // [SỬA LỖI 405 TẠI ĐÂY]: Dùng adminCreateUser thay vì adminCreatePatient
         await Api.adminCreateUser(data);
         alert("✅ Tạo người dùng mới thành công!");
       }
@@ -132,6 +140,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
       onSuccess();
     } catch (error: any) {
       console.error("Error:", error);
+      // Hiển thị chi tiết lỗi từ Backend nếu có
       const msg = error.response?.data?.message || "Có lỗi xảy ra!";
       alert("❌ " + msg);
     } finally {
@@ -140,7 +149,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0  flex justify-center items-center z-50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100">
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
           <h2 className="text-xl font-bold text-gray-800">
@@ -169,6 +178,23 @@ const UserFormModal: React.FC<UserFormProps> = ({
                   value={formData.FullName}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              {/* Ô nhập Username */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tên đăng nhập <span className="text-red-500">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  name="Username"
+                  value={formData.Username}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 outline-none"
+                  placeholder="VD: nguyenvan_a"
+                  disabled={isEdit} // Không sửa username khi update
                 />
               </div>
 
@@ -565,10 +591,10 @@ export default function UserManagementPage() {
                           <div className="text-sm font-bold text-gray-900">
                             {u.FullName}
                           </div>
-                          <div className="text-xs text-gray-500">{u.Email}</div>
-                          <div className="text-xs text-gray-400">
-                            {u.PhoneNumber}
+                          <div className="text-xs text-gray-500">
+                            @{u.Username}
                           </div>
+                          <div className="text-xs text-gray-400">{u.Email}</div>
                         </div>
                       </div>
                     </td>

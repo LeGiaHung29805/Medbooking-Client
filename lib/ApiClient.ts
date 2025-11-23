@@ -263,7 +263,7 @@ export const checkInAppointment = async (
 };
 
 export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
-  const response = await apiClient.get("/admin/all-appointments", {
+  const response = await apiClient.get("/staff/all-appointments", {
     headers: getAuthHeaders(),
   });
   return response.data;
@@ -406,7 +406,7 @@ export const getPatientHistory = async (
 };
 
 export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
-  const response = await apiClient.get("/admin/feedbacks", {
+  const response = await apiClient.get("/staff/feedbacks", {
     headers: getAuthHeaders(),
   }); // Admin/Staff dùng chung
   return response.data;
@@ -526,6 +526,81 @@ export const adminCreateUser = async (
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/users", formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+// [UPDATE] Hủy lịch hẹn Staff/Admin (Dùng Route của Staff)
+export const adminCancelAppointment = async (
+  id: number,
+  reason: string
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.patch(
+    `/staff/appointments/${id}/cancel`,
+    { reason },
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  return response.data;
+};
+// Lấy lịch làm việc của 1 bác sĩ (Public hoặc Staff đều dùng được)
+// Đã có hàm getDoctorAvailability ở trên, có thể dùng lại.
+
+// ==========================================
+// === 7. QUẢN LÝ LỊCH LÀM VIỆC (ADMIN/STAFF) ===
+// ==========================================
+
+// Lấy lịch làm việc của 1 bác sĩ (Đã có - giữ nguyên)
+// export const getDoctorAvailability ...
+
+// [MỚI] Admin/Staff tạo slot cho một bác sĩ cụ thể
+export const adminCreateSlot = async (
+  doctorId: number,
+  start: string,
+  end: string
+): Promise<Model.AvailabilitySlot> => {
+  const formData = new FormData();
+  formData.append("DoctorID", doctorId.toString()); // Admin phải chọn Bác sĩ
+  formData.append("StartTime", start); // Format: YYYY-MM-DD HH:mm
+  formData.append("EndTime", end); // Format: YYYY-MM-DD HH:mm
+
+  // Gọi vào route của Staff (Admin dùng chung được)
+  const response = await apiClient.post("/staff/availability", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data.slot || response.data; // Trả về object slot vừa tạo
+};
+
+// [MỚI] Admin/Staff xóa slot
+export const adminDeleteSlot = async (slotId: number): Promise<void> => {
+  // Gọi vào route của Staff
+  await apiClient.delete(`/staff/availability/${slotId}`, {
+    headers: getAuthHeaders(),
+  });
+};
+// ==========================================
+// === 10. QUẢN LÝ THÔNG BÁO (ADMIN) ===
+// ==========================================
+
+// Lấy lịch sử thông báo
+export const getNotificationLogs = async (): Promise<any[]> => {
+  // Giả định Backend có route GET /api/admin/notifications
+  const response = await apiClient.get("/admin/notifications", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+// Gửi thông báo mới
+export const sendNotification = async (data: {
+  Title: string;
+  Content: string;
+  TargetGroup: string; // 'all', 'patients', 'doctors'
+  Channel: string; // 'in_app', 'email'
+}): Promise<Model.MessageResponse> => {
+  // Giả định Backend có route POST /api/admin/notifications/send
+  const response = await apiClient.post("/admin/notifications/send", data, {
+    headers: getAuthHeaders(),
   });
   return response.data;
 };
