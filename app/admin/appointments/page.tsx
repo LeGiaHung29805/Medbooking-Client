@@ -1,305 +1,425 @@
-"use client"; // QUAN TRỌNG: Phải là 'use client' chứ không phải 'user client'
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
 
-// --- 1. ĐỊNH NGHĨA KIỂU DỮ LIỆU (Để TypeScript không báo lỗi) ---
-interface Patient {
-    id: number;
-    full_name: string;
-    phone_number: string;
-}
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "Pending":
+      return (
+        <span className="px-2 py-1 text-xs font-bold text-yellow-700 bg-yellow-100 rounded-full">
+          Chờ duyệt
+        </span>
+      );
+    case "Confirmed":
+      return (
+        <span className="px-2 py-1 text-xs font-bold text-blue-700 bg-blue-100 rounded-full">
+          Đã xác nhận
+        </span>
+      );
+    case "Completed":
+      return (
+        <span className="px-2 py-1 text-xs font-bold text-green-700 bg-green-100 rounded-full">
+          Hoàn thành
+        </span>
+      );
+    case "Cancelled":
+      return (
+        <span className="px-2 py-1 text-xs font-bold text-red-700 bg-red-100 rounded-full">
+          Đã hủy
+        </span>
+      );
+    case "CheckedIn":
+      return (
+        <span className="px-2 py-1 text-xs font-bold text-purple-700 bg-purple-100 rounded-full">
+          Đã Check-in
+        </span>
+      );
+    default:
+      return (
+        <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
+          {status}
+        </span>
+      );
+  }
+};
 
-interface Doctor {
-    id: number;
-    full_name: string;
-    specialty: string;
-}
-
-interface Service {
-    id: number;
-    service_name: string;
-    price: number;
-}
-
-interface Schedule {
-    date: string;
-    time_slot: string;
-}
-
-interface Appointment {
-    appointment_id: number;
-    patient: Patient;
-    doctor: Doctor;
-    service: Service;
-    schedule: Schedule;
-    status: string;
-    initial_symptoms: string;
-    cancellation_reason?: string; // Dấu ? nghĩa là có thể có hoặc không
-    created_at: string;
-}
-
-// --- 2. FAKE DATA ---
-const initialData: Appointment[] = [
-    {
-        appointment_id: 1001,
-        patient: { id: 205, full_name: "Nguyễn Văn An", phone_number: "0912345678" },
-        doctor: { id: 501, full_name: "Dr. Lê Thị Bích", specialty: "Tim mạch" },
-        service: { id: 30, service_name: "Khám tim mạch tổng quát", price: 500000 },
-        schedule: { date: "2025-11-25", time_slot: "09:00 - 09:30" },
-        status: "pending",
-        initial_symptoms: "Hay bị đau thắt ngực trái khi vận động mạnh",
-        created_at: "2025-11-20T08:00:00"
-    },
-    {
-        appointment_id: 1002,
-        patient: { id: 206, full_name: "Trần Thị Mai", phone_number: "0987654321" },
-        doctor: { id: 502, full_name: "Dr. Phạm Minh Tuấn", specialty: "Da liễu" },
-        service: { id: 32, service_name: "Điều trị mụn viêm", price: 300000 },
-        schedule: { date: "2025-11-25", time_slot: "10:00 - 10:30" },
-        status: "confirmed",
-        initial_symptoms: "Da mặt nổi nhiều mụn đỏ, ngứa",
-        created_at: "2025-11-21T09:15:00"
-    },
-    {
-        appointment_id: 1003,
-        patient: { id: 207, full_name: "Lê Văn Cường", phone_number: "0909123123" },
-        doctor: { id: 501, full_name: "Dr. Lê Thị Bích", specialty: "Tim mạch" },
-        service: { id: 30, service_name: "Khám tim mạch tổng quát", price: 500000 },
-        schedule: { date: "2025-11-24", time_slot: "14:00 - 14:30" },
-        status: "cancelled",
-        cancellation_reason: "Bệnh nhân bận việc đột xuất",
-        initial_symptoms: "Tái khám định kỳ",
-        created_at: "2025-11-18T10:00:00"
-    }
-];
-
-// --- 3. COMPONENT CHÍNH (PAGE) ---
 export default function AppointmentsPage() {
-    const [appointments, setAppointments] = useState<Appointment[]>(initialData);
-    const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [searchTerm, setSearchTerm] = useState<string>('');
+  const [appointments, setAppointments] = useState<Model.Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    // State cho Modal
-    const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [cancelReason, setCancelReason] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-    // --- HELPER FUNCTIONS ---
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'pending': return <span className="px-2 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full">Chờ duyệt</span>;
-            case 'confirmed': return <span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">Đã xác nhận</span>;
-            case 'completed': return <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">Hoàn thành</span>;
-            case 'cancelled': return <span className="px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Đã hủy</span>;
-            default: return <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">{status}</span>;
-        }
-    };
+  const [selectedAppt, setSelectedAppt] = useState<Model.Appointment | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [cancelReason, setCancelReason] = useState<string>("");
 
-    const filteredAppointments = appointments.filter(item => {
-        const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-        const matchesSearch =
-            item.patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.appointment_id.toString().includes(searchTerm);
-        return matchesStatus && matchesSearch;
+  // Sử dụng useCallback để tránh warning trong useEffect
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Gọi API lấy tất cả lịch hẹn (qua Api Staff)
+      const data = await Api.getAllAppointments();
+      // Sắp xếp giảm dần theo thời gian (Mới nhất lên đầu)
+      const sortedData = data.sort(
+        (a, b) =>
+          new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime()
+      );
+      setAppointments(sortedData);
+    } catch (error) {
+      console.error("Lỗi tải lịch hẹn:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const openModal = (appt: Model.Appointment) => {
+    setSelectedAppt(appt);
+    setCancelReason("");
+    setIsModalOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedAppt) return;
+    try {
+      await Api.confirmAppointment(selectedAppt.AppointmentID);
+      alert(`✅ Đã duyệt lịch hẹn #${selectedAppt.AppointmentID}`);
+      setIsModalOpen(false);
+      loadData();
+    } catch (error) {
+      alert("❌ Duyệt thất bại. Vui lòng thử lại.");
+    }
+  };
+
+  const handleCheckIn = async () => {
+    if (!selectedAppt) return;
+    try {
+      await Api.checkInAppointment(selectedAppt.AppointmentID);
+      alert(`✅ Đã check-in cho lịch hẹn #${selectedAppt.AppointmentID}`);
+      setIsModalOpen(false);
+      loadData();
+    } catch (error) {
+      alert("❌ Check-in thất bại. Vui lòng thử lại.");
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!selectedAppt) return;
+    if (!cancelReason.trim()) {
+      alert("Vui lòng nhập lý do hủy!");
+      return;
+    }
+    try {
+      await Api.adminCancelAppointment(
+        selectedAppt.AppointmentID,
+        cancelReason
+      );
+      alert(`🗑️ Đã hủy lịch hẹn #${selectedAppt.AppointmentID}`);
+      setIsModalOpen(false);
+      loadData();
+    } catch (error) {
+      alert("❌ Hủy thất bại. Vui lòng thử lại.");
+    }
+  };
+
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((item) => {
+      const statusMatch =
+        filterStatus === "all" || item.Status === filterStatus;
+
+      // Map field an toàn với dấu ? để tránh lỗi nếu dữ liệu null
+      const pName = item.patient?.FullName?.toLowerCase() || "";
+      const dName = item.doctor?.user?.FullName?.toLowerCase() || "";
+      const idStr = item.AppointmentID.toString();
+      const search = searchTerm.toLowerCase();
+
+      const searchMatch =
+        pName.includes(search) ||
+        dName.includes(search) ||
+        idStr.includes(search);
+      return statusMatch && searchMatch;
     });
+  }, [appointments, filterStatus, searchTerm]);
 
-    const openModal = (appt: Appointment) => {
-        setSelectedAppt(appt);
-        setCancelReason('');
-        setIsModalOpen(true);
-    };
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
+      <section className="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="p-6 min-h-[80vh]">
+          <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                📅 Quản lý Lịch Hẹn
+              </h1>
+              <p className="text-gray-500 mt-1">
+                Xem và xử lý các yêu cầu đặt khám.
+              </p>
+            </div>
+            <button
+              onClick={loadData}
+              className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+            >
+              ↻ Làm mới dữ liệu
+            </button>
+          </div>
 
-    const handleConfirm = () => {
-        if (!selectedAppt) return;
-        const updatedList = appointments.map(app =>
-            app.appointment_id === selectedAppt.appointment_id ? { ...app, status: 'confirmed' } : app
-        );
-        setAppointments(updatedList);
-        setIsModalOpen(false);
-        alert(`Đã duyệt lịch hẹn #${selectedAppt.appointment_id}`);
-    };
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 flex flex-wrap gap-4 items-center">
+            <div className="relative flex-grow max-w-md">
+              <input
+                type="text"
+                placeholder="🔍 Tìm theo mã, tên bệnh nhân, bác sĩ..."
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            </div>
 
-    const handleCancel = () => {
-        if (!selectedAppt) return;
-        if (!cancelReason) {
-            alert("Vui lòng nhập lý do hủy!");
-            return;
-        }
-        const updatedList = appointments.map(app =>
-            app.appointment_id === selectedAppt.appointment_id
-                ? { ...app, status: 'cancelled', cancellation_reason: cancelReason }
-                : app
-        );
-        setAppointments(updatedList);
-        setIsModalOpen(false);
-    };
+            <select
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="Pending">Chờ duyệt</option>
+              <option value="Confirmed">Đã xác nhận</option>
+              <option value="CheckedIn">Đã Check-in</option>
+              <option value="Completed">Hoàn thành</option>
+              <option value="Cancelled">Đã hủy</option>
+            </select>
+          </div>
 
-    // --- RENDER GIAO DIỆN ---
-    return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <section className="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="p-6 bg-gray-50 min-h-screen text-gray-800">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold text-gray-900">Quản lý Lịch Hẹn</h1>
-                        <p className="text-gray-500">Xem và quản lý danh sách đặt khám của bệnh nhân</p>
-                    </div>
-
-                    {/* BỘ LỌC */}
-                    <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4 items-center justify-between">
-                        <div className="flex gap-4 flex-1">
-                            <input
-                                type="text"
-                                placeholder="Tìm theo tên hoặc mã lịch..."
-                                className="border border-gray-300 rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <select
-                                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                            >
-                                <option value="all">Tất cả trạng thái</option>
-                                <option value="pending">Chờ duyệt</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* BẢNG DỮ LIỆU */}
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã Lịch</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bệnh nhân</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bác sĩ / Dịch vụ</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredAppointments.map((item) => (
-                                    <tr key={item.appointment_id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">#{item.appointment_id}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{item.patient.full_name}</div>
-                                            <div className="text-sm text-gray-500">{item.patient.phone_number}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{item.doctor.full_name}</div>
-                                            <div className="text-sm text-gray-500">{item.service.service_name}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-blue-600">{item.schedule.time_slot}</div>
-                                            <div className="text-sm text-gray-500">{item.schedule.date}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {getStatusBadge(item.status)}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={() => openModal(item)}
-                                                className="text-blue-600 hover:text-blue-900 font-semibold"
-                                            >
-                                                Chi tiết
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredAppointments.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">Không tìm thấy dữ liệu phù hợp.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* MODAL */}
-                    {isModalOpen && selectedAppt && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center">
-                            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-gray-900">Chi tiết lịch hẹn #{selectedAppt.appointment_id}</h3>
-                                    <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                                </div>
-
-                                <div className="p-6 grid grid-cols-2 gap-4 text-gray-800">
-                                    <div className="col-span-2 bg-blue-50 p-3 rounded border border-blue-100">
-                                        <p className="text-sm text-gray-600">Triệu chứng ban đầu:</p>
-                                        <p className="font-medium text-gray-800">{selectedAppt.initial_symptoms}</p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-sm text-gray-500">Bệnh nhân</p>
-                                        <p className="font-medium">{selectedAppt.patient.full_name}</p>
-                                        <p className="text-sm">{selectedAppt.patient.phone_number}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500">Bác sĩ</p>
-                                        <p className="font-medium">{selectedAppt.doctor.full_name}</p>
-                                        <p className="text-sm">{selectedAppt.doctor.specialty}</p>
-                                    </div>
-
-                                    {selectedAppt.status !== 'cancelled' && selectedAppt.status !== 'completed' && (
-                                        <div className="col-span-2 mt-4 pt-4 border-t border-gray-200">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Hành động quản trị:</label>
-                                            {selectedAppt.status === 'pending' && (
-                                                <div className="flex gap-3">
-                                                    <button
-                                                        onClick={handleConfirm}
-                                                        className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-                                                    >
-                                                        Xác nhận lịch hẹn
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            <div className="mt-4">
-                                                <p className="text-sm text-red-600 font-medium mb-1">Hủy lịch hẹn này?</p>
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Nhập lý do hủy..."
-                                                        className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-500"
-                                                        value={cancelReason}
-                                                        onChange={(e) => setCancelReason(e.target.value)}
-                                                    />
-                                                    <button
-                                                        onClick={handleCancel}
-                                                        className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded hover:bg-red-100 transition text-sm font-medium"
-                                                    >
-                                                        Hủy Lịch
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {selectedAppt.status === 'cancelled' && (
-                                        <div className="col-span-2 bg-red-50 p-3 rounded border border-red-100 mt-2">
-                                            <p className="text-sm text-red-800 font-bold">Lịch đã hủy</p>
-                                            <p className="text-sm text-red-600">Lý do: {selectedAppt.cancellation_reason}</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="px-6 py-3 bg-gray-50 text-right">
-                                    <button
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="px-4 py-2 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-100 font-medium"
-                                    >
-                                        Đóng
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+            {loading ? (
+              <div className="p-12 text-center text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                Đang tải lịch hẹn...
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase w-20">
+                        Mã
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                        Bệnh nhân
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                        Bác sĩ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                        Thời gian
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                        Trạng thái
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAppointments.map((item) => (
+                      <tr
+                        key={item.AppointmentID}
+                        className="hover:bg-blue-50 transition duration-150"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                          #{item.AppointmentID}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-bold text-gray-900">
+                            {item.patient?.FullName || "---"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {item.patient?.PhoneNumber}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-blue-700">
+                            BS. {item.doctor?.user?.FullName || "Chưa xếp"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {item.doctor?.specialty?.SpecialtyName}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {new Date(item.StartTime).toLocaleDateString(
+                              "vi-VN"
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(item.StartTime).toLocaleTimeString(
+                              "vi-VN",
+                              { hour: "2-digit", minute: "2-digit" }
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(item.Status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => openModal(item)}
+                            className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
+                          >
+                            Chi tiết
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredAppointments.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-6 py-12 text-center text-gray-500"
+                        >
+                          <span className="text-2xl block mb-2">📭</span>
+                          Không tìm thấy dữ liệu.
+                        </td>
+                      </tr>
                     )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {isModalOpen && selectedAppt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Chi tiết Lịch hẹn #{selectedAppt.AppointmentID}
+                  </h3>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                  >
+                    &times;
+                  </button>
                 </div>
-            </section>
+
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-800">
+                  <div className="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <p className="text-xs text-blue-600 font-bold uppercase mb-1">
+                      Triệu chứng / Ghi chú
+                    </p>
+                    <p className="font-medium text-gray-800">
+                      {selectedAppt.InitialSymptoms || "Không có mô tả"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">
+                      Bệnh nhân
+                    </p>
+                    <p className="font-bold text-lg">
+                      {selectedAppt.patient?.FullName}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {selectedAppt.patient?.PhoneNumber}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">
+                      Bác sĩ phụ trách
+                    </p>
+                    <p className="font-bold text-lg text-blue-700">
+                      {selectedAppt.doctor?.user?.FullName || "Chưa phân công"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {selectedAppt.doctor?.specialty?.SpecialtyName}
+                    </p>
+                  </div>
+
+                  {/* Hiển thị link file đính kèm nếu có */}
+                  {selectedAppt.file_path && (
+                    <div className="col-span-1 md:col-span-2">
+                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">
+                        File đính kèm
+                      </p>
+                      <a
+                        href={selectedAppt.file_path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        📎 Xem tài liệu đính kèm
+                      </a>
+                    </div>
+                  )}
+
+                  {selectedAppt.Status !== "Cancelled" &&
+                    selectedAppt.Status !== "Completed" && (
+                      <div className="col-span-1 md:col-span-2 mt-4 pt-6 border-t border-gray-100">
+                        <label className="block text-sm font-bold text-gray-700 mb-3">
+                          Hành động xử lý:
+                        </label>
+                        <div className="flex gap-3 mb-4">
+                          {selectedAppt.Status === "Pending" && (
+                            <button
+                              onClick={handleConfirm}
+                              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-bold"
+                            >
+                              ✅ Duyệt Lịch
+                            </button>
+                          )}
+                          {selectedAppt.Status === "Confirmed" && (
+                            <button
+                              onClick={handleCheckIn}
+                              className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-bold"
+                            >
+                              🏥 Check-in
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex gap-2 items-center">
+                          <input
+                            type="text"
+                            placeholder="Lý do hủy..."
+                            className="flex-1 border border-red-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                          />
+                          <button
+                            onClick={handleCancel}
+                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition text-sm font-bold"
+                          >
+                            Hủy Lịch
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  {selectedAppt.Status === "Cancelled" && (
+                    <div className="col-span-1 md:col-span-2 bg-gray-100 p-4 rounded-lg border border-gray-200">
+                      <p className="text-sm text-red-600 font-bold uppercase">
+                        🚫 Lịch đã bị hủy
+                      </p>
+                      <p className="text-sm text-gray-700 mt-1">
+                        Lý do: {selectedAppt.CancellationReason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-    );
+      </section>
+    </div>
+  );
 }
