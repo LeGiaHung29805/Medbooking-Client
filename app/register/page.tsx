@@ -63,9 +63,7 @@ export default function RegisterPage() {
             router.push("/login");
 
         } catch (err) {
-            // SỬA: Thay 'any' bằng 'Record<string, string[]>'
-            // Giải thích: Laravel trả về errors dạng { "email": ["Email invalid"], "password": ["Too short"] }
-            // Nên type chính xác là Record<string, string[]> (Map từ string sang mảng string)
+
             const error = err as AxiosError<{ message: string; errors?: Record<string, string[]> }>;
             console.error("Register Error:", error);
 
