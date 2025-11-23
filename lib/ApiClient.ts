@@ -329,21 +329,16 @@ export const adminGetUsers = async (
 
 export const adminUpdateUser = async (
   id: number,
-  data: { Role?: string; Status?: string }
+  formData: FormData // <--- Thay đổi từ Object sang FormData
 ): Promise<Model.MessageResponse> => {
-  // Dùng POST + _method: PUT
-  const formData = new FormData();
+  // Thêm method spoofing để Laravel hiểu đây là PUT khi dùng FormData
   formData.append("_method", "PUT");
-  if (data.Role) formData.append("Role", data.Role);
-  if (data.Status) formData.append("Status", data.Status);
-  // (Cần gửi thêm FullName, Username... nếu Backend yêu cầu required,
-  // hoặc sửa Backend để nullable. Tạm thời giả định Admin chỉ sửa Role/Status)
-
-  // Lưu ý: API update user hiện tại của chúng ta yêu cầu FullName...
-  // Nếu chỉ sửa Role, Frontend cần gửi lại cả thông tin cũ.
 
   const response = await apiClient.post(`/admin/users/${id}`, formData, {
-    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "multipart/form-data", // Báo cho server biết đây là form data
+    },
   });
   return response.data;
 };
@@ -441,4 +436,96 @@ export const adminDeleteMedicalRecord = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/medical-records/${id}`, {
     headers: getAuthHeaders(),
   });
+};
+export const getAllServices = async (
+  search?: string
+): Promise<Model.Service[]> => {
+  const params = search ? { search } : {};
+  const response = await apiClient.get("/services", { params }); // Hoặc /admin/services tùy route backend
+  return response.data;
+};
+export const adminUpdateService = async (
+  id: number,
+  formData: FormData
+): Promise<Model.MessageResponse> => {
+  formData.append("_method", "PUT"); // Laravel Method Spoofing
+  const response = await apiClient.post(`/admin/services/${id}`, formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+// --- Bổ sung API ---
+
+// Bệnh nhân tự sửa hồ sơ
+export const updateProfile = async (
+  data: any
+): Promise<Model.MessageResponse> => {
+  // Dùng method PUT (hoặc POST + _method:PUT nếu muốn gửi form-data đồng bộ)
+  // Ở đây ta dùng JSON cho đơn giản vì không có file
+  const response = await apiClient.put("/user/profile", data, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+// Bệnh nhân gửi đánh giá
+export const submitFeedback = async (
+  appointmentId: number,
+  rating: number,
+  comment: string
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post(
+    `/appointments/${appointmentId}/feedback`,
+    {
+      Rating: rating,
+      Comment: comment,
+    },
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  return response.data;
+};
+// ==========================================
+// === 8. QUẢN LÝ NGƯỜI DÙNG (ADMIN) ===
+// ==========================================
+
+// Lấy danh sách người dùng (Có tìm kiếm)
+
+// Lấy chi tiết 1 người dùng
+export const adminGetUserDetail = async (id: number): Promise<Model.User> => {
+  const response = await apiClient.get(`/admin/users/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+// Tạo Bệnh nhân mới (Dùng cho trang quản lý User nếu muốn tạo nhanh)
+// (Lưu ý: Để tạo Bác sĩ, hãy dùng adminCreateDoctor ở phần trên)
+export const adminCreatePatient = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post("/admin/patients", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Cập nhật người dùng (Sửa lại để nhận FormData => Hỗ trợ upload ảnh & Method Spoofing)
+
+// Xóa người dùng (Dùng API xóa bệnh nhân - Vì UserManagementController chưa có hàm destroy)
+// Nếu xóa Bác sĩ, nên dùng adminDeleteDoctor.
+// Ở đây ta tạm dùng endpoint của patients cho các user thông thường.
+export const adminDeleteUser = async (id: number): Promise<void> => {
+  await apiClient.delete(`/admin/patients/${id}`, {
+    headers: getAuthHeaders(),
+  });
+};
+export const adminCreateUser = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post("/admin/users", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
 };
