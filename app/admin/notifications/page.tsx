@@ -70,7 +70,6 @@ export default function NotificationManagerPage() {
     loadData();
   }, [loadData]);
 
-  // --- HANDLERS ---
   const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!broadcastForm.title || !broadcastForm.content)
@@ -117,21 +116,19 @@ export default function NotificationManagerPage() {
           <div className="flex gap-6 mt-6 border-b border-gray-200">
             <button
               onClick={() => setActiveTab("broadcast")}
-              className={`pb-3 text-sm font-bold transition border-b-2 ${
-                activeTab === "broadcast"
+              className={`pb-3 text-sm font-bold transition border-b-2 ${activeTab === "broadcast"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
             >
               ✉️ Soạn Thông Báo
             </button>
             <button
               onClick={() => setActiveTab("logs")}
-              className={`pb-3 text-sm font-bold transition border-b-2 ${
-                activeTab === "logs"
+              className={`pb-3 text-sm font-bold transition border-b-2 ${activeTab === "logs"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
             >
               📜 Nhật Ký Gửi
             </button>

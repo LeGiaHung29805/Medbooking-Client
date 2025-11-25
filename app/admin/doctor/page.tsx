@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
+import { getFullImageUrl } from "@/lib/utils";
+
+// 1. IMPORT COMPONENT DÙNG CHUNG
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 // ===============================================
 // 1. COMPONENT FORM MODAL
@@ -28,7 +33,11 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   // --- Map dữ liệu API vào Form ---
   const [formData, setFormData] = useState({
     FullName: doctor?.user?.FullName || "",
+
+    // SỬA Ở ĐÂY: Ưu tiên lấy Email (Hoa) trước
     Email: doctor?.user?.Email || "",
+
+    Username: doctor?.user?.Username || "",
     Password: "",
     PhoneNumber: doctor?.user?.PhoneNumber || "",
     SpecialtyID: doctor?.SpecialtyID || specialties[0]?.SpecialtyID || 0,
@@ -36,15 +45,16 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
     YearsOfExperience: doctor?.YearsOfExperience || 1,
     ProfileDescription: doctor?.ProfileDescription || "",
     Status: doctor?.user?.Status || "HoatDong",
-    // Giữ nguyên ImageURL để map với logic hiển thị cũ
-    ImageURL: doctor?.imageURL || doctor?.user?.avatar_url || "",
   });
 
+  // State xử lý file ảnh
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  // Logic preview ảnh: Ưu tiên file chọn > Link ảnh cũ > Rỗng
-  const previewUrl = selectedFile
-    ? URL.createObjectURL(selectedFile)
-    : formData.ImageURL;
+
+  // Logic preview ảnh
+  const initialImage = doctor?.imageURL || doctor?.user?.avatar_url;
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    initialImage ? getFullImageUrl(initialImage) : ""
+  );
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -63,13 +73,15 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
   const handleRemoveImage = () => {
     setSelectedFile(null);
-    setFormData((prev) => ({ ...prev, ImageURL: "" }));
+    setPreviewUrl("");
     const fileInput = document.querySelector(
       'input[type="file"]'
     ) as HTMLInputElement;
@@ -90,7 +102,11 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
     try {
       const data = new FormData();
       data.append("FullName", formData.FullName);
+      data.append("Username", formData.Username);
+
+      // SỬA Ở ĐÂY: Gửi key Email (Hoa) lên backend
       data.append("Email", formData.Email);
+
       data.append("PhoneNumber", formData.PhoneNumber);
       data.append("SpecialtyID", formData.SpecialtyID.toString());
       data.append("Degree", formData.Degree);
@@ -99,14 +115,19 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
       if (formData.ProfileDescription)
         data.append("ProfileDescription", formData.ProfileDescription);
+
       if (formData.Password && (isResettingPassword || !isEdit)) {
         data.append("Password", formData.Password);
       }
+
+      // Gửi file với key 'image' (hoặc 'imageURL' nếu backend bạn đã sửa nhận key này)
       if (selectedFile) {
-        data.append("image", selectedFile);
+        data.append("imageURL", selectedFile);
       }
 
       if (isEdit && doctor) {
+        // Thêm _method PUT để Laravel nhận file khi update
+        data.append("_method", "PUT");
         await Api.adminUpdateDoctor(doctor.DoctorID, data);
         alert("Cập nhật thành công!");
       } else {
@@ -114,27 +135,30 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
         alert("Tạo hồ sơ thành công!");
       }
       onSuccess();
-    } catch (error: any) {
-      console.error(error);
-      const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-      alert("Lỗi: " + msg);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error("Error:", error);
+        const msg = error.response?.data?.message || "Có lỗi xảy ra!";
+        alert("❌ " + msg);
+      } else {
+        console.error("Unexpected Error:", error);
+        alert("❌ Có lỗi không xác định xảy ra!");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // Lớp phủ bên ngoài
     <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50 p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-      {/* Container chính của Modal */}
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-3xl my-8 overflow-y-auto max-h-[90vh]">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-3xl my-8 overflow-y-auto max-h-[90vh] border border-gray-100">
         <div className="flex justify-between items-center mb-4 border-b pb-2">
           <h2 className="text-2xl font-semibold text-gray-800">
             {isEdit ? "Sửa hồ sơ Bác sĩ" : "Thêm Bác sĩ mới"}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
           >
             &times;
           </button>
@@ -170,7 +194,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                 value={formData.SpecialtyID}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
                 {specialties.map((s) => (
                   <option key={s.SpecialtyID} value={s.SpecialtyID}>
@@ -182,7 +206,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Email (Tài khoản đăng nhập)
+                Email
               </label>
               <input
                 type="email"
@@ -193,7 +217,19 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Tài khoản đăng nhập
+              </label>
+              <input
+                type="text"
+                name="Username"
+                value={formData.Username}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Số điện thoại
@@ -208,12 +244,12 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               />
             </div>
 
-            {/* Mật khẩu/Reset */}
-            <div className="col-span-1 md:col-span-2">
+            {/* Mật khẩu */}
+            <div>
               {(isResettingPassword || !isEdit) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    {!isEdit ? "Mật khẩu" : "Mật khẩu mới (Tạm thời)"}
+                    {!isEdit ? "Mật khẩu" : "Mật khẩu mới"}
                   </label>
                   <input
                     type="password"
@@ -221,90 +257,25 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                     value={formData.Password}
                     onChange={handleChange}
                     required={!isEdit}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-blue-50"
                   />
-                  {isEdit && (
-                    <p className="mt-1 text-xs text-red-500">
-                      Mật khẩu mới sẽ được băm và lưu.
-                    </p>
-                  )}
                 </div>
               )}
-
               {isEdit && !isResettingPassword && (
                 <button
                   type="button"
                   onClick={() => setIsResettingPassword(true)}
-                  className="flex items-center space-x-2 px-3 py-2 bg-red-500 text-white text-sm font-medium rounded-md hover:bg-red-600 transition duration-150 mt-1"
+                  className="text-sm text-blue-600 hover:underline mt-4 font-medium"
                 >
-                  <span className="w-4 h-4 mr-1">🔑</span>
-                  <span>Reset Mật khẩu</span>
+                  🔑 Đổi mật khẩu
                 </button>
               )}
             </div>
 
             {/* THÔNG TIN CHUYÊN MÔN */}
             <h3 className="col-span-full text-lg font-bold mt-4 border-b pb-1">
-              Thông tin Chuyên môn
+              Thông tin Chuyên môn & Hình ảnh
             </h3>
-
-            {/* INPUT ẢNH */}
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ảnh Đại Diện (Profile Picture)
-              </label>
-              <div className="flex items-start space-x-4">
-                {/* Preview Image */}
-                <img
-                  src={
-                    previewUrl ||
-                    "https://placehold.co/64x64/E0E0E0/000?text=👤"
-                  }
-                  alt="Avatar Preview"
-                  className="w-16 h-16 rounded-full object-cover border border-gray-300 flex-shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src =
-                      "https://placehold.co/64x64/E0E0E0/000?text=👤";
-                  }}
-                />
-
-                {/* File Input */}
-                <div className="flex flex-col space-y-2 flex-grow">
-                  <input
-                    type="file"
-                    name="avatarFile"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-
-                  {/* URL Input Fallback (nếu code cũ có dùng) */}
-                  <input
-                    type="url"
-                    name="ImageURL"
-                    value={formData.ImageURL}
-                    onChange={handleChange}
-                    className="block w-full p-2 border border-gray-300 rounded-md text-sm hidden" // Ẩn đi vì đã dùng upload file
-                    disabled={!!selectedFile}
-                  />
-
-                  {/* Nút xóa ảnh */}
-                  {(previewUrl || formData.ImageURL) && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="text-red-500 hover:text-red-700 text-sm ml-auto flex-shrink-0"
-                    >
-                      Xóa
-                    </button>
-                  )}
-                </div>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Kích thước gợi ý: 1:1, dưới 1MB.
-              </p>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -336,6 +307,39 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
             </div>
 
             <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ảnh đại diện
+              </label>
+              <div className="flex items-center space-x-3 p-2 border border-dashed rounded-lg bg-gray-50">
+                <div className="w-16 h-16 relative rounded-full border bg-white overflow-hidden flex-shrink-0">
+                  {/* Sử dụng DataThumbnail cho preview trong Modal (để tái sử dụng logic ảnh) */}
+                  <DataThumbnail
+                    src={previewUrl}
+                    fallbackType="doctor"
+                    className="w-full h-full"
+                  />
+                </div>
+                <div className="flex flex-col w-full">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                  />
+                  {previewUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="text-xs text-red-500 hover:text-red-700 font-semibold text-left mt-1 w-fit"
+                    >
+                      ✖ Xóa ảnh
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">
                 Mô tả hồ sơ (ProfileDescription)
               </label>
@@ -349,7 +353,6 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               />
             </div>
 
-            {/* Trạng thái (Chỉ khi sửa) */}
             {isEdit && (
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -360,16 +363,16 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                   value={formData.Status}
                   onChange={handleChange}
                   required
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
-                  <option value="HoatDong">Active (Hoạt động)</option>
-                  <option value="Khoa">Inactive (Khóa)</option>
+                  <option value="HoatDong">Hoạt động</option>
+                  <option value="Khoa">Khóa / Nghỉ việc</option>
                 </select>
               </div>
             )}
           </div>
 
-          <div className="mt-6 flex justify-end space-x-3">
+          <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
             <button
               type="button"
               onClick={onClose}
@@ -418,7 +421,6 @@ export default function DoctorManagementPage() {
   );
   const ITEMS_PER_PAGE = 10;
 
-  // --- Load Data ---
   const loadData = async () => {
     setLoading(true);
     try {
@@ -438,7 +440,6 @@ export default function DoctorManagementPage() {
     loadData();
   }, []);
 
-  // --- Handlers ---
   const handleDelete = async (id: number) => {
     if (window.confirm("Bạn có chắc chắn muốn VÔ HIỆU HÓA bác sĩ này?")) {
       try {
@@ -446,6 +447,7 @@ export default function DoctorManagementPage() {
         setDoctors((prev) => prev.filter((d) => d.DoctorID !== id));
         alert("Đã xóa thành công.");
       } catch (error) {
+        console.log(error);
         alert("Xóa thất bại.");
       }
     }
@@ -461,12 +463,11 @@ export default function DoctorManagementPage() {
     loadData();
   };
 
-  // --- Filter ---
   const filteredDoctors = useMemo(() => {
     return doctors.filter((doc) => {
-      // Map data chuẩn API vào biến local để search
       const name = doc.user?.FullName?.toLowerCase() || "";
-      const email = doc.user?.Email?.toLowerCase() || "";
+      // Check cả Email Hoa và thường cho chắc chắn
+      const email = (doc.user?.Email || "").toLowerCase();
       const query = searchQuery.toLowerCase();
 
       const matchesSearch = name.includes(query) || email.includes(query);
@@ -515,7 +516,7 @@ export default function DoctorManagementPage() {
               <select
                 value={filterSpecialty}
                 onChange={(e) => setFilterSpecialty(e.target.value)}
-                className="p-2 border border-gray-300 rounded-lg appearance-none bg-white pr-8 focus:ring-blue-500 focus:border-blue-500"
+                className="p-2 border border-gray-300 rounded-lg appearance-none bg-white pr-8 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
               >
                 <option value="ALL">Tất cả Chuyên khoa</option>
                 {specialties.map((s) => (
@@ -525,7 +526,7 @@ export default function DoctorManagementPage() {
                 ))}
               </select>
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                ⚙️
+                ▼
               </span>
             </div>
           </div>
@@ -541,12 +542,12 @@ export default function DoctorManagementPage() {
       </div>
 
       {/* Bảng Danh sách Bác sĩ */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">
                   Ảnh
                 </th>
                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -564,45 +565,36 @@ export default function DoctorManagementPage() {
                 <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Trạng thái
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="py-3 px-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Hành động
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {currentDoctors.map((doctor) => {
-                // Lấy dữ liệu từ object lồng nhau (doctor.user)
                 const fullName = doctor.user?.FullName || "N/A";
+
                 const email = doctor.user?.Email || "N/A";
+
                 const phone = doctor.user?.PhoneNumber || "N/A";
                 const status = doctor.user?.Status || "HoatDong";
-                const avatar =
-                  doctor.imageURL ||
-                  doctor.user?.avatar_url ||
-                  "https://placehold.co/40x40/E0E0E0/000?text=👤";
+                const avatar = doctor.imageURL || doctor.user?.avatar_url;
 
-                // Tìm tên chuyên khoa
                 const specName =
                   specialties.find((s) => s.SpecialtyID === doctor.SpecialtyID)
                     ?.SpecialtyName || "---";
 
                 return (
-                  <tr key={doctor.DoctorID} className="hover:bg-gray-50">
+                  <tr key={doctor.DoctorID} className="hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-sm text-gray-700">
-                      <div className="relative w-10 h-10">
-                        <img
-                          src={avatar}
-                          alt={fullName}
-                          className="w-full h-full rounded-full object-cover border border-gray-300"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src =
-                              "https://placehold.co/40x40/E0E0E0/000?text=👤";
-                          }}
-                        />
-                      </div>
+                      <DataThumbnail
+                        src={avatar}
+                        alt={fullName}
+                        fallbackType="doctor"
+                        className="w-10 h-10 rounded-full border"
+                      />
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700 font-medium">
+                    <td className="py-3 px-4 text-sm text-gray-700 font-bold">
                       {fullName}
                     </td>
                     <td className="py-3 px-4 text-sm font-semibold text-blue-600">
@@ -616,35 +608,32 @@ export default function DoctorManagementPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-700">
-                      {email}
+                      {email} {/* Hiển thị biến email đã xử lý */}
                       <br />
                       <span className="text-xs text-gray-500">{phone}</span>
                     </td>
                     <td className="py-3 px-4 text-sm">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
-                          status === "HoatDong"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-orange-100 text-orange-700"
-                        }`}
+                        className={`px-2 py-1 text-xs font-semibold rounded ${status === "HoatDong"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-orange-100 text-orange-700"
+                          }`}
                       >
                         {status === "HoatDong" ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm flex space-x-2">
+                    <td className="py-3 px-4 text-right text-sm space-x-2">
                       <button
                         onClick={() => handleOpenModal(doctor)}
-                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
-                        title="Chỉnh sửa"
+                        className="text-blue-600 hover:text-blue-800 font-bold hover:underline"
                       >
-                        <span className="w-4 h-4">✏️</span>
+                        Sửa
                       </button>
                       <button
                         onClick={() => handleDelete(doctor.DoctorID)}
-                        className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
-                        title="Vô hiệu hóa"
+                        className="text-red-600 hover:text-red-800 font-bold hover:underline"
                       >
-                        <span className="w-4 h-4">🗑️</span>
+                        Xóa
                       </button>
                     </td>
                   </tr>
@@ -652,7 +641,10 @@ export default function DoctorManagementPage() {
               })}
               {currentDoctors.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                  <td
+                    colSpan={7}
+                    className="py-8 text-center text-gray-500"
+                  >
                     {loading
                       ? "Đang tải dữ liệu..."
                       : "Không tìm thấy bác sĩ nào khớp với tiêu chí tìm kiếm/lọc."}
@@ -676,7 +668,7 @@ export default function DoctorManagementPage() {
             disabled={currentPage === 1}
             className="px-3 py-1 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"
           >
-            -
+            Trước
           </button>
           <span className="px-3 py-1 text-sm font-medium text-blue-600">
             Trang {currentPage} / {totalPages || 1}
@@ -688,7 +680,7 @@ export default function DoctorManagementPage() {
             disabled={currentPage === totalPages || totalPages === 0}
             className="px-3 py-1 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"
           >
-            +
+            Sau
           </button>
         </div>
       </div>

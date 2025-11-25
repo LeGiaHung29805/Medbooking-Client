@@ -1,8 +1,9 @@
 "use client";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import LayoutBook from "@/components/layoutBook";
 import Image from "next/image";
 import {
@@ -13,136 +14,118 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import { AxiosError } from 'axios';
 
-// Kiểu dữ liệu bác sĩ
-interface Doctor {
-    id: number;
-    name: string;
-    dept: string;
-    room: string;
-    avatar: string;
-    services: { name: string; price: number }[];
-    schedule: { date: string; times: string[] }[];
-    fee?: number;
-    insurance?: string;
-}
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 export default function DoctorBookingPage() {
     const router = useRouter();
 
-    // STATE FORM
-    const [selectedPerson, setSelectedPerson] = useState("Tôi - Lê Gia Hưng");
-    const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+    // --- STATE DỮ LIỆU ---
+    const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
+    const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
+    const [currentUser, setCurrentUser] = useState<Model.User | null>(null); // <--- 1. THÊM STATE USER
+    const [loading, setLoading] = useState(true);
+
+    // --- STATE FORM ---
+    const [selectedPerson, setSelectedPerson] = useState(""); // Để rỗng ban đầu
+    const [selectedDoctor, setSelectedDoctor] = useState<Model.Doctor | null>(null);
+
+    // State cho lịch
+    const [availabilities, setAvailabilities] = useState<Model.AvailabilitySlot[]>([]);
     const [selectedDate, setSelectedDate] = useState("");
-    const [selectedTime, setSelectedTime] = useState("");
+    const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+    const [selectedTimeLabel, setSelectedTimeLabel] = useState("");
+
     const [reason, setReason] = useState("");
     const [file, setFile] = useState<File | null>(null);
+    const [bookingLoading, setBookingLoading] = useState(false);
 
-    // STATE SHEET
     const [showDoctorSheet, setShowDoctorSheet] = useState(false);
-    const [showDoctorDetail, setShowDoctorDetail] = useState<Doctor | null>(null);
+    const [viewingDoctor, setViewingDoctor] = useState<Model.Doctor | null>(null);
 
-    // Tìm kiếm & phân trang
     const [search, setSearch] = useState("");
     const [deptFilter, setDeptFilter] = useState("");
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // Dữ liệu giả
-    const doctors: Doctor[] = [
-        {
-            id: 1,
-            name: "PGSTS Trần Ngọc Ánh",
-            dept: "Tiêu hoá",
-            room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
-            avatar: "/image/doctors/doctor5.jpg",
-            fee: 350000,
-            insurance: "Có hỗ trợ BHYT",
-            services: [{ name: "Khám Nội [PK1]", price: 350000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["06:45", "07:00", "07:15"] },
-                { date: "2025-10-01", times: ["07:30", "07:45", "08:00"] },
-                { date: "2025-10-02", times: ["08:15", "08:30", "09:00"] },
-            ],
-        },
-        {
-            id: 2,
-            name: "BS. Vũ Mạnh Tiến",
-            dept: "Tim mạch",
-            room: "Phòng 201",
-            avatar: "/image/doctors/doctor4.jpg",
-            fee: 300000,
-            insurance: "Thanh toán trực tiếp bằng BHYT",
-            services: [{ name: "Khám tim cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-10-02", times: ["08:00", "09:00", "10:00"] },
-                { date: "2025-10-03", times: ["13:00", "14:00", "15:00"] },
-            ],
-        },
-        {
-            id: 3,
-            name: "BS. Nguyễn Văn D",
-            dept: "Tim mạch",
-            room: "Phòng 201",
-            avatar: "/image/doctors/doctor8.jpg",
-            fee: 320000,
-            insurance: "Hỗ trợ thanh toán bảo hiểm",
-            services: [{ name: "Khám tim cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["13:00", "14:00"] },
-                { date: "2025-10-01", times: ["08:00", "09:00", "10:00"] },
-            ],
-        },
-        {
-            id: 4,
-            name: "BS. Nguyễn Văn D",
-            dept: "Tim mạch",
-            room: "Phòng 201",
-            avatar: "/image/doctors/doctor10.jpg",
-            fee: 320000,
-            insurance: "Hỗ trợ thanh toán bảo hiểm",
-            services: [{ name: "Khám tim cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["13:00", "14:00"] },
-                { date: "2025-10-01", times: ["08:00", "09:00", "10:00"] },
-            ],
-        },
-        {
-            id: 5,
-            name: "BS. Nguyễn Văn D",
-            dept: "Tim mạch",
-            room: "Phòng 201",
-            avatar: "/image/doctors/doctor12.jpg",
-            fee: 320000,
-            insurance: "Hỗ trợ thanh toán bảo hiểm",
-            services: [{ name: "Khám tim cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["13:00", "14:00"] },
-                { date: "2025-10-01", times: ["08:00", "09:00", "10:00"] },
-            ],
-        },
-        {
-            id: 6,
-            name: "BS. Nguyễn Văn D",
-            dept: "Tim mạch",
-            room: "Phòng 201",
-            avatar: "/image/doctors/doctor2.jpg",
-            fee: 320000,
-            insurance: "Hỗ trợ thanh toán bảo hiểm",
-            services: [{ name: "Khám tim cơ bản", price: 300000 }],
-            schedule: [
-                { date: "2025-09-30", times: ["13:00", "14:00"] },
-                { date: "2025-10-01", times: ["08:00", "09:00", "10:00"] },
-            ],
-        },
-    ];
+    // 1. LOAD DỮ LIỆU (SỬA ĐỔI)
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [docsData, specsData, userData] = await Promise.all([
+                    Api.getDoctors(),
+                    Api.getSpecialties(),
+                    Api.getMe().catch(() => null)
+                ]);
 
-    // Lọc
-    const filteredDoctors = doctors.filter(
-        (d) =>
-            d.name.toLowerCase().includes(search.toLowerCase()) &&
-            (!deptFilter || d.dept.toLowerCase().includes(deptFilter.toLowerCase()))
-    );
+                setDoctors(docsData);
+                setSpecialties(specsData);
+
+                if (userData) {
+                    setCurrentUser(userData);
+                    // Tự động chọn tên người dùng làm mặc định
+                    setSelectedPerson(userData.FullName);
+                }
+            } catch (error) {
+                console.error("Lỗi tải dữ liệu:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // 2. XỬ LÝ KHI MỞ SHEET CHỌN BÁC SĨ
+    // Khi bấm vào 1 bác sĩ trong list, ta gọi API lấy lịch ngay
+    const handleViewDoctor = async (doctor: Model.Doctor) => {
+        setViewingDoctor(doctor);
+        setSelectedDate(""); // Reset ngày đã chọn
+        setSelectedSlotId(null);
+        setAvailabilities([]); // Xóa lịch cũ
+
+        try {
+            // Gọi API lấy lịch trống
+            const slots = await Api.getDoctorAvailability(doctor.DoctorID);
+            // Lọc slot tương lai & Available
+            const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
+            setAvailabilities(validSlots);
+
+            // Tự động chọn ngày đầu tiên nếu có lịch
+            if (validSlots.length > 0) {
+                const firstDate = validSlots[0].StartTime.split(" ")[0]; // YYYY-MM-DD
+                setSelectedDate(firstDate);
+            }
+        } catch (error) {
+            console.error("Lỗi lấy lịch:", error);
+        }
+    };
+
+    // 3. XỬ LÝ LOGIC NGÀY GIỜ TỪ API
+    // Lấy danh sách ngày duy nhất
+    const uniqueDates = useMemo(() => {
+        const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
+        return Array.from(dates).sort();
+    }, [availabilities]);
+
+    // Lấy danh sách giờ theo ngày đang chọn
+    const slotsOnDate = useMemo(() => {
+        return availabilities.filter(slot => slot.StartTime.startsWith(selectedDate));
+    }, [availabilities, selectedDate]);
+
+
+    // Lọc danh sách bác sĩ (Client-side)
+    const filteredDoctors = useMemo(() => {
+        return doctors.filter((d) => {
+            const nameMatch = d.user?.FullName?.toLowerCase().includes(search.toLowerCase());
+            // Lọc theo tên chuyên khoa (deptFilter là text nhập vào)
+            const specMatch = !deptFilter || d.specialty?.SpecialtyName.toLowerCase().includes(deptFilter.toLowerCase());
+            return nameMatch && specMatch;
+        });
+    }, [doctors, search, deptFilter]);
 
     // Phân trang
     const totalPages = Math.ceil(filteredDoctors.length / pageSize);
@@ -151,71 +134,68 @@ export default function DoctorBookingPage() {
         page * pageSize
     );
 
-    // Format ngày
-    const weekdayNames = [
-        "Chủ nhật",
-        "Thứ Hai",
-        "Thứ Ba",
-        "Thứ Tư",
-        "Thứ Năm",
-        "Thứ Sáu",
-        "Thứ Bảy",
-    ];
+    // Format ngày hiển thị (Thứ..., dd/mm)
+    const weekdayNames = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
     const formatDateLabel = (dateStr: string) => {
+        if (!dateStr) return "";
         const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
         const weekday = weekdayNames[d.getDay()];
         const day = d.getDate().toString().padStart(2, "0");
         const month = (d.getMonth() + 1).toString().padStart(2, "0");
         return `${weekday} ${day}/${month}`;
     };
 
-    // Submit
-    const handleSubmit = (e: React.FormEvent) => {
+    // Submit Đặt lịch
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedDoctor) return alert("Vui lòng chọn bác sĩ!");
-        if (!selectedDate || !selectedTime)
-            return alert("Vui lòng chọn thời gian khám!");
+        if (!selectedSlotId) return alert("Vui lòng chọn thời gian khám!");
+        if (!reason.trim()) return alert("Vui lòng nhập lý do khám!");
 
-        console.log({
-            patient: selectedPerson,
-            doctor: selectedDoctor.name,
-            dept: selectedDoctor.dept,
-            room: selectedDoctor.room,
-            service: selectedDoctor.services[0],
-            date: selectedDate,
-            time: selectedTime,
-            reason,
-            file,
-        });
+        setBookingLoading(true);
+        try {
+            // GỌI API ĐẶT LỊCH
+            await Api.bookAppointment(selectedSlotId, reason, file || undefined);
 
-        alert("Đặt lịch khám thành công (demo)");
-        router.push("/dat-lich");
+            alert("✅ Đặt lịch khám thành công!");
+            router.push("/dat-lich");
+        } catch (error) {
+            const err = error as AxiosError<{ message: string }>;
+            const msg = err.response?.data?.message || "Đặt lịch thất bại.";
+            alert("❌ " + msg);
+        } finally {
+            setBookingLoading(false);
+        }
     };
 
     return (
         <LayoutBook>
-            {/* Form đặt lịch */}
+            {/* Form đặt lịch chính */}
             <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
                 <h1 className="text-2xl font-bold text-green-700 text-center mb-6">
                     Đặt lịch khám theo bác sĩ
                 </h1>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Người tới khám */}
                     <div>
                         <label className="block font-semibold mb-2">Người tới khám</label>
                         <select
                             value={selectedPerson}
                             onChange={(e) => setSelectedPerson(e.target.value)}
-                            className="w-full border rounded px-3 py-2 focus:outline-green-600"
+                            className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
-                            <option value="Tôi - Lê Gia Hưng">Tôi - Lê Gia Hưng</option>
-                            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
-                            <option value="Trần Thị B">Trần Thị B</option>
+                            {currentUser ? (
+                                <option value={currentUser.FullName}>
+                                    {currentUser.FullName}
+                                </option>
+                            ) : (
+                                <option value="">Đang tải thông tin...</option>
+                            )}
                         </select>
                     </div>
 
-                    {/* Bác sĩ */}
+                    {/* Bác sĩ (Đã chọn) */}
                     <div>
                         <label className="block font-semibold mb-2">Bác sĩ</label>
                         {!selectedDoctor ? (
@@ -231,23 +211,18 @@ export default function DoctorBookingPage() {
                                 className="w-full border rounded px-3 py-3 cursor-pointer hover:border-green-600"
                             >
                                 <div className="font-semibold text-green-700">
-                                    {selectedDoctor.name}
+                                    {selectedDoctor.user?.FullName}
                                 </div>
                                 <div className="text-sm text-gray-600">
-                                    Chuyên khoa: {selectedDoctor.dept}
+                                    Chuyên khoa: {selectedDoctor.specialty?.SpecialtyName}
                                 </div>
                                 <div className="text-sm text-gray-600">
-                                    Phòng khám: {selectedDoctor.room}
+                                    Học vị: {selectedDoctor.Degree} | Kinh nghiệm: {selectedDoctor.YearsOfExperience} năm
                                 </div>
-                                <div className="mt-2 text-sm text-gray-700">
-                                    Dịch vụ: {selectedDoctor.services[0].name} –{" "}
-                                    <span className="text-red-600">
-                                        {selectedDoctor.services[0].price.toLocaleString()}đ
-                                    </span>
-                                </div>
-                                {selectedDate && selectedTime && (
-                                    <div className="text-sm mt-1 text-blue-600">
-                                        Thời gian: {formatDateLabel(selectedDate)} – {selectedTime}
+
+                                {selectedDate && selectedTimeLabel && (
+                                    <div className="text-sm mt-1 text-blue-600 font-bold">
+                                        Thời gian: {formatDateLabel(selectedDate)} – {selectedTimeLabel}
                                     </div>
                                 )}
                             </div>
@@ -287,204 +262,200 @@ export default function DoctorBookingPage() {
 
                     <Button
                         type="submit"
+                        disabled={bookingLoading}
                         className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
-                        Xác nhận đặt lịch
+                        {bookingLoading ? "Đang xử lý..." : "Xác nhận đặt lịch"}
                     </Button>
                 </form>
             </div>
 
-            {/* Sheet chọn bác sĩ */}
+            {/* Sheet (Modal) chọn bác sĩ */}
             {showDoctorSheet && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white w-[600px] max-h-[85%] rounded-t-2xl p-4 overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold">Chọn bác sĩ</h2>
-                            <button onClick={() => setShowDoctorSheet(false)}>✕</button>
-                        </div>
-
-                        {/* Lọc */}
-                        <div className="flex justify-center mb-4">
-                            <div className="flex gap-2 w-[500px]">
-                                <input
-                                    type="text"
-                                    placeholder="Tìm chuyên khoa..."
-                                    value={deptFilter}
-                                    onChange={(e) => setDeptFilter(e.target.value)}
-                                    className="border rounded px-2 py-1 w-full text-sm"
-                                />
-
-                                <input
-                                    type="text"
-                                    placeholder="Tìm bác sĩ..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="border rounded px-2 py-1 w-full text-sm"
-                                />
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+                    {/* Nếu chưa chọn bác sĩ chi tiết để xem lịch -> Hiện danh sách bác sĩ */}
+                    {!viewingDoctor ? (
+                        <div className="bg-white w-[600px] max-h-[85%] rounded-t-2xl p-4 overflow-y-auto rounded-b-2xl">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold">Chọn bác sĩ</h2>
+                                <button onClick={() => setShowDoctorSheet(false)}>✕</button>
                             </div>
-                        </div>
 
-                        {/* Danh sách bác sĩ */}
-                        {currentDoctors.map((doc) => (
-                            <div
-                                key={doc.id}
-                                onClick={() => setShowDoctorDetail(doc)}
-                                className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100"
-                            >
-                                <Image
-                                    src={doc.avatar}
-                                    alt={doc.name}
-                                    width={60}
-                                    height={60}
-                                    className="rounded-full object-cover"
-                                />
-                                <div>
-                                    <div className="font-medium">{doc.name}</div>
-                                    <div className="text-sm text-gray-600">{doc.dept}</div>
-                                    <div className="text-sm">{doc.room}</div>
+                            {/* Lọc */}
+                            <div className="flex justify-center mb-4">
+                                <div className="flex gap-2 w-full">
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm chuyên khoa..."
+                                        value={deptFilter}
+                                        onChange={(e) => setDeptFilter(e.target.value)}
+                                        className="border rounded px-2 py-1 w-full text-sm"
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm bác sĩ..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="border rounded px-2 py-1 w-full text-sm"
+                                    />
                                 </div>
                             </div>
-                        ))}
 
-                        {/* Phân trang */}
-                        {totalPages > 1 && (
-                            <Pagination className="mt-4">
-                                <PaginationContent>
-                                    <PaginationItem>
-                                        <PaginationPrevious
-                                            onClick={() => setPage(Math.max(page - 1, 1))}
-                                            aria-disabled={page === 1}
-                                            className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                                        />
-                                    </PaginationItem>
-
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                                        <PaginationItem key={p}>
-                                            <PaginationLink
-                                                isActive={page === p}
-                                                onClick={() => setPage(p)}
-                                            >
-                                                {p}
-                                            </PaginationLink>
-                                        </PaginationItem>
+                            {/* Danh sách bác sĩ */}
+                            {loading ? (
+                                <div className="text-center py-8 text-gray-500">Đang tải danh sách...</div>
+                            ) : currentDoctors.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">Không tìm thấy bác sĩ nào.</div>
+                            ) : (
+                                <>
+                                    {currentDoctors.map((doc) => (
+                                        <div
+                                            key={doc.DoctorID}
+                                            onClick={() => handleViewDoctor(doc)}
+                                            className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100 transition"
+                                        >
+                                            {/* Dùng DataThumbnail thay cho Image */}
+                                            <div className="w-[60px] h-[60px]">
+                                                <DataThumbnail
+                                                    src={doc.imageURL || doc.user?.avatar_url}
+                                                    alt={doc.user?.FullName}
+                                                    fallbackType="doctor"
+                                                    className="w-full h-full rounded-full"
+                                                />
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-900">{doc.user?.FullName}</div>
+                                                <div className="text-sm text-green-600 font-medium">{doc.specialty?.SpecialtyName}</div>
+                                                <div className="text-xs text-gray-500">{doc.Degree}</div>
+                                            </div>
+                                        </div>
                                     ))}
 
-                                    <PaginationItem>
-                                        <PaginationNext
-                                            onClick={() => setPage(Math.min(page + 1, totalPages))}
-                                            aria-disabled={page === totalPages}
-                                            className={
-                                                page === totalPages ? "pointer-events-none opacity-50" : ""
-                                            }
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-                            </Pagination>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Sheet chi tiết bác sĩ */}
-            {showDoctorDetail && (
-                <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
-                    <div className="bg-white w-[50%] max-h-[90%] rounded-t-2xl p-6 overflow-y-auto">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-green-700">
-                                Lịch bác sĩ
-                            </h2>
-                            <button onClick={() => setShowDoctorDetail(null)}>✕</button>
+                                    {/* Phân trang */}
+                                    {totalPages > 1 && (
+                                        <Pagination className="mt-4">
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        onClick={() => setPage(Math.max(page - 1, 1))}
+                                                        className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                                <span className="mx-2 text-sm">Trang {page}/{totalPages}</span>
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        onClick={() => setPage(Math.min(page + 1, totalPages))}
+                                                        className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
+                                    )}
+                                </>
+                            )}
                         </div>
-
-                        {/* Info */}
-                        <div className="flex gap-4 border-b pb-4 mb-4">
-                            <Image
-                                src={showDoctorDetail.avatar}
-                                alt={showDoctorDetail.name}
-                                width={80}
-                                height={80}
-                                className="rounded-lg object-cover"
-                            />
-                            <div>
-                                <h3 className="text-lg font-semibold text-blue-700">
-                                    {showDoctorDetail.name}
-                                </h3>
-                                <p className="text-sm text-gray-600">{showDoctorDetail.dept}</p>
-                                <p className="text-sm text-gray-600">{showDoctorDetail.room}</p>
+                    ) : (
+                        // Nếu đã bấm vào 1 bác sĩ -> Hiện chi tiết & Lịch
+                        <div className="bg-white w-[50%] max-h-[90%] rounded-2xl p-6 overflow-y-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold text-green-700">Lịch bác sĩ</h2>
+                                {/* Bấm X thì quay lại danh sách bác sĩ, không đóng hẳn */}
+                                <button onClick={() => setViewingDoctor(null)} className="text-gray-500 hover:text-gray-800"> Quay lại danh sách</button>
                             </div>
-                        </div>
 
-                        {/* Chọn ngày */}
-                        <h4 className="font-semibold mb-2">Chọn ngày khám</h4>
-                        <div className="flex gap-2 overflow-x-auto mb-4">
-                            {[...showDoctorDetail.schedule]
-                                .sort(
-                                    (a, b) =>
-                                        new Date(a.date).getTime() - new Date(b.date).getTime()
-                                )
-                                .map((sch) => (
+                            <div className="flex gap-4 border-b pb-4 mb-4 items-center">
+                                <div className="w-20 h-20">
+                                    <DataThumbnail
+                                        src={viewingDoctor.imageURL || viewingDoctor.user?.avatar_url}
+                                        alt={viewingDoctor.user?.FullName}
+                                        fallbackType="doctor"
+                                        className="w-full h-full rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-blue-700">
+                                        {viewingDoctor.user?.FullName}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 font-bold">{viewingDoctor.specialty?.SpecialtyName}</p>
+                                    <p className="text-sm text-gray-500">{viewingDoctor.ProfileDescription}</p>
+                                </div>
+                            </div>
+
+                            {/* Chọn ngày */}
+                            <h4 className="font-semibold mb-2 text-gray-700">Chọn ngày khám</h4>
+                            <div className="flex gap-2 overflow-x-auto mb-6 pb-2">
+                                {uniqueDates.length > 0 ? uniqueDates.map((dateStr) => (
                                     <button
-                                        key={sch.date}
+                                        key={dateStr}
                                         onClick={() => {
-                                            setSelectedDate(sch.date);
-                                            setSelectedTime("");
+                                            setSelectedDate(dateStr);
+                                            setSelectedSlotId(null);
+                                            setSelectedTimeLabel("");
                                         }}
-                                        className={`px-3 py-2 rounded-lg border min-w-[120px] text-sm text-center ${selectedDate === sch.date
-                                            ? "bg-blue-600 text-white"
-                                            : "bg-white"
+                                        className={`px-4 py-2 rounded-lg border min-w-[100px] text-sm text-center transition whitespace-nowrap ${selectedDate === dateStr
+                                            ? "bg-green-600 text-white border-green-600 shadow-md"
+                                            : "bg-white border-gray-200 text-gray-600 hover:bg-green-50"
                                             }`}
                                     >
-                                        {formatDateLabel(sch.date)}
+                                        {formatDateLabel(dateStr)}
                                     </button>
-                                ))}
-                        </div>
-
-                        {/* Chọn giờ */}
-                        {selectedDate && (
-                            <div className="grid grid-cols-3 gap-2 mb-4">
-                                {showDoctorDetail.schedule
-                                    .find((s) => s.date === selectedDate)
-                                    ?.times.map((t) => (
-                                        <button
-                                            key={t}
-                                            onClick={() => setSelectedTime(t)}
-                                            className={`border rounded py-2 ${selectedTime === t
-                                                ? "bg-green-600 text-white"
-                                                : "hover:border-green-500"
-                                                }`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
+                                )) : (
+                                    <p className="text-sm text-gray-400 italic">Bác sĩ chưa có lịch trống.</p>
+                                )}
                             </div>
-                        )}
 
-                        <div className="border-t pt-4 mt-4 text-sm text-gray-700 space-y-3">
-                            <p>
-                                <span className="font-semibold">Giá khám:</span>{" "}
-                                {showDoctorDetail.fee
-                                    ? `${showDoctorDetail.fee.toLocaleString()} VNĐ`
-                                    : "Chưa có"}
-                            </p>
-                            <p>
-                                <span className="font-semibold">Bảo hiểm:</span>{" "}
-                                {showDoctorDetail.insurance || "Chưa cập nhật"}
-                            </p>
+                            {/* Chọn giờ */}
+                            {selectedDate && (
+                                <div className="animate-fade-in">
+                                    <h4 className="font-semibold mb-2 text-gray-700">Chọn giờ khám</h4>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+                                        {slotsOnDate.length > 0 ? slotsOnDate.map((slot) => {
+                                            const timeStr = slot.StartTime.split(" ")[1].substring(0, 5); // 08:00
+                                            return (
+                                                <button
+                                                    key={slot.SlotID}
+                                                    onClick={() => {
+                                                        setSelectedSlotId(slot.SlotID);
+                                                        setSelectedTimeLabel(timeStr);
+                                                    }}
+                                                    className={`py-2 rounded border text-sm font-semibold transition ${selectedSlotId === slot.SlotID
+                                                        ? "bg-green-600 text-white border-green-600 shadow-md"
+                                                        : "border-gray-200 text-gray-700 hover:border-green-500 hover:bg-green-50"
+                                                        }`}
+                                                >
+                                                    {timeStr}
+                                                </button>
+                                            );
+                                        }) : (
+                                            <p className="col-span-3 text-sm text-gray-400">Hết giờ ngày này.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer Sheet */}
+                            <div className="flex justify-end gap-3 border-t pt-4">
+                                <button
+                                    onClick={() => setShowDoctorSheet(false)} // Đóng hẳn sheet
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                >
+                                    Đóng
+                                </button>
+                                <button
+                                    disabled={!selectedDate || !selectedSlotId}
+                                    onClick={() => {
+                                        setSelectedDoctor(viewingDoctor); // Set bác sĩ vào Form chính
+                                        setShowDoctorSheet(false); // Đóng sheet
+                                        setViewingDoctor(null);
+                                    }}
+                                    className="bg-green-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 transition"
+                                >
+                                    Xác nhận chọn
+                                </button>
+                            </div>
                         </div>
-
-                        <button
-                            disabled={!selectedDate || !selectedTime}
-                            onClick={() => {
-                                setSelectedDoctor(showDoctorDetail);
-                                setShowDoctorDetail(null);
-                                setShowDoctorSheet(false);
-                            }}
-                            className="w-full bg-green-600 text-white py-2 rounded mt-4 disabled:opacity-50"
-                        >
-                            Xác nhận chọn
-                        </button>
-                    </div>
+                    )}
                 </div>
             )}
         </LayoutBook>

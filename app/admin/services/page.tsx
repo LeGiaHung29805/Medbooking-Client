@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
+import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
-
-// ===============================================
-// 1. MODAL FORM (Thêm/Sửa Dịch Vụ)
-// ===============================================
+import { getFullImageUrl } from "@/lib/utils";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 interface ServiceFormProps {
-  service: Model.Service | null; // Null khi tạo mới
-  specialties: Model.Specialty[]; // Danh sách chuyên khoa từ API
+  service: Model.Service | null;
+  specialties: Model.Specialty[];
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -24,19 +24,20 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
   const isEdit = !!service;
   const [loading, setLoading] = useState(false);
 
-  // State Form
   const [formData, setFormData] = useState({
     ServiceName: service?.ServiceName || "",
     Description: service?.Description || "",
     EstimatedDuration: service?.EstimatedDuration?.toString() || "15",
     Price: service?.Price?.toString() || "0",
-    // Mặc định chọn chuyên khoa đầu tiên nếu tạo mới
     SpecialtyID: service?.SpecialtyID || specialties[0]?.SpecialtyID || 0,
   });
 
-  // State Ảnh
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(service?.imageURL || "");
+
+  // Logic preview ảnh trong Modal: dùng getFullImageUrl cho ảnh cũ
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    service?.imageURL ? getFullImageUrl(service.imageURL) : ""
+  );
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -73,7 +74,7 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
         data.append("Description", formData.Description);
 
       if (selectedFile) {
-        data.append("image", selectedFile); // Key 'image' khớp backend
+        data.append("imageURL", selectedFile);
       }
 
       if (isEdit && service) {
@@ -85,17 +86,22 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       }
 
       onSuccess();
-    } catch (error: any) {
-      console.error("Error:", error);
-      const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-      alert("❌ " + msg);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error("Error:", error);
+        const msg = error.response?.data?.message || "Có lỗi xảy ra!";
+        alert("❌ " + msg);
+      } else {
+        console.error("Unexpected Error:", error);
+        alert("❌ Có lỗi không xác định xảy ra!");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex justify-center items-center z-50 p-4">
+    <div className="fixed inset-0 bg-transparent backdrop-blur-sm flex justify-center items-center z-50 p-4 bg-black/30">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100">
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
           <h2 className="text-xl font-bold text-gray-800">
@@ -111,7 +117,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Tên Dịch vụ */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Tên Dịch vụ *
@@ -127,7 +132,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
               />
             </div>
 
-            {/* Chuyên khoa */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Chuyên khoa *
@@ -147,20 +151,22 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
               </select>
             </div>
 
-            {/* Upload Ảnh */}
+            {/* --- Phần Ảnh trong Modal --- */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Ảnh minh họa
               </label>
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-lg border bg-gray-50 flex-shrink-0 overflow-hidden">
-                  <img
+                <div className="w-12 h-12 relative rounded-lg border bg-gray-50 flex-shrink-0 overflow-hidden">
+                  {/* Preview Modal vẫn dùng Image trực tiếp */}
+                  <Image
                     src={previewUrl || "https://placehold.co/100x100?text=IMG"}
                     alt="Preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) =>
-                      (e.currentTarget.src =
-                        "https://placehold.co/100x100?text=Err")
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                    onError={() =>
+                      setPreviewUrl("https://placehold.co/100x100?text=Err")
                     }
                   />
                 </div>
@@ -173,7 +179,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
               </div>
             </div>
 
-            {/* Giá */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Giá (VNĐ) *
@@ -189,7 +194,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
               />
             </div>
 
-            {/* Thời gian */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Thời gian (phút) *
@@ -205,7 +209,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
               />
             </div>
 
-            {/* Mô tả */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Mô tả chi tiết
@@ -257,12 +260,10 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
 // ===============================================
 
 export default function ServiceManagementPage() {
-  // State Dữ liệu API
   const [services, setServices] = useState<Model.Service[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State UI
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Model.Service | null>(
@@ -271,13 +272,12 @@ export default function ServiceManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  // --- LOAD DATA (Services & Specialties) ---
   const loadData = async () => {
     setLoading(true);
     try {
       const [servicesData, specialtiesData] = await Promise.all([
-        Api.getAllServices(), // Hàm mới thêm trong ApiClient
-        Api.getSpecialties(), // Lấy chuyên khoa để map tên
+        Api.getAllServices(),
+        Api.getSpecialties(),
       ]);
       setServices(servicesData);
       setSpecialties(specialtiesData);
@@ -292,7 +292,6 @@ export default function ServiceManagementPage() {
     loadData();
   }, []);
 
-  // Map ID chuyên khoa sang Tên để hiển thị
   const specialtyMap = useMemo(() => {
     return specialties.reduce((map, s) => {
       map.set(s.SpecialtyID, s.SpecialtyName);
@@ -300,7 +299,6 @@ export default function ServiceManagementPage() {
     }, new Map<number, string>());
   }, [specialties]);
 
-  // Filter Client-side
   const filteredServices = useMemo(() => {
     setCurrentPage(1);
     if (!searchQuery) return services;
@@ -313,14 +311,12 @@ export default function ServiceManagementPage() {
     );
   }, [services, searchQuery, specialtyMap]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredServices.length / ITEMS_PER_PAGE);
   const currentServices = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredServices.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredServices, currentPage]);
 
-  // Handlers
   const handleSuccess = () => {
     setIsModalOpen(false);
     loadData();
@@ -338,6 +334,7 @@ export default function ServiceManagementPage() {
         setServices((prev) => prev.filter((s) => s.ServiceID !== id));
         alert("🗑️ Đã xóa thành công.");
       } catch (error) {
+        console.error(error);
         alert("❌ Xóa thất bại.");
       }
     }
@@ -362,7 +359,6 @@ export default function ServiceManagementPage() {
         </button>
       </div>
 
-      {/* Search Bar */}
       <div className="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100">
         <div className="relative max-w-md">
           <input
@@ -378,7 +374,6 @@ export default function ServiceManagementPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
         {loading ? (
           <div className="p-16 text-center">
@@ -417,17 +412,12 @@ export default function ServiceManagementPage() {
                     className="hover:bg-blue-50 transition group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <img
-                        src={
-                          service.imageURL ||
-                          "https://placehold.co/40x40/E0E0E0/000?text=DV"
-                        }
-                        alt=""
-                        className="w-10 h-10 rounded-lg object-cover border"
-                        onError={(e) =>
-                          (e.currentTarget.src =
-                            "https://placehold.co/40x40/E0E0E0/000?text=Err")
-                        }
+                      {/* SỬ DỤNG DATA THUMBNAIL MỚI */}
+                      <DataThumbnail
+                        src={service.imageURL}
+                        alt={service.ServiceName}
+                        fallbackType="service"
+                        className="w-10 h-10 rounded-lg"
                       />
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-800">
@@ -477,7 +467,6 @@ export default function ServiceManagementPage() {
         )}
       </div>
 
-      {/* Pagination */}
       <div className="mt-6 flex justify-end gap-2">
         <button
           disabled={currentPage === 1}

@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "example.com", // Sửa lỗi "Invalid src prop" bạn đang gặp
+        hostname: "example.com",
       },
       {
         protocol: "http",
