@@ -15,14 +15,220 @@ interface ServiceFormProps {
   onSuccess: () => void;
 }
 
-const ServiceFormModal: React.FC<ServiceFormProps> = ({
-  service,
-  specialties,
-  onClose,
-  onSuccess,
-}) => {
-  const isEdit = !!service;
-  const [loading, setLoading] = useState(false);
+// KHAI BÁO CỐ ĐỊNH CHO PHÂN TRANG
+const SERVICES_PER_PAGE = 10;
+
+// Dữ liệu giả lập Chuyên khoa (Lấy từ bảng Specialties)
+const MOCK_SPECIALTIES: Specialty[] = [
+    { SpecialtyID: 1, SpecialtyName: 'Nội Tổng Quát' },
+    { SpecialtyID: 2, SpecialtyName: 'Da Liễu' },
+    { SpecialtyID: 3, SpecialtyName: 'Tim Mạch' },
+    { SpecialtyID: 4, SpecialtyName: 'Răng Hàm Mặt' },
+    { SpecialtyID: 5, SpecialtyName: 'Nhi Khoa' },
+    { SpecialtyID: 6, SpecialtyName: 'Phụ Sản' },   
+    { SpecialtyID: 7, SpecialtyName: 'Tai Mũi Họng' },
+    { SpecialtyID: 8, SpecialtyName: 'Cơ Xương Khớp' },
+    { SpecialtyID: 9, SpecialtyName: 'Tiết Niệu' },
+    { SpecialtyID: 10, SpecialtyName: 'Mắt' },
+    { SpecialtyID: 11, SpecialtyName: 'Truyền Nhiễm' },
+    { SpecialtyID: 12, SpecialtyName: 'Thần Kinh' },
+    { SpecialtyID: 13, SpecialtyName: 'Ung Bướu' },
+    { SpecialtyID: 14, SpecialtyName: 'Ngoại Tổng Quát' },
+    { SpecialtyID: 15, SpecialtyName: 'Gây Mê Hồi Sức' },
+    { SpecialtyID: 16, SpecialtyName: 'Chẩn Đoán Hình Ảnh' },
+];
+
+// Dữ liệu giả lập Dịch vụ (Lấy từ bảng Services)
+const INITIAL_SERVICES: Service[] = [
+    { 
+        ServiceID: 101, 
+        ServiceName: 'Khám tổng quát', 
+        Description: 'Kiểm tra sức khỏe cơ bản, đo huyết áp, nhịp tim.', 
+        EstimatedDuration: 15, 
+        Price: 250000, 
+        SpecialtyID: 1, 
+        ImageURL: '/image/doctors/doctor1.jpg', // ← DÙNG ẢNH THẬT TỪ TRANG ADMIN/DOCTOR
+        DoctorNames: 'BS. Nguyễn Hoàng A, BS. Trần Thị B' 
+    },
+    { 
+        ServiceID: 102, 
+        ServiceName: 'Tư vấn Da Liễu', 
+        Description: 'Tư vấn chuyên sâu về các vấn đề da liễu.', 
+        EstimatedDuration: 25, 
+        Price: 400000, 
+        SpecialtyID: 2, 
+        ImageURL: '/image/doctors/doctor2.jpg', 
+        DoctorNames: 'BS. Hoàng Văn E' 
+    },
+    { 
+        ServiceID: 103, 
+        ServiceName: 'Siêu âm tim', 
+        Description: 'Dùng sóng siêu âm để kiểm tra cấu trúc tim.', 
+        EstimatedDuration: 40, 
+        Price: 850000, 
+        SpecialtyID: 3, 
+        ImageURL: '/image/doctors/doctor3.jpg', 
+        DoctorNames: 'BS. Lý Văn I' 
+    },
+    { 
+        ServiceID: 104, 
+        ServiceName: 'Lấy cao răng', 
+        Description: 'Làm sạch vôi răng và đánh bóng.', 
+        EstimatedDuration: 30, 
+        Price: 300000, 
+        SpecialtyID: 4, 
+        ImageURL: '/image/doctors/doctor4.jpg', 
+        DoctorNames: 'BS. Phạm Thị K' 
+    },
+
+    {
+        ServiceID: 105,
+        ServiceName: 'Khám Nhi Khoa',
+        Description: 'Khám và tư vấn sức khỏe cho trẻ em.',
+        EstimatedDuration: 20,
+        Price: 300000,
+        SpecialtyID: 5,
+        ImageURL: '/image/doctors/doctor5.jpg',
+        DoctorNames: 'BS. Lê Thị M'
+    },
+
+    {
+        ServiceID: 106,
+        ServiceName: 'Khám Phụ Sản',
+        Description: 'Khám và tư vấn sức khỏe phụ nữ mang thai.',
+        EstimatedDuration: 30,
+        Price: 500000,
+        SpecialtyID: 6,
+        ImageURL: '/image/doctors/doctor6.jpg',
+        DoctorNames: 'BS. Trần Thị N'
+    },
+
+    {
+        ServiceID: 107,
+        ServiceName: 'Khám Tai Mũi Họng',
+        Description: 'Khám và điều trị các bệnh về tai, mũi, họng.',
+        EstimatedDuration: 25,
+        Price: 350000,
+        SpecialtyID: 7,
+        ImageURL: '/image/doctors/doctor7.jpg',
+        DoctorNames: 'BS. Nguyễn Văn O'
+    },
+
+    {
+        ServiceID: 108,
+        ServiceName: 'Khám Cơ Xương Khớp',
+        Description: 'Khám và điều trị các bệnh về cơ xương khớp.',
+        EstimatedDuration: 30,
+        Price: 400000,
+        SpecialtyID: 8,
+        ImageURL: '/image/doctors/doctor8.jpg',
+        DoctorNames: 'BS. Lê Văn P'
+    },
+
+    {
+        ServiceID: 109,
+        ServiceName: 'Khám Tiết Niệu',
+        Description: 'Khám và điều trị các bệnh về hệ tiết niệu.',
+        EstimatedDuration: 20,
+        Price: 300000,
+        SpecialtyID: 9,
+        ImageURL: '/image/doctors/doctor9.jpg',
+        DoctorNames: 'BS. Phạm Thị Q'
+    },
+
+    {
+        ServiceID: 110,
+        ServiceName: 'Khám Mắt',
+        Description: 'Khám và tư vấn các vấn đề về mắt.',
+        EstimatedDuration: 15,
+        Price: 250000,
+        SpecialtyID: 10,
+        ImageURL: '/image/doctors/doctor10.jpg',
+        DoctorNames: 'BS. Hoàng Văn R'
+    },
+
+    {
+        ServiceID: 111,
+        ServiceName: 'Khám Truyền Nhiễm',
+        Description: 'Khám và điều trị các bệnh truyền nhiễm.',
+        EstimatedDuration: 30,
+        Price: 450000,
+        SpecialtyID: 11,
+        ImageURL: '/image/doctors/doctor11.jpg',
+        DoctorNames: 'BS. Lý Thị S'
+    },
+
+    {
+        ServiceID: 112,
+        ServiceName: 'Khám Thần Kinh',
+        Description: 'Khám và điều trị các bệnh về thần kinh.',
+        EstimatedDuration: 40,
+        Price: 600000,
+        SpecialtyID: 12,
+        ImageURL: '/image/doctors/doctor12.jpg',
+        DoctorNames: 'BS. Trần Văn T'
+    },
+
+    {
+        ServiceID: 113,
+        ServiceName: 'Khám Ung Bướu',
+        Description: 'Khám và tư vấn các bệnh ung bướu.',
+        EstimatedDuration: 45,
+        Price: 700000,
+        SpecialtyID: 13,
+        ImageURL: '/image/doctors/doctor13.jpg',
+        DoctorNames: 'BS. Nguyễn Thị U'
+    },
+
+    {
+        ServiceID: 114,
+        ServiceName: 'Khám Ngoại Tổng Quát',
+        Description: 'Khám và điều trị các bệnh ngoại khoa tổng quát.',
+        EstimatedDuration: 35,
+        Price: 550000,
+        SpecialtyID: 14,
+        ImageURL: '/image/doctors/doctor14.jpg',
+        DoctorNames: 'BS. Lê Văn V'
+    },  
+
+    {
+        ServiceID: 115,
+        ServiceName: 'Gây Mê Hồi Sức',  
+        Description: 'Dịch vụ gây mê và hồi sức cho các ca phẫu thuật.',    
+        EstimatedDuration: 60,
+        Price: 1200000,
+        SpecialtyID: 15,
+        ImageURL: '/image/doctors/doctor15.jpg',
+        DoctorNames: 'BS. Phạm Thị W'
+    },
+
+    {
+        ServiceID: 116,
+        ServiceName: 'Chẩn Đoán Hình Ảnh',
+        Description: 'Dịch vụ chẩn đoán hình ảnh bằng X-quang, CT, MRI.',
+        EstimatedDuration: 50,
+        Price: 900000,
+        SpecialtyID: 16,
+        ImageURL: '/image/doctors/doctor16.jpg',
+        DoctorNames: 'BS. Hoàng Văn X'
+    },
+];
+
+// ===============================================
+// 2. MODAL THÊM/SỬA DỊCH VỤ
+// ===============================================
+
+const ServiceFormModal: React.FC<ServiceFormProps> = ({ service, specialties, onClose, onSuccess }) => {
+    const isEdit = !!service;
+    const [formData, setFormData] = useState({
+        ServiceName: service?.ServiceName || '',
+        Description: service?.Description || '',
+        EstimatedDuration: service?.EstimatedDuration.toString() || '15',
+        Price: service?.Price.toString() || '0',
+        SpecialtyID: service?.SpecialtyID || specialties[0]?.SpecialtyID,
+        ImageURL: service?.ImageURL || '', // KHỚP DB: ImageURL
+    });
+    const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     ServiceName: service?.ServiceName || "",
@@ -59,9 +265,9 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
 
     try {
       const data = new FormData();
@@ -224,39 +430,31 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md flex items-center transition disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <span className="mr-2 animate-spin">⌛</span> Đang lưu...
-                </>
-              ) : (
-                <>
-                  <span className="mr-2">💾</span>{" "}
-                  {isEdit ? "Lưu thay đổi" : "Tạo mới"}
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+                    <div className="mt-6 flex justify-end space-x-3">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            Hủy
+                        </button>
+                        <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 flex items-center" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <span className="mr-2 animate-spin">💾</span> Đang lưu...
+                                </>
+                            ) : (
+                                <>
+                                    <span className="mr-2">💾</span> {isEdit ? 'Cập nhật' : 'Thêm mới'}
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 };
 
+
 // ===============================================
-// 2. MAIN COMPONENT
+// 3. MAIN COMPONENT
 // ===============================================
 
 export default function ServiceManagementPage() {
@@ -288,9 +486,10 @@ export default function ServiceManagementPage() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+    useEffect(() => {
+        setServices(INITIAL_SERVICES);
+        setLoading(false);
+    }, []);
 
   const specialtyMap = useMemo(() => {
     return specialties.reduce((map, s) => {
@@ -487,14 +686,15 @@ export default function ServiceManagementPage() {
         </button>
       </div>
 
-      {isModalOpen && (
-        <ServiceFormModal
-          service={selectedService}
-          specialties={specialties}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={handleSuccess}
-        />
-      )}
-    </div>
-  );
+            {/* Modal */}
+            {isModalOpen && (
+                <ServiceFormModal
+                    service={selectedService}
+                    specialties={MOCK_SPECIALTIES}
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={handleSuccess}
+                />
+            )}
+        </div>
+    );
 }

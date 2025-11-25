@@ -610,3 +610,25 @@ export const sendNotification = async (data: {
   });
   return response.data;
 };
+// [MỚI] Lấy danh sách lịch hẹn chờ xác nhận (Pending)
+export const getPendingAppointments = async (): Promise<
+  Model.Appointment[]
+> => {
+  // Giả sử backend có hỗ trợ filter status, hoặc dùng API lấy tất cả rồi filter ở frontend (nếu backend chưa hỗ trợ filter)
+  // Cách tốt nhất là backend có endpoint riêng hoặc param filter
+  // Ở đây dùng cách filter ở frontend từ API getAllAppointments nếu backend chưa có endpoint riêng
+  // Hoặc gọi endpoint /staff/pending-appointments nếu có.
+
+  // Cách 1: Gọi API lấy tất cả rồi lọc (Tạm thời dùng cách này nếu chưa rõ backend)
+  const allAppointments = await getAllAppointments();
+  return allAppointments.filter((app) => app.Status === "Pending");
+};
+// [MỚI] Staff tạo lịch hẹn thay mặt bệnh nhân
+export const staffCreateAppointment = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post("/staff/appointments", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};

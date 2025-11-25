@@ -10,14 +10,32 @@ import { getFullImageUrl } from "@/lib/utils";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 // ===============================================
-// 1. COMPONENT FORM MODAL
+// 1. INTERFACE & MOCK DATA
 // ===============================================
 
+interface Specialty {
+    id: number;
+    name: string;
+}
+
+interface DoctorUser {
+    UserID: number;
+    FullName: string;
+    Email: string;
+    PhoneNumber: string;
+    Status: 'Active' | 'Inactive' | 'Pending' | 'on_leave';
+    SpecialtyID: number;
+    Degree: string;
+    YearsOfExperience: number;
+    ProfileDescription: string;
+    ImageURL?: string;
+}
+
 interface DoctorFormProps {
-  doctor: Model.Doctor | null;
-  specialties: Model.Specialty[];
-  onClose: () => void;
-  onSuccess: () => void;
+    doctor: DoctorUser | null;
+    specialties: Specialty[];
+    onClose: () => void;
+    onSuccess: (updatedDoctor: DoctorUser) => void;
 }
 
 const DoctorFormModal: React.FC<DoctorFormProps> = ({
@@ -56,20 +74,13 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
     initialImage ? getFullImageUrl(initialImage) : ""
   );
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        name === "SpecialtyID" || name === "YearsOfExperience"
-          ? Number(value)
-          : value,
-    }));
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: (name === 'SpecialtyID' || name === 'YearsOfExperience') ? parseInt(value) || 0 : value
+        }));
+    };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -88,7 +99,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
     if (fileInput) fileInput.value = "";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -164,26 +175,14 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* THÔNG TIN CHUNG */}
-            <h3 className="col-span-full text-lg font-bold mt-2 border-b pb-1">
-              Thông tin Tài khoản & Cơ bản
-            </h3>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <h3 className="col-span-full text-lg font-bold mt-2 border-b pb-1">Thông tin Tài khoản & Cơ bản</h3>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Họ và Tên
-              </label>
-              <input
-                type="text"
-                name="FullName"
-                value={formData.FullName}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Họ và Tên</label>
+                            <input type="text" name="FullName" value={formData.FullName} onChange={handleChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+                        </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -277,19 +276,10 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               Thông tin Chuyên môn & Hình ảnh
             </h3>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Bằng cấp
-              </label>
-              <input
-                type="text"
-                name="Degree"
-                value={formData.Degree}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Bằng cấp</label>
+                            <input type="text" name="Degree" value={formData.Degree} onChange={handleChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+                        </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -339,19 +329,10 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               </div>
             </div>
 
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Mô tả hồ sơ (ProfileDescription)
-              </label>
-              <textarea
-                name="ProfileDescription"
-                value={formData.ProfileDescription}
-                onChange={handleChange}
-                rows={3}
-                required
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+                        <div className="col-span-1 md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700">Mô tả hồ sơ</label>
+                            <textarea name="ProfileDescription" value={formData.ProfileDescription} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+                        </div>
 
             {isEdit && (
               <div className="md:col-span-2">
@@ -404,7 +385,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 };
 
 // ===============================================
-// 2. MAIN COMPONENT
+// 3. TRANG CHÍNH
 // ===============================================
 
 export default function DoctorManagementPage() {
@@ -489,28 +470,28 @@ export default function DoctorManagementPage() {
     setCurrentPage(1);
   }, [searchQuery, filterSpecialty]);
 
-  return (
-    <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">
-        🧑‍⚕️ Quản lý Hồ sơ Bác sĩ
-      </h1>
+    return (
+        <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
+            <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">
+                Quản lý Hồ sơ Bác sĩ
+            </h1>
 
-      {/* Thanh Điều khiển */}
-      <div className="bg-white p-4 rounded-xl shadow-md mb-6">
-        <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
-          <div className="flex space-x-3 items-center w-full md:w-auto">
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                placeholder="Tìm kiếm theo tên, email, chuyên khoa..."
-                className="p-2 pl-10 border border-gray-300 rounded-lg w-full md:w-72 focus:ring-blue-500 focus:border-blue-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                🔍
-              </span>
-            </div>
+            <div className="bg-white p-4 rounded-xl shadow-md mb-6">
+                <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
+                    <div className="flex space-x-3 items-center w-full md:w-auto">
+                        <div className="relative flex-grow">
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm theo tên, email, chuyên khoa..."
+                                className="p-2 pl-10 border border-gray-300 rounded-lg w-full md:w-72 focus:ring-blue-500 focus:border-blue-500"
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                        </div>
 
             <div className="relative">
               <select
@@ -531,15 +512,15 @@ export default function DoctorManagementPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => handleOpenModal()}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md w-full md:w-auto"
-          >
-            <span>➕</span>
-            <span>Thêm Bác sĩ Mới</span>
-          </button>
-        </div>
-      </div>
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition duration-150 shadow-md w-full md:w-auto"
+                    >
+                        <span>➕</span>
+                        <span>Thêm Bác sĩ Mới</span>
+                    </button>
+                </div>
+            </div>
 
       {/* Bảng Danh sách Bác sĩ */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
@@ -685,14 +666,14 @@ export default function DoctorManagementPage() {
         </div>
       </div>
 
-      {isModalOpen && (
-        <DoctorFormModal
-          doctor={selectedDoctor}
-          specialties={specialties}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={handleModalSuccess}
-        />
-      )}
-    </div>
-  );
+            {isModalOpen && (
+                <DoctorFormModal
+                    doctor={selectedDoctor}
+                    specialties={MOCK_SPECIALTIES}
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={handleSuccess}
+                />
+            )}
+        </div>
+    );
 }
