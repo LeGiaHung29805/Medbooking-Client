@@ -1,41 +1,22 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
-
-// 1. IMPORT COMPONENT DÙNG CHUNG
-import DataThumbnail from "@/components/thumnail/DataThumbnail";
+import DataThumbnail from "@/components/thumnail/DataThumbnail"; // Đã sửa đường dẫn import cho đúng chuẩn
 
 // ===============================================
-// 1. INTERFACE & MOCK DATA
+// 1. MODAL FORM (Thêm/Sửa Bác sĩ)
 // ===============================================
-
-interface Specialty {
-    id: number;
-    name: string;
-}
-
-interface DoctorUser {
-    UserID: number;
-    FullName: string;
-    Email: string;
-    PhoneNumber: string;
-    Status: 'Active' | 'Inactive' | 'Pending' | 'on_leave';
-    SpecialtyID: number;
-    Degree: string;
-    YearsOfExperience: number;
-    ProfileDescription: string;
-    ImageURL?: string;
-}
 
 interface DoctorFormProps {
-    doctor: DoctorUser | null;
-    specialties: Specialty[];
-    onClose: () => void;
-    onSuccess: (updatedDoctor: DoctorUser) => void;
+  doctor: Model.Doctor | null;
+  specialties: Model.Specialty[];
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 const DoctorFormModal: React.FC<DoctorFormProps> = ({
@@ -51,10 +32,8 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   // --- Map dữ liệu API vào Form ---
   const [formData, setFormData] = useState({
     FullName: doctor?.user?.FullName || "",
-
-    // SỬA Ở ĐÂY: Ưu tiên lấy Email (Hoa) trước
+    // Lấy Email (Hoa) hoặc email (thường)
     Email: doctor?.user?.Email || "",
-
     Username: doctor?.user?.Username || "",
     Password: "",
     PhoneNumber: doctor?.user?.PhoneNumber || "",
@@ -68,25 +47,32 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   // State xử lý file ảnh
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Logic preview ảnh
+  // Logic preview ảnh: Ưu tiên ảnh từ DB (qua getFullImageUrl)
   const initialImage = doctor?.imageURL || doctor?.user?.avatar_url;
   const [previewUrl, setPreviewUrl] = useState<string>(
     initialImage ? getFullImageUrl(initialImage) : ""
   );
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: (name === 'SpecialtyID' || name === 'YearsOfExperience') ? parseInt(value) || 0 : value
-        }));
-    };
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "SpecialtyID" || name === "YearsOfExperience"
+          ? Number(value)
+          : value,
+    }));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setPreviewUrl(URL.createObjectURL(file)); // Preview ảnh local
     }
   };
 
@@ -99,7 +85,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
     if (fileInput) fileInput.value = "";
   };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -115,7 +101,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
       data.append("FullName", formData.FullName);
       data.append("Username", formData.Username);
 
-      // SỬA Ở ĐÂY: Gửi key Email (Hoa) lên backend
+      // QUAN TRỌNG: Gửi key Email (Hoa) khớp với Backend
       data.append("Email", formData.Email);
 
       data.append("PhoneNumber", formData.PhoneNumber);
@@ -131,14 +117,15 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
         data.append("Password", formData.Password);
       }
 
-      // Gửi file với key 'image' (hoặc 'imageURL' nếu backend bạn đã sửa nhận key này)
+      // QUAN TRỌNG: Gửi file vào key 'image'
       if (selectedFile) {
-        data.append("imageURL", selectedFile);
+        data.append("image", selectedFile);
       }
 
       if (isEdit && doctor) {
-        // Thêm _method PUT để Laravel nhận file khi update
+        // QUAN TRỌNG: Method Spoofing cho Laravel
         data.append("_method", "PUT");
+
         await Api.adminUpdateDoctor(doctor.DoctorID, data);
         alert("Cập nhật thành công!");
       } else {
@@ -175,14 +162,26 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
           </button>
         </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <h3 className="col-span-full text-lg font-bold mt-2 border-b pb-1">Thông tin Tài khoản & Cơ bản</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* THÔNG TIN CHUNG */}
+            <h3 className="col-span-full text-lg font-bold mt-2 border-b pb-1">
+              Thông tin Tài khoản & Cơ bản
+            </h3>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Họ và Tên</label>
-                            <input type="text" name="FullName" value={formData.FullName} onChange={handleChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
-                        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Họ và Tên
+              </label>
+              <input
+                type="text"
+                name="FullName"
+                value={formData.FullName}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -276,10 +275,19 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               Thông tin Chuyên môn & Hình ảnh
             </h3>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Bằng cấp</label>
-                            <input type="text" name="Degree" value={formData.Degree} onChange={handleChange} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
-                        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Bằng cấp
+              </label>
+              <input
+                type="text"
+                name="Degree"
+                value={formData.Degree}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -302,11 +310,16 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               </label>
               <div className="flex items-center space-x-3 p-2 border border-dashed rounded-lg bg-gray-50">
                 <div className="w-16 h-16 relative rounded-full border bg-white overflow-hidden flex-shrink-0">
-                  {/* Sử dụng DataThumbnail cho preview trong Modal (để tái sử dụng logic ảnh) */}
-                  <DataThumbnail
-                    src={previewUrl}
-                    fallbackType="doctor"
-                    className="w-full h-full"
+                  {/* Preview Modal */}
+                  <Image
+                    src={previewUrl || "https://placehold.co/100x100?text=Dr"}
+                    alt="Avatar Preview"
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                    onError={() =>
+                      setPreviewUrl("https://placehold.co/100x100?text=Err")
+                    }
                   />
                 </div>
                 <div className="flex flex-col w-full">
@@ -329,10 +342,19 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               </div>
             </div>
 
-                        <div className="col-span-1 md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700">Mô tả hồ sơ</label>
-                            <textarea name="ProfileDescription" value={formData.ProfileDescription} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
-                        </div>
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Mô tả hồ sơ (ProfileDescription)
+              </label>
+              <textarea
+                name="ProfileDescription"
+                value={formData.ProfileDescription}
+                onChange={handleChange}
+                rows={3}
+                required
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
             {isEdit && (
               <div className="md:col-span-2">
@@ -385,7 +407,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 };
 
 // ===============================================
-// 3. TRANG CHÍNH
+// 2. MAIN COMPONENT
 // ===============================================
 
 export default function DoctorManagementPage() {
@@ -428,7 +450,7 @@ export default function DoctorManagementPage() {
         setDoctors((prev) => prev.filter((d) => d.DoctorID !== id));
         alert("Đã xóa thành công.");
       } catch (error) {
-        console.log(error);
+        console.log(error)
         alert("Xóa thất bại.");
       }
     }
@@ -447,7 +469,6 @@ export default function DoctorManagementPage() {
   const filteredDoctors = useMemo(() => {
     return doctors.filter((doc) => {
       const name = doc.user?.FullName?.toLowerCase() || "";
-      // Check cả Email Hoa và thường cho chắc chắn
       const email = (doc.user?.Email || "").toLowerCase();
       const query = searchQuery.toLowerCase();
 
@@ -470,28 +491,28 @@ export default function DoctorManagementPage() {
     setCurrentPage(1);
   }, [searchQuery, filterSpecialty]);
 
-    return (
-        <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
-            <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">
-                Quản lý Hồ sơ Bác sĩ
-            </h1>
+  return (
+    <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">
+        🧑‍⚕️ Quản lý Hồ sơ Bác sĩ
+      </h1>
 
-            <div className="bg-white p-4 rounded-xl shadow-md mb-6">
-                <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
-                    <div className="flex space-x-3 items-center w-full md:w-auto">
-                        <div className="relative flex-grow">
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm theo tên, email, chuyên khoa..."
-                                className="p-2 pl-10 border border-gray-300 rounded-lg w-full md:w-72 focus:ring-blue-500 focus:border-blue-500"
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                            />
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
-                        </div>
+      {/* Thanh Điều khiển */}
+      <div className="bg-white p-4 rounded-xl shadow-md mb-6">
+        <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
+          <div className="flex space-x-3 items-center w-full md:w-auto">
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                placeholder="Tìm kiếm theo tên, email, chuyên khoa..."
+                className="p-2 pl-10 border border-gray-300 rounded-lg w-full md:w-72 focus:ring-blue-500 focus:border-blue-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                🔍
+              </span>
+            </div>
 
             <div className="relative">
               <select
@@ -512,15 +533,15 @@ export default function DoctorManagementPage() {
             </div>
           </div>
 
-                    <button
-                        onClick={() => handleOpenModal()}
-                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition duration-150 shadow-md w-full md:w-auto"
-                    >
-                        <span>➕</span>
-                        <span>Thêm Bác sĩ Mới</span>
-                    </button>
-                </div>
-            </div>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md w-full md:w-auto"
+          >
+            <span>➕</span>
+            <span>Thêm Bác sĩ Mới</span>
+          </button>
+        </div>
+      </div>
 
       {/* Bảng Danh sách Bác sĩ */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
@@ -555,6 +576,7 @@ export default function DoctorManagementPage() {
               {currentDoctors.map((doctor) => {
                 const fullName = doctor.user?.FullName || "N/A";
 
+                // Lấy Email (ưu tiên chữ Hoa)
                 const email = doctor.user?.Email || "N/A";
 
                 const phone = doctor.user?.PhoneNumber || "N/A";
@@ -568,6 +590,7 @@ export default function DoctorManagementPage() {
                 return (
                   <tr key={doctor.DoctorID} className="hover:bg-gray-50 transition">
                     <td className="py-3 px-4 text-sm text-gray-700">
+                      {/* SỬ DỤNG COMPONENT DataThumbnail CHUNG */}
                       <DataThumbnail
                         src={avatar}
                         alt={fullName}
@@ -589,7 +612,7 @@ export default function DoctorManagementPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-700">
-                      {email} {/* Hiển thị biến email đã xử lý */}
+                      {email}
                       <br />
                       <span className="text-xs text-gray-500">{phone}</span>
                     </td>
@@ -666,14 +689,14 @@ export default function DoctorManagementPage() {
         </div>
       </div>
 
-            {isModalOpen && (
-                <DoctorFormModal
-                    doctor={selectedDoctor}
-                    specialties={MOCK_SPECIALTIES}
-                    onClose={() => setIsModalOpen(false)}
-                    onSuccess={handleSuccess}
-                />
-            )}
-        </div>
-    );
+      {isModalOpen && (
+        <DoctorFormModal
+          doctor={selectedDoctor}
+          specialties={specialties}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleModalSuccess}
+        />
+      )}
+    </div>
+  );
 }
