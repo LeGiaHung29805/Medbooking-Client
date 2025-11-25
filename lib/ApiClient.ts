@@ -626,3 +626,29 @@ export const staffCreateAppointment = async (
   });
   return response.data;
 };
+export const staffUpdateSlot = async (
+  slotId: number,
+  doctorId: number,
+  startTime: string,
+  endTime: string
+): Promise<Model.MessageResponse> => {
+  // Vì không có file upload, ta dùng JSON bình thường cho gọn
+  const response = await apiClient.put(
+    `/staff/availability/${slotId}`,
+    {
+      DoctorID: doctorId,
+      StartTime: startTime,
+      EndTime: endTime,
+    },
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  return response.data;
+};
+// [MỚI] Staff xóa slot rảnh
+export const staffDeleteSlot = async (id: number): Promise<void> => {
+  await apiClient.delete(`/staff/availability/${id}`, {
+    headers: getAuthHeaders(),
+  });
+};
