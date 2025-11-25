@@ -75,6 +75,8 @@ export default function LoginPage() {
         }
 
         setIsLoading(true);
+
+        // Gọi API thật nếu mock login không thành công
         try {
             const formData = new FormData();
             formData.append("Username", username);

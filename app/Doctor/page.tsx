@@ -32,7 +32,7 @@ import {
 } from "lucide-react"
 
 // ===============================================
-// INTERFACE MỚI CHO DOCTOR DASHBOARD
+// INTERFACE CHO DOCTOR DASHBOARD
 // ===============================================
 
 interface Appointment {
@@ -1909,7 +1909,7 @@ function Stat({
 }
 
 // ===============================================
-// COMPONENT ScheduleTab BỊ THIẾU - THÊM VÀO CUỐI FILE
+// COMPONENT ScheduleTab 
 // ===============================================
 
 const ScheduleTab = ({ 

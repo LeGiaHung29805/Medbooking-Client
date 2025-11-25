@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Image from "next/image";
+import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
-
-// ===============================================
-// 1. CONSTANTS & HELPERS
-// ===============================================
+import { getFullImageUrl } from "@/lib/utils";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 const ROLE_LABELS: Record<string, string> = {
   BenhNhan: "Bệnh nhân",
@@ -25,10 +25,7 @@ const ROLES = ["BenhNhan", "BacSi", "NhanVien", "QuanTriVien"];
 const STATUSES = ["HoatDong", "Khoa"];
 const USERS_PER_PAGE = 10;
 
-// ===============================================
-// 2. MODAL FORM
-// ===============================================
-
+//Model Form
 interface UserFormProps {
   user: Model.User | null;
   specialties: Model.Specialty[];
@@ -58,9 +55,11 @@ const UserFormModal: React.FC<UserFormProps> = ({
     SpecialtyID: 0,
   });
 
-  // State Avatar
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(user?.avatar_url || "");
+
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    user?.avatar_url ? getFullImageUrl(user.avatar_url) : ""
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -93,14 +92,12 @@ const UserFormModal: React.FC<UserFormProps> = ({
     e.preventDefault();
     setLoading(true);
 
-    // Validate mật khẩu khi tạo mới
     if (!isEdit && !formData.Password) {
       alert("Vui lòng nhập mật khẩu cho tài khoản mới.");
       setLoading(false);
       return;
     }
 
-    // Validate Username
     if (!formData.Username.trim()) {
       alert("Vui lòng nhập Tên đăng nhập.");
       setLoading(false);
@@ -111,12 +108,11 @@ const UserFormModal: React.FC<UserFormProps> = ({
       const data = new FormData();
       data.append("FullName", formData.FullName);
       data.append("Email", formData.Email);
-      data.append("Username", formData.Username); // [QUAN TRỌNG] Đã bổ sung dòng này
+      data.append("Username", formData.Username);
       data.append("PhoneNumber", formData.PhoneNumber);
       data.append("Role", formData.Role);
       data.append("Status", formData.Status);
 
-      // Gửi password (lowercase key để khớp backend Laravel)
       if (formData.Password && (isResettingPassword || !isEdit)) {
         data.append("password", formData.Password);
       }
@@ -131,25 +127,29 @@ const UserFormModal: React.FC<UserFormProps> = ({
 
       if (isEdit && user) {
         await Api.adminUpdateUser(user.UserID, data);
-        alert("✅ Cập nhật thành công!");
+        alert("Cập nhật thành công!");
       } else {
         await Api.adminCreateUser(data);
-        alert("✅ Tạo người dùng mới thành công!");
+        alert("Tạo người dùng mới thành công!");
       }
 
       onSuccess();
-    } catch (error: any) {
-      console.error("Error:", error);
-      // Hiển thị chi tiết lỗi từ Backend nếu có
-      const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-      alert("❌ " + msg);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error("Error:", error);
+        const msg = error.response?.data?.message || "Có lỗi xảy ra!";
+        alert("" + msg);
+      } else {
+        console.error("Unexpected Error:", error);
+        alert("Có lỗi không xác định xảy ra!");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 flex justify-center items-center z-50 p-4 backdrop-blur-sm bg-black/30">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100">
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
           <h2 className="text-xl font-bold text-gray-800">
@@ -165,7 +165,6 @@ const UserFormModal: React.FC<UserFormProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Cột 1 */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -181,7 +180,6 @@ const UserFormModal: React.FC<UserFormProps> = ({
                 />
               </div>
 
-              {/* Ô nhập Username */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tên đăng nhập <span className="text-red-500">*</span>
@@ -194,7 +192,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 outline-none"
                   placeholder="VD: nguyenvan_a"
-                  disabled={isEdit} // Không sửa username khi update
+                  disabled={isEdit}
                 />
               </div>
 
@@ -256,7 +254,6 @@ const UserFormModal: React.FC<UserFormProps> = ({
               </div>
             </div>
 
-            {/* Cột 2 */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -321,16 +318,15 @@ const UserFormModal: React.FC<UserFormProps> = ({
                   Ảnh đại diện
                 </label>
                 <div className="flex items-center space-x-3 p-2 border border-dashed rounded-lg bg-gray-50">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border bg-white flex-shrink-0">
-                    <img
-                      src={
-                        previewUrl || "https://placehold.co/100x100?text=User"
-                      }
+                  <div className="w-12 h-12 rounded-full overflow-hidden border bg-white flex-shrink-0 relative">
+                    <Image
+                      src={previewUrl || "https://placehold.co/100x100?text=User"}
                       alt="Avatar"
-                      className="w-full h-full object-cover"
-                      onError={(e) =>
-                        (e.currentTarget.src =
-                          "https://placehold.co/100x100?text=Err")
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                      onError={() =>
+                        setPreviewUrl("https://placehold.co/100x100?text=Err")
                       }
                     />
                   </div>
@@ -388,10 +384,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
   );
 };
 
-// ===============================================
-// 3. MAIN PAGE
-// ===============================================
-
+//Main
 export default function UserManagementPage() {
   const [users, setUsers] = useState<Model.User[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
@@ -448,6 +441,7 @@ export default function UserManagementPage() {
         setUsers((prev) => prev.filter((u) => u.UserID !== userId));
         alert("🗑️ Đã xóa thành công.");
       } catch (error) {
+        console.log(error);
         alert("❌ Xóa thất bại.");
       }
     }
@@ -499,7 +493,6 @@ export default function UserManagementPage() {
         </button>
       </div>
 
-      {/* Toolbar */}
       <div className="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
         <div className="flex-grow w-full md:w-auto relative">
           <input
@@ -533,7 +526,6 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
         {loading ? (
           <div className="p-16 text-center">
@@ -573,20 +565,13 @@ export default function UserManagementPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <img
-                          src={
-                            u.avatar_url ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              u.FullName
-                            )}&background=random`
-                          }
-                          alt=""
-                          className="h-10 w-10 rounded-full border object-cover mr-3 bg-gray-100"
-                          onError={(e) =>
-                            (e.currentTarget.src =
-                              "https://placehold.co/100x100?text=User")
-                          }
+                        <DataThumbnail
+                          src={u.avatar_url}
+                          alt={u.FullName}
+                          fallbackType="user"
+                          className="h-10 w-10 rounded-full border mr-3"
                         />
+
                         <div>
                           <div className="text-sm font-bold text-gray-900">
                             {u.FullName}
@@ -601,15 +586,14 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold
-                        ${
-                          u.Role === "QuanTriVien"
+                        ${u.Role === "QuanTriVien"
                             ? "bg-purple-100 text-purple-800"
                             : u.Role === "BacSi"
-                            ? "bg-blue-100 text-blue-800"
-                            : u.Role === "NhanVien"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }
+                              ? "bg-blue-100 text-blue-800"
+                              : u.Role === "NhanVien"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                          }
                       `}
                       >
                         {ROLE_LABELS[u.Role] || u.Role}
@@ -618,11 +602,10 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80
-                        ${
-                          u.Status === "HoatDong"
+                        ${u.Status === "HoatDong"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                        }
+                          }
                       `}
                         onClick={() => handleToggleStatus(u)}
                         title="Bấm để đổi trạng thái"
