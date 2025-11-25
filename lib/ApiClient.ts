@@ -1,4 +1,3 @@
-// Tên file: lib/ApiClient.ts
 
 import axios from "axios";
 import * as Model from "./model";
@@ -78,16 +77,23 @@ export const getSpecialties = async (
   return response.data;
 };
 
-export const getDoctors = async (): Promise<Model.Doctor[]> => {
-  const response = await apiClient.get("/doctors");
-  return response.data;
-};
-
 export const getDoctorDetails = async (id: number): Promise<Model.Doctor> => {
   const response = await apiClient.get(`/doctors/${id}`);
   return response.data;
 };
+export const getDoctors = async (
+  search?: string,
+  specialtyId?: number
+): Promise<Model.Doctor[]> => {
+  // 1. Định nghĩa rõ kiểu: object này có thể có key 'search' và 'specialty_id'
+  const params: { search?: string; specialty_id?: number } = {};
 
+  if (search) params.search = search;
+  if (specialtyId) params.specialty_id = specialtyId; // Backend cần key này
+
+  const response = await apiClient.get("/doctors", { params });
+  return response.data;
+};
 // Lấy lịch trống theo ID Bác sĩ
 export const getDoctorAvailability = async (
   doctorId: number
@@ -601,6 +607,28 @@ export const sendNotification = async (data: {
   // Giả định Backend có route POST /api/admin/notifications/send
   const response = await apiClient.post("/admin/notifications/send", data, {
     headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+// [MỚI] Lấy danh sách lịch hẹn chờ xác nhận (Pending)
+export const getPendingAppointments = async (): Promise<
+  Model.Appointment[]
+> => {
+  // Giả sử backend có hỗ trợ filter status, hoặc dùng API lấy tất cả rồi filter ở frontend (nếu backend chưa hỗ trợ filter)
+  // Cách tốt nhất là backend có endpoint riêng hoặc param filter
+  // Ở đây dùng cách filter ở frontend từ API getAllAppointments nếu backend chưa có endpoint riêng
+  // Hoặc gọi endpoint /staff/pending-appointments nếu có.
+
+  // Cách 1: Gọi API lấy tất cả rồi lọc (Tạm thời dùng cách này nếu chưa rõ backend)
+  const allAppointments = await getAllAppointments();
+  return allAppointments.filter((app) => app.Status === "Pending");
+};
+// [MỚI] Staff tạo lịch hẹn thay mặt bệnh nhân
+export const staffCreateAppointment = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post("/staff/appointments", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };

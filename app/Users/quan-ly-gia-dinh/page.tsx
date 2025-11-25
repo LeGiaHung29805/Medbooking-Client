@@ -104,13 +104,6 @@ export default function QuanLyGiaDinh() {
         {/* Tiêu đề */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-semibold">Quản lý gia đình</h1>
-          <button
-            onClick={startAdd}
-            className="flex items-center px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Thêm thành viên
-          </button>
         </div>
 
         {/* Nếu chưa có thành viên */}
