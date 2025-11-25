@@ -1,46 +1,70 @@
 "use client";
 import { useEffect, useState } from "react";
 import LayoutUsers from "@/components/layoutUsers";
+import * as Api from "@/lib/ApiClient"; // Import API
+import * as Model from "@/lib/model";
 
 export default function ProfilePage() {
-    const [profile, setProfile] = useState({
-        name: "",
-        dob: "",
-        gender: "",
-        phone: "",
-        email: "",
-        address: "",
-        username: "",
-        country: "",
-        job: "",
+    const [formData, setFormData] = useState({
+        FullName: "",
+        DateOfBirth: "",
+        Gender: "",
+        PhoneNumber: "",
+        Email: "",
+        Address: "",
     });
 
+    const [loading, setLoading] = useState(true);
+
+    // 2. Load dữ liệu từ API khi vào trang
     useEffect(() => {
-        const storedProfile = {
-            name: localStorage.getItem("name") || "",
-            dob: localStorage.getItem("dob") || "",
-            gender: localStorage.getItem("gender") || "",
-            phone: localStorage.getItem("phone") || "",
-            email: localStorage.getItem("email") || "",
-            address: localStorage.getItem("address") || "",
-            username: localStorage.getItem("username") || "",
-            country: localStorage.getItem("country") || "",
-            job: localStorage.getItem("job") || "",
+        const fetchProfile = async () => {
+            try {
+                const userData = await Api.getMe(); // Lấy từ Database
+                setFormData({
+                    FullName: userData.FullName || "",
+                    DateOfBirth: userData.DateOfBirth || "",
+                    Gender: userData.Gender || "",
+                    PhoneNumber: userData.PhoneNumber || "",
+                    Email: userData.Email || "",
+                    Address: userData.Address || "",
+                });
+            } catch (error) {
+                console.error("Lỗi tải thông tin:", error);
+            } finally {
+                setLoading(false);
+            }
         };
-        setProfile(storedProfile);
+
+        fetchProfile();
     }, []);
 
+    // 3. Xử lý nhập liệu
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setProfile({ ...profile, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
-        // Lưu lại vào localStorage
-        for (const key in profile) {
-            localStorage.setItem(key, profile[key as keyof typeof profile]);
+    // 4. Lưu thông tin lên Server
+    const handleSave = async () => {
+        try {
+            await Api.updateProfile(formData); // Gọi API Update
+            alert("Cập nhật thông tin thành công!");
+        } catch (error) {
+            console.log(error);
+            alert("Có lỗi xảy ra khi lưu thông tin.");
         }
-        alert("Cập nhật thông tin thành công!");
     };
+
+    if (loading) {
+        return (
+            <LayoutUsers>
+                <div className="min-h-screen p-8 bg-gray-50 flex justify-center">
+                    Đang tải...
+                </div>
+            </LayoutUsers>
+        );
+    }
 
     return (
         <LayoutUsers>
@@ -51,8 +75,8 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Họ và tên</label>
                             <input
-                                name="name"
-                                value={profile.name}
+                                name="FullName" // Khớp với state
+                                value={formData.FullName}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                             />
@@ -60,9 +84,9 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Ngày sinh</label>
                             <input
-                                name="dob"
+                                name="DateOfBirth" // Khớp với state
                                 type="date"
-                                value={profile.dob}
+                                value={formData.DateOfBirth}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                             />
@@ -71,10 +95,10 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Giới tính</label>
                             <select
-                                name="gender"
-                                value={profile.gender}
+                                name="Gender" // Khớp với state
+                                value={formData.Gender}
                                 onChange={handleChange}
-                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
                             >
                                 <option value="">Chọn giới tính</option>
                                 <option value="Nam">Nam</option>
@@ -85,8 +109,8 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Số điện thoại</label>
                             <input
-                                name="phone"
-                                value={profile.phone}
+                                name="PhoneNumber" // Khớp với state
+                                value={formData.PhoneNumber}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                             />
@@ -95,46 +119,19 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Email</label>
                             <input
-                                name="email"
+                                name="Email" // Khớp với state
                                 type="email"
-                                value={profile.email}
+                                value={formData.Email}
                                 onChange={handleChange}
-                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                disabled // Email thường không cho sửa, nếu muốn sửa thì bỏ disabled đi
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-gray-500 cursor-not-allowed"
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Địa chỉ</label>
                             <input
-                                name="address"
-                                value={profile.address}
-                                onChange={handleChange}
-                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                            />
-                        </div>
-
-                        {/* <div>
-                            <label className="block text-sm font-medium mb-1">Tên đăng nhập</label>
-                            <input
-                                name="username"
-                                value={profile.username}
-                                onChange={handleChange}
-                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                            />
-                        </div> */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Nghề nghiệp</label>
-                            <input
-                                name="address"
-                                value={profile.job}
-                                onChange={handleChange}
-                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Quốc gia</label>
-                            <input
-                                name="address"
-                                value={profile.country}
+                                name="Address" // Khớp với state
+                                value={formData.Address}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                             />

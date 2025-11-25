@@ -1,4 +1,3 @@
-// Tên file: lib/ApiClient.ts
 
 import axios from "axios";
 import * as Model from "./model";
@@ -78,16 +77,23 @@ export const getSpecialties = async (
   return response.data;
 };
 
-export const getDoctors = async (): Promise<Model.Doctor[]> => {
-  const response = await apiClient.get("/doctors");
-  return response.data;
-};
-
 export const getDoctorDetails = async (id: number): Promise<Model.Doctor> => {
   const response = await apiClient.get(`/doctors/${id}`);
   return response.data;
 };
+export const getDoctors = async (
+  search?: string,
+  specialtyId?: number
+): Promise<Model.Doctor[]> => {
+  // 1. Định nghĩa rõ kiểu: object này có thể có key 'search' và 'specialty_id'
+  const params: { search?: string; specialty_id?: number } = {};
 
+  if (search) params.search = search;
+  if (specialtyId) params.specialty_id = specialtyId; // Backend cần key này
+
+  const response = await apiClient.get("/doctors", { params });
+  return response.data;
+};
 // Lấy lịch trống theo ID Bác sĩ
 export const getDoctorAvailability = async (
   doctorId: number

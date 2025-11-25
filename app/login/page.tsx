@@ -56,8 +56,6 @@ export default function LoginPage() {
             const error = err as AxiosError<{ message: string }>;
 
             console.error("Login failed:", error);
-
-            // Kiểm tra an toàn: error.response có tồn tại không? data có message không?
             if (error.response && error.response.data && error.response.data.message) {
                 setError(error.response.data.message);
             } else {

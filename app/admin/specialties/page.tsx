@@ -1,16 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-// 1. Import API và Model thật
+import Image from "next/image";
+import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
-
-// ===============================================
-// 1. MODAL FORM (Logic API đã được tích hợp vào UI cũ)
-// ===============================================
+import { getFullImageUrl } from "@/lib/utils";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 interface SpecialtyFormProps {
-  specialty: Model.Specialty | null; // Dùng Model thật
+  specialty: Model.Specialty | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -23,28 +22,17 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
   const isEdit = !!specialty;
   const [loading, setLoading] = useState(false);
 
-  // State Form
   const [formData, setFormData] = useState({
     SpecialtyName: specialty?.SpecialtyName || "",
     Description: specialty?.Description || "",
   });
 
-  // State xử lý file ảnh
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Logic hiển thị ảnh preview:
-  // Nếu có ảnh cũ từ server -> hiển thị (nối thêm domain nếu cần)
-  // Nếu chọn ảnh mới -> hiển thị blob local
-  const getInitialPreview = () => {
-    if (specialty?.imageURL) {
-      return specialty.imageURL.startsWith("http")
-        ? specialty.imageURL
-        : `http://127.0.0.1:8000${specialty.imageURL}`;
-    }
-    return "";
-  };
-
-  const [previewUrl, setPreviewUrl] = useState<string>(getInitialPreview());
+  // Logic preview ảnh: Nếu có ảnh cũ -> lấy link từ DB (qua getFullImageUrl), nếu không -> rỗng
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    specialty?.imageURL ? getFullImageUrl(specialty.imageURL) : ""
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -57,7 +45,7 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); // Xem trước ảnh local
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -66,18 +54,15 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
     setLoading(true);
 
     try {
-      // 1. Chuẩn bị FormData (Bắt buộc để gửi file)
       const data = new FormData();
       data.append("SpecialtyName", formData.SpecialtyName);
       if (formData.Description)
         data.append("Description", formData.Description);
 
-      // Gửi file ảnh với key là 'imageURL' (Khớp Backend)
       if (selectedFile) {
         data.append("imageURL", selectedFile);
       }
 
-      // 2. Gọi API thật
       if (isEdit && specialty) {
         await Api.adminUpdateSpecialty(specialty.SpecialtyID, data);
         alert("✅ Cập nhật chuyên khoa thành công!");
@@ -86,107 +71,110 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
         alert("✅ Tạo chuyên khoa mới thành công!");
       }
 
-      onSuccess(); // Load lại danh sách
+      onSuccess();
       onClose();
-    } catch (error: any) {
-      console.error("Error:", error);
-      const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-      alert("❌ " + msg);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error("Error:", error);
+        const msg = error.response?.data?.message || "Có lỗi xảy ra!";
+        alert("❌ " + msg);
+      } else {
+        console.error("Unexpected Error:", error);
+        alert("❌ Có lỗi không xác định xảy ra!");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // --- GIAO DIỆN CŨ CỦA BẠN (GIỮ NGUYÊN) ---
   return (
-    <div className="fixed inset-0 bg-gray-400 bg-opacity-30 flex justify-center items-center z-50 p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
+    <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg border border-gray-100">
         <div className="flex justify-between items-center mb-4 border-b pb-2">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            {isEdit ? "Sửa Chuyên khoa" : "Thêm Chuyên khoa mới"}
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isEdit ? "📝 Sửa Chuyên khoa" : "✨ Thêm Chuyên khoa mới"}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-gray-400 hover:text-gray-600 text-2xl transition"
           >
             &times;
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* Tên Chuyên khoa */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Tên Chuyên khoa
-              </label>
-              <input
-                type="text"
-                name="SpecialtyName"
-                value={formData.SpecialtyName}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Tên Chuyên khoa *
+            </label>
+            <input
+              type="text"
+              name="SpecialtyName"
+              value={formData.SpecialtyName}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              placeholder="Ví dụ: Khoa Nội, Khoa Nhi..."
+            />
+          </div>
 
-            {/* Link Ảnh (Đã sửa thành Upload File) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Ảnh Minh Họa
-              </label>
-
-              {/* Input File thay vì Input Text */}
+          {/* --- Phần Ảnh trong Modal --- */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Ảnh Minh Họa
+            </label>
+            <div className="flex items-center space-x-4 mt-2">
+              <div className="w-16 h-16 relative rounded-full border bg-gray-50 flex-shrink-0 overflow-hidden">
+                {/* Vẫn dùng Image trực tiếp cho Preview Modal */}
+                <Image
+                  src={
+                    previewUrl || "https://placehold.co/64x64/E0E0E0/000?text=CK"
+                  }
+                  alt="Preview"
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                  onError={() =>
+                    setPreviewUrl(
+                      "https://placehold.co/64x64/E0E0E0/000?text=Err"
+                    )
+                  }
+                />
+              </div>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-
-              {/* Preview Ảnh */}
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-16 h-16 rounded-full object-cover mt-2 border border-gray-200"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src =
-                      "https://placehold.co/40x40/E0E0E0/000?text=CK";
-                  }}
-                />
-              ) : (
-                <div className="mt-2 text-xs text-gray-400">Chưa có ảnh</div>
-              )}
-            </div>
-
-            {/* Mô tả */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Mô tả
-              </label>
-              <textarea
-                name="Description"
-                value={formData.Description}
-                onChange={handleChange}
-                rows={3}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end space-x-3">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Mô tả
+            </label>
+            <textarea
+              name="Description"
+              value={formData.Description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              placeholder="Thông tin chi tiết về chuyên khoa..."
+            />
+          </div>
+
+          <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
             >
-              Hủy
+              Hủy bỏ
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 flex items-center"
+              className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md flex items-center transition disabled:opacity-50"
               disabled={loading}
             >
               {loading ? (
@@ -208,11 +196,11 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
 };
 
 // ===============================================
-// 2. MAIN COMPONENT (Kết nối API thật)
+// 2. MAIN COMPONENT
 // ===============================================
 
 export default function SpecialtyManagementPage() {
-  const [specialties, setSpecialties] = useState<Model.Specialty[]>([]); // Dữ liệu thật
+  const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -220,11 +208,10 @@ export default function SpecialtyManagementPage() {
   const [selectedSpecialty, setSelectedSpecialty] =
     useState<Model.Specialty | null>(null);
 
-  // --- LOAD DATA TỪ API ---
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await Api.getSpecialties(); // Gọi API GET
+      const data = await Api.getSpecialties();
       setSpecialties(data);
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
@@ -233,12 +220,10 @@ export default function SpecialtyManagementPage() {
     }
   };
 
-  // Load lần đầu
   useEffect(() => {
     loadData();
   }, []);
 
-  // --- FILTER CLIENT-SIDE ---
   const filteredSpecialties = useMemo(() => {
     if (!searchQuery) return specialties;
     const query = searchQuery.toLowerCase();
@@ -249,10 +234,9 @@ export default function SpecialtyManagementPage() {
     );
   }, [specialties, searchQuery]);
 
-  // --- HANDLERS ---
   const handleSuccess = () => {
     setIsModalOpen(false);
-    loadData(); // Reload data từ server để thấy thay đổi mới nhất
+    loadData();
   };
 
   const handleOpenModal = (specialty: Model.Specialty | null = null) => {
@@ -260,7 +244,6 @@ export default function SpecialtyManagementPage() {
     setIsModalOpen(true);
   };
 
-  // Xử lý xóa thật
   const handleDelete = async (specialtyId: number) => {
     if (
       confirm(
@@ -268,8 +251,7 @@ export default function SpecialtyManagementPage() {
       )
     ) {
       try {
-        await Api.adminDeleteSpecialty(specialtyId); // Gọi API DELETE
-        // Xóa trên giao diện ngay lập tức
+        await Api.adminDeleteSpecialty(specialtyId);
         setSpecialties((prev) =>
           prev.filter((s) => s.SpecialtyID !== specialtyId)
         );
@@ -281,22 +263,21 @@ export default function SpecialtyManagementPage() {
     }
   };
 
-  // --- RENDER (GIỮ NGUYÊN GIAO DIỆN CŨ) ---
   return (
-    <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">
+    <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen font-sans">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2 flex items-center gap-2">
         🏥 Quản lý Danh mục Chuyên khoa
       </h1>
 
       {/* Thanh Điều khiển */}
-      <div className="bg-white p-4 rounded-xl shadow-md mb-6">
-        <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+        <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0 gap-4">
           {/* Tìm kiếm */}
           <div className="relative flex-grow max-w-md">
             <input
               type="text"
               placeholder="Tìm kiếm theo tên chuyên khoa..."
-              className="p-2 pl-10 border border-gray-300 rounded-lg w-full focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -308,7 +289,7 @@ export default function SpecialtyManagementPage() {
           {/* Nút Thêm mới */}
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition duration-150 shadow-md w-full md:w-auto"
+            className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md w-full md:w-auto"
           >
             <span>➕</span>
             <span>Thêm Chuyên khoa</span>
@@ -317,87 +298,81 @@ export default function SpecialtyManagementPage() {
       </div>
 
       {/* Bảng Danh sách Chuyên khoa */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                <th className="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-16">
                   ID
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">
+                <th className="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-20">
                   Ảnh
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/4">
+                <th className="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-1/4">
                   Tên Chuyên khoa
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-auto">
+                <th className="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-auto">
                   Mô tả
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
+                <th className="py-4 px-6 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-1/6">
                   Hành động
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                  <td colSpan={5} className="py-12 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                     Đang tải dữ liệu...
                   </td>
                 </tr>
               ) : filteredSpecialties.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                  <td colSpan={5} className="py-12 text-center text-gray-500">
                     Không tìm thấy chuyên khoa nào.
                   </td>
                 </tr>
               ) : (
                 filteredSpecialties.map((specialty) => (
-                  <tr key={specialty.SpecialtyID} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-700 font-semibold">
-                      {specialty.SpecialtyID}
+                  <tr
+                    key={specialty.SpecialtyID}
+                    className="hover:bg-blue-50 transition duration-150"
+                  >
+                    <td className="py-4 px-6 text-sm text-gray-500 font-mono">
+                      #{specialty.SpecialtyID}
                     </td>
 
-                    {/* Cột Ảnh (Xử lý đường dẫn thật) */}
-                    <td className="py-3 px-4 text-sm text-gray-700">
-                      <img
-                        src={
-                          specialty.imageURL
-                            ? specialty.imageURL.startsWith("http")
-                              ? specialty.imageURL
-                              : `http://127.0.0.1:8000${specialty.imageURL}`
-                            : "https://placehold.co/40x40/E0E0E0/000?text=CK"
-                        }
+                    <td className="py-4 px-6">
+                      <DataThumbnail
+                        src={specialty.imageURL}
                         alt={specialty.SpecialtyName}
-                        className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src =
-                            "https://placehold.co/40x40/E0E0E0/000?text=CK";
-                        }}
+                        fallbackType="specialty"
+                        className="w-10 h-10 rounded-full"
                       />
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-800 font-medium">
+
+                    <td className="py-4 px-6 text-sm text-gray-800 font-bold">
                       {specialty.SpecialtyName}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
+                    <td className="py-4 px-6 text-sm text-gray-600">
                       {specialty.Description}
                     </td>
-                    <td className="py-3 px-4 text-sm flex space-x-2">
+                    <td className="py-4 px-6 text-right text-sm flex justify-end space-x-3">
                       <button
                         onClick={() => handleOpenModal(specialty)}
-                        className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                        className="text-blue-600 hover:text-blue-800 font-bold hover:underline"
                         title="Chỉnh sửa"
                       >
-                        ✏️
+                        Sửa
                       </button>
                       <button
                         onClick={() => handleDelete(specialty.SpecialtyID)}
-                        className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
+                        className="text-red-600 hover:text-red-800 font-bold hover:underline"
                         title="Xóa"
                       >
-                        🗑️
+                        Xóa
                       </button>
                     </td>
                   </tr>
@@ -408,7 +383,6 @@ export default function SpecialtyManagementPage() {
         </div>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <SpecialtyFormModal
           specialty={selectedSpecialty}
