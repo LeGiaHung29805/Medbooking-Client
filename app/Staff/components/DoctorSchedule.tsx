@@ -531,7 +531,7 @@ export default function DoctorSchedule() {
 
       {/* Edit Slot Modal */}
       {showEditModal && selectedSlot && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-bold text-gray-900">
@@ -582,11 +582,10 @@ export default function DoctorSchedule() {
                     onClick={() =>
                       updateSlotStatus(selectedSlot.id, "available")
                     }
-                    className={`w-full px-4 py-3 text-left rounded-lg border-2 transition-colors ${
-                      selectedSlot.status === "available"
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 hover:border-green-300"
-                    }`}
+                    className={`w-full px-4 py-3 text-left rounded-lg border-2 transition-colors ${selectedSlot.status === "available"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                      }`}
                   >
                     <div className="flex items-center">
                       <div className="w-4 h-4 rounded-full bg-green-500 mr-3"></div>
@@ -603,11 +602,10 @@ export default function DoctorSchedule() {
                     onClick={() =>
                       updateSlotStatus(selectedSlot.id, "unavailable")
                     }
-                    className={`w-full px-4 py-3 text-left rounded-lg border-2 transition-colors ${
-                      selectedSlot.status === "unavailable"
-                        ? "border-gray-500 bg-gray-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`w-full px-4 py-3 text-left rounded-lg border-2 transition-colors ${selectedSlot.status === "unavailable"
+                      ? "border-gray-500 bg-gray-50"
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <div className="flex items-center">
                       <div className="w-4 h-4 rounded-full bg-gray-500 mr-3"></div>

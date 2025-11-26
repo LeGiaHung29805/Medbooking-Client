@@ -14,7 +14,7 @@ export default function LoginPage() {
 
     const handleMockLogin = () => {
         console.log("🔄 Using mock login for development");
-        
+
         // Mock data cho các role
         const mockUsers = {
             bacsia: {
@@ -29,7 +29,7 @@ export default function LoginPage() {
             staff: {
                 user: {
                     id: 2,
-                    name: "Nhân Viên Quản Lý", 
+                    name: "Nhân Viên Quản Lý",
                     Role: "nhanvien"
                 },
                 redirect: "/Staff"
@@ -38,7 +38,7 @@ export default function LoginPage() {
                 user: {
                     id: 3,
                     name: "Quản Trị Viên",
-                    Role: "quantrivien" 
+                    Role: "quantrivien"
                 },
                 redirect: "/admin"
             }
@@ -51,12 +51,12 @@ export default function LoginPage() {
             // Lưu vào localStorage giống API thật
             localStorage.setItem("user", JSON.stringify(mockUser.user));
             localStorage.setItem("token", "mock-token-development");
-            
-            console.log(`✅ Mock login successful - redirecting to ${mockUser.redirect}`);
+
+            console.log(`Mock login successful - redirecting to ${mockUser.redirect}`);
             router.push(mockUser.redirect);
             return true;
         }
-        
+
         return false;
     };
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
 
             // Dùng mock accounts khi API fail
             if (error.code === "ERR_NETWORK" || error.code === "ERR_CONNECTION_REFUSED") {
-                setError("Backend đang bảo trì. Dùng tài khoản demo:\n👨‍⚕️ Bác sĩ: bacsia / password\n👨‍💼 Staff: staff / password\n👨‍💻 Admin: admin / password");
+                setError("Backend đang bảo trì. Dùng tài khoản demo:\n Bác sĩ: bacsia / password\n Staff: staff / password\n Admin: admin / password");
             } else if (error.response && error.response.data && error.response.data.message) {
                 setError(error.response.data.message);
             } else {
@@ -141,6 +141,7 @@ export default function LoginPage() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                placeholder="Tên đăng nhập"
                                 disabled={isLoading}
                             />
                         </div>
@@ -152,7 +153,6 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                                placeholder="password"
                                 disabled={isLoading}
                             />
                         </div>
@@ -160,11 +160,10 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full text-white py-2 rounded-md transition flex justify-center items-center ${
-                                isLoading
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-green-700 hover:bg-green-800"
-                            }`}
+                            className={`w-full text-white py-2 rounded-md transition flex justify-center items-center ${isLoading
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-green-700 hover:bg-green-800"
+                                }`}
                         >
                             {isLoading ? (
                                 <>
