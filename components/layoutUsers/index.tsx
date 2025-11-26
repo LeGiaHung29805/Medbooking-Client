@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getMe } from "@/lib/ApiClient";
+import { User as UserModel } from "@/lib/model";
+
 import {
     FaUser,
     FaUsers,
@@ -16,26 +20,43 @@ import {
 import Header from "./Header";
 import Footer from "./Footer";
 
-type User = {
-    name: string;
-    gender: string;
-    dob: string;
-    avatarUrl?: string;
-};
-
 type LayoutUserProps = {
     children: ReactNode;
-    user?: User; // có thể undefined
 };
 
-export default function LayoutUser({ children, user }: LayoutUserProps) {
-    // Nếu không có user, dùng dữ liệu mặc định
-    const displayUser: User = user || {
-        name: "Lê Gia Hưng",
-        gender: "Nam",
-        dob: "29/01/2000",
-        avatarUrl: "/default-avatar.png",
-    };
+export default function LayoutUser({ children }: LayoutUserProps) {
+    const router = useRouter();
+
+    // State lưu thông tin người dùng thực tế từ API
+    const [user, setUser] = useState<UserModel | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                // Kiểm tra token trước
+                const token = localStorage.getItem("api_token");
+                if (!token) {
+                    router.push("/login");
+                    return;
+                }
+
+                // Gọi API lấy thông tin cá nhân
+                const userData = await getMe();
+                setUser(userData);
+            } catch (error) {
+                console.error("Lỗi xác thực:", error);
+                // Nếu token lỗi hoặc hết hạn -> Đăng xuất và về trang login
+                localStorage.removeItem("api_token");
+                localStorage.removeItem("token");
+                router.push("/login");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [router]);
 
     const menuItems = [
         { name: "Hồ sơ cá nhân", icon: <FaUser />, path: "/Users/profile" },
@@ -49,45 +70,62 @@ export default function LayoutUser({ children, user }: LayoutUserProps) {
         { name: "Thông báo", icon: <FaBell />, path: "/Users/thong-bao" },
     ];
 
+    // Màn hình chờ khi đang tải dữ liệu user
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-700"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col min-h-screen">
+            {/* Header nhận diện được trạng thái đăng nhập nhờ localStorage */}
             <Header />
 
-            <div className="flex flex-1">
-                {/* Sidebar */}
-                <aside className="w-64 bg-white border-r p-4">
+            <div className="flex flex-1 container mx-auto py-6 gap-6">
+                <aside className="w-64 bg-white border rounded-lg shadow-sm p-4 h-fit">
                     <div className="text-center mb-6">
-                        <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden relative">
+                        <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden relative border-2 border-green-600">
+                            {/* Hiển thị avatar thực tế hoặc avatar mặc định */}
                             <Image
-                                src={displayUser.avatarUrl || "/default-avatar.png"}
+                                src={user?.avatar_url || "/image/default-avatar.png"} // Cần đảm bảo có file default-avatar.png trong public/image
                                 alt="avatar"
                                 fill
                                 style={{ objectFit: "cover" }}
                                 className="rounded-full"
                             />
                         </div>
-                        <h2 className="font-bold">{displayUser.name}</h2>
-                        <p className="text-gray-500">
-                            {displayUser.gender}, {displayUser.dob}
+
+                        {/* Hiển thị tên thực tế */}
+                        <h2 className="font-bold text-lg text-gray-800">
+                            {user?.FullName || "Người dùng"}
+                        </h2>
+
+                        {/* Hiển thị SĐT hoặc Email */}
+                        <p className="text-gray-500 text-sm">
+                            {user?.PhoneNumber || user?.Email || "Chưa cập nhật thông tin"}
                         </p>
                     </div>
 
-                    <nav className="space-y-2">
+                    <nav className="space-y-1">
                         {menuItems.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.path}
-                                className="flex items-center p-2 rounded hover:bg-green-600 hover:text-white text-gray-700"
+                                className="flex items-center p-3 rounded-md transition-colors duration-200 hover:bg-green-50 hover:text-green-700 text-gray-600 font-medium"
                             >
-                                <span className="mr-2">{item.icon}</span>
+                                <span className="mr-3 text-lg">{item.icon}</span>
                                 {item.name}
                             </Link>
                         ))}
                     </nav>
                 </aside>
 
-                {/* Main content */}
-                <main className="flex-1 p-6 bg-gray-100">{children}</main>
+                <main className="flex-1 bg-white rounded-lg shadow-sm p-6 border">
+                    {children}
+                </main>
             </div>
 
             <Footer />

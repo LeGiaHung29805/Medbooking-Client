@@ -74,10 +74,10 @@ export default function QuanLyGiaDinh() {
         members.map((m) =>
           m.id === editingId
             ? {
-                ...m,
-                ...formData,
-                avatar: formData.avatar || "/default-avatar.png",
-              }
+              ...m,
+              ...formData,
+              avatar: formData.avatar || "/default-avatar.png",
+            }
             : m
         )
       );
