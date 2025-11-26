@@ -14,12 +14,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "example.com", // Sửa lỗi "Invalid src prop" bạn đang gặp
+        hostname: "example.com",
       },
       {
         protocol: "http",
         hostname: "127.0.0.1", // Backend Laravel
         port: "8000",
+        pathname: '/storage/**',
       },
       {
         protocol: "https",

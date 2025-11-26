@@ -65,8 +65,9 @@ export default function LayoutUser({ children }: LayoutUserProps) {
         { name: "Kết quả khám bệnh", icon: <FaFileMedical />, path: "/Users/ket-qua-kham-benh" },
         { name: "Lịch hẹn khám lại", icon: <FaStethoscope />, path: "/Users/lich-hen-kham-lai" },
         { name: "Bác sĩ của tôi", icon: <FaUser />, path: "/Users/bac-si-cua-toi" },
-        { name: "Giấy chuyển tuyến", icon: <FaFilePrescription />, path: "/Users/giay-chuyen-tuyen" },
-        { name: "Bảo hiểm y tế", icon: <FaShieldAlt />, path: "/Users/bao-hiem-y-te" },
+        // { name: "Giấy chuyển tuyến", icon: <FaFilePrescription />, path: "/Users/giay-chuyen-tuyen" },
+        // { name: "Bảo hiểm y tế", icon: <FaShieldAlt />, path: "/Users/bao-hiem-y-te" },
+        { name: "Nhận xét, Góp ý", icon: <FaUser />, path: "/Users/nhan-xet" },
         { name: "Thông báo", icon: <FaBell />, path: "/Users/thong-bao" },
     ];
 

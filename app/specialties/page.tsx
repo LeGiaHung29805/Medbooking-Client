@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 
@@ -85,24 +86,17 @@ export default function HospitalPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {filtered.map((sp) => (
                 <Card
-                  key={sp.SpecialtyID} // Dùng ID từ Database
+                  key={sp.SpecialtyID}
                   className="flex flex-col items-center p-6 hover:shadow-lg transition cursor-pointer"
                 >
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden">
-                    {/* Hiển thị ảnh từ API hoặc Placeholder nếu chưa có ảnh */}
-                    <Image
-                      src={
-                        sp.imageURL ||
-                        "https://placehold.co/100x100/png?text=Khoa"
-                      }
+                  {/* ⚠️ THAY THẾ KHỐI IMAGE NÀY BẰNG DATA THUMBNAIL */}
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden relative">
+                    <DataThumbnail
+                      // Dùng DataThumbnail để tự động nối link Backend
+                      src={sp.imageURL}
                       alt={sp.SpecialtyName}
-                      width={40}
-                      height={40}
-                      className="object-contain w-10 h-10"
-                      onError={(e) =>
-                        (e.currentTarget.srcset =
-                          "https://placehold.co/100x100/png?text=Khoa")
-                      } // Fallback nếu ảnh lỗi
+                      fallbackType="specialty" // Lấy ảnh CK (Chuyên khoa) nếu lỗi
+                      className="w-full h-full rounded-full"
                     />
                   </div>
                   <p className="text-center text-sm font-medium">
@@ -208,9 +202,8 @@ export default function HospitalPage() {
               <button
                 key={index}
                 onClick={() => showImage(index)}
-                className={`overflow-hidden rounded-lg border-2 transition ${
-                  currentIndex === index ? "border-white" : "border-transparent"
-                }`}
+                className={`overflow-hidden rounded-lg border-2 transition ${currentIndex === index ? "border-white" : "border-transparent"
+                  }`}
               >
                 <Image
                   src={src}

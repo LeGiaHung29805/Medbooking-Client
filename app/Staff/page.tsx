@@ -50,34 +50,75 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // 1. Import Router
+import { LogOut } from "lucide-react"; // Import Icon
+import * as Api from "@/lib/ApiClient"; // 2. Import API
+
 import Dashboard from "./components/Dashboard";
 import AppointmentManagement from "./components/AppointmentManagement";
 import PatientManagement from "./components/PatientManagement";
 import DoctorSchedule from "./components/DoctorSchedule";
 
 export default function StaffPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [loggingOut, setLoggingOut] = useState(false); // State loading logout
+
+  // 3. Hàm xử lý Đăng xuất
+  const handleLogout = async () => {
+    if (!confirm("Bạn có chắc chắn muốn đăng xuất?")) return;
+
+    setLoggingOut(true);
+    try {
+      await Api.logout(); // Gọi API logout để xóa token server (nếu có)
+    } catch (error) {
+      console.error("Logout error", error);
+    } finally {
+      // Xóa token client và chuyển hướng
+      localStorage.removeItem("api_token");
+      localStorage.removeItem("user_role");
+      router.push("/login"); // Chuyển về trang đăng nhập
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Tabs */}
-      <nav className="bg-white border-b sticky top-0 z-10">
+      <nav className="bg-white border-b sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mt-5 flex items-center space-x-3">
-            <img
-              src="image/HUNRE_LOGO.svg"
-              alt="Medbooking"
-              className="w-60 h-12 object-cover"
-            />
-            <div className="bg-red-600 text-white font-bold text-xl px-4 py-2 rounded-lg ml-auto">
-              ADMIN
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <img
+                src="/image/HUNRE_LOGO.svg"
+                alt="Medbooking"
+                className="h-10 w-auto object-contain"
+              />
+            </div>
+
+            {/* Right Side: Badge & Logout */}
+            <div className="flex items-center gap-4">
+              <div className="bg-red-600 text-white font-bold text-sm px-3 py-1 rounded shadow-sm">
+                STAFF / ADMIN
+              </div>
+
+              {/* Nút Đăng Xuất */}
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex items-center gap-2 text-gray-600 hover:text-red-600 font-medium transition text-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                {loggingOut ? "Đang thoát..." : "Đăng xuất"}
+              </button>
             </div>
           </div>
 
-          <div className="flex space-x-8 overflow-x-auto">
+          {/* Tabs Menu */}
+          <div className="flex space-x-8 overflow-x-auto border-t border-gray-100 pt-1">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === "dashboard"
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "dashboard"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
@@ -86,7 +127,7 @@ export default function StaffPage() {
             </button>
             <button
               onClick={() => setActiveTab("appointments")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === "appointments"
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "appointments"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
@@ -95,7 +136,7 @@ export default function StaffPage() {
             </button>
             <button
               onClick={() => setActiveTab("patients")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === "patients"
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "patients"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
@@ -104,7 +145,7 @@ export default function StaffPage() {
             </button>
             <button
               onClick={() => setActiveTab("schedule")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === "schedule"
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "schedule"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}

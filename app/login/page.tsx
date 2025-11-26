@@ -3,16 +3,62 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
 import { login } from "@/lib/ApiClient";
-import { AxiosError } from "axios"; // 1. Import AxiosError để xử lý lỗi chuẩn xác
+import { AxiosError } from "axios";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
     const router = useRouter();
+
+    const handleMockLogin = () => {
+        console.log("🔄 Using mock login for development");
+
+        // Mock data cho các role
+        const mockUsers = {
+            bacsia: {
+                user: {
+                    id: 1,
+                    name: "Nguyễn Hoàng A",
+                    Role: "bacsi",
+                    specialty: "Nội khoa"
+                },
+                redirect: "/Doctor"
+            },
+            staff: {
+                user: {
+                    id: 2,
+                    name: "Nhân Viên Quản Lý",
+                    Role: "nhanvien"
+                },
+                redirect: "/Staff"
+            },
+            admin: {
+                user: {
+                    id: 3,
+                    name: "Quản Trị Viên",
+                    Role: "quantrivien"
+                },
+                redirect: "/admin"
+            }
+        };
+
+        const userKey = username.toLowerCase();
+        const mockUser = mockUsers[userKey as keyof typeof mockUsers];
+
+        if (mockUser && password === "password") {
+            // Lưu vào localStorage giống API thật
+            localStorage.setItem("user", JSON.stringify(mockUser.user));
+            localStorage.setItem("token", "mock-token-development");
+
+            console.log(`Mock login successful - redirecting to ${mockUser.redirect}`);
+            router.push(mockUser.redirect);
+            return true;
+        }
+
+        return false;
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,8 +69,14 @@ export default function LoginPage() {
             return;
         }
 
+        //Thử mock login trước khi gọi API
+        if (handleMockLogin()) {
+            return; // Mock login thành công thì dừng lại
+        }
+
         setIsLoading(true);
 
+        // Gọi API thật nếu mock login không thành công
         try {
             const formData = new FormData();
             formData.append("Username", username);
@@ -51,14 +103,13 @@ export default function LoginPage() {
             }
 
         } catch (err) {
-            // 2. Sửa lỗi 'any': Ép kiểu err thành AxiosError
-            // Giả định response lỗi trả về có dạng { message: string }
             const error = err as AxiosError<{ message: string }>;
-
             console.error("Login failed:", error);
 
-            // Kiểm tra an toàn: error.response có tồn tại không? data có message không?
-            if (error.response && error.response.data && error.response.data.message) {
+            // Dùng mock accounts khi API fail
+            if (error.code === "ERR_NETWORK" || error.code === "ERR_CONNECTION_REFUSED") {
+                setError("Backend đang bảo trì. Dùng tài khoản demo:\n Bác sĩ: bacsia / password\n Staff: staff / password\n Admin: admin / password");
+            } else if (error.response && error.response.data && error.response.data.message) {
                 setError(error.response.data.message);
             } else {
                 setError("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");
@@ -77,7 +128,7 @@ export default function LoginPage() {
                     </h1>
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm whitespace-pre-line">
                             {error}
                         </div>
                     )}
@@ -90,7 +141,7 @@ export default function LoginPage() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                                placeholder="Nhập email hoặc tên đăng nhập"
+                                placeholder="Tên đăng nhập"
                                 disabled={isLoading}
                             />
                         </div>
@@ -102,7 +153,6 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                                placeholder="Nhập mật khẩu"
                                 disabled={isLoading}
                             />
                         </div>

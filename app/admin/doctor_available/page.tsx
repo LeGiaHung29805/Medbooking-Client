@@ -4,20 +4,16 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 
-// ===============================================
-// 1. TYPE DEFINITIONS & HELPERS
-// ===============================================
 
 // Interface cho form tạo mới
 interface NewSlotForm {
   doctor_id: number;
-  date: string; // YYYY-MM-DD
-  start_time: string; // HH:mm
-  end_time: string; // HH:mm
+  date: string; 
+  start_time: string; 
+  end_time: string;
 }
 
 export default function ScheduleManagementPage() {
-  // --- STATE ---
   const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
   const [slots, setSlots] = useState<Model.AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,7 +33,7 @@ export default function ScheduleManagementPage() {
     end_time: "08:30",
   });
 
-  // --- 1. LOAD DANH SÁCH BÁC SĨ ---
+  //LOAD DANH SÁCH BÁC SĨ
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -50,7 +46,7 @@ export default function ScheduleManagementPage() {
     fetchDoctors();
   }, []);
 
-  // --- 2. LOAD LỊCH LÀM VIỆC ---
+  //LOAD LỊCH LÀM VIỆC
   const loadSlots = useCallback(async () => {
     if (selectedDoctorId === "all") {
       setSlots([]);
@@ -74,30 +70,28 @@ export default function ScheduleManagementPage() {
     loadSlots();
   }, [loadSlots]);
 
-  // --- 3. FILTER LOGIC ---
+  //FILTER LOGIC
   const filteredSlots = useMemo(() => {
     return slots.filter((slot) => {
-      // Cắt chuỗi datetime để lấy ngày
       const slotDate = slot.StartTime.split(" ")[0];
       return slotDate === selectedDate;
     });
   }, [slots, selectedDate]);
 
-  // --- 4. HANDLERS ---
+  //HANDLERS
 
   const handleDeleteSlot = async (slotId: number, status: string) => {
     if (status === "Booked") {
-      alert("❌ Không thể xóa lịch đã có người đặt!");
+      alert("Không thể xóa lịch đã có người đặt!");
       return;
     }
     if (confirm("Bạn có chắc muốn xóa khung giờ này?")) {
       try {
-        // [UPDATE] Dùng hàm adminDeleteSlot mới
         await Api.adminDeleteSlot(slotId);
         setSlots((prev) => prev.filter((s) => s.SlotID !== slotId));
-        alert("🗑️ Đã xóa thành công.");
+        alert("Đã xóa thành công.");
       } catch (error) {
-        alert("❌ Xóa thất bại.");
+        alert("Xóa thất bại.");
       }
     }
   };
@@ -108,31 +102,26 @@ export default function ScheduleManagementPage() {
       return;
     }
     try {
-      // [UPDATE] Gộp ngày + giờ thành chuỗi DateTime chuẩn (YYYY-MM-DD HH:mm)
       const startDateTime = `${newSlot.date} ${newSlot.start_time}`;
       const endDateTime = `${newSlot.date} ${newSlot.end_time}`;
 
-      // Gọi hàm adminCreateSlot mới
       await Api.adminCreateSlot(newSlot.doctor_id, startDateTime, endDateTime);
 
-      alert("✅ Đã thêm lịch làm việc mới!");
+      alert("Đã thêm lịch làm việc mới!");
       setIsModalOpen(false);
 
-      // Reload dữ liệu nếu đang xem đúng bác sĩ/ngày đó
       if (selectedDoctorId === newSlot.doctor_id.toString()) {
         loadSlots();
       } else {
-        // Chuyển view sang bác sĩ vừa thêm
         setSelectedDoctorId(newSlot.doctor_id.toString());
         setSelectedDate(newSlot.date);
       }
     } catch (error) {
       console.error(error);
-      alert("❌ Thêm lịch thất bại. Có thể bị trùng giờ.");
+      alert("Thêm lịch thất bại. Có thể bị trùng giờ.");
     }
   };
 
-  // Helper lấy thông tin bác sĩ
   const getDoctorInfo = (id: number) => doctors.find((d) => d.DoctorID === id);
 
   return (
@@ -142,7 +131,7 @@ export default function ScheduleManagementPage() {
         <div className="p-6 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              📅 Lịch Trình Bác Sĩ
+              Lịch Trình Bác Sĩ
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               Quản lý ca làm việc và thời gian trống.
@@ -184,7 +173,7 @@ export default function ScheduleManagementPage() {
           {selectedDoctorId === "all" ? (
             <div className="flex flex-col items-center justify-center h-64 text-gray-400">
               <p className="text-lg font-medium">
-                👆 Vui lòng chọn một Bác sĩ để xem lịch trình
+                Vui lòng chọn một Bác sĩ để xem lịch trình
               </p>
             </div>
           ) : loading ? (
@@ -281,7 +270,7 @@ export default function ScheduleManagementPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="font-bold text-gray-800 text-lg">
-                ✨ Tạo Khung Giờ Làm Việc
+                Tạo Khung Giờ Làm Việc
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}

@@ -1,4 +1,3 @@
-// Tên file: lib/ApiClient.ts
 
 import axios from "axios";
 import * as Model from "./model";
@@ -78,16 +77,23 @@ export const getSpecialties = async (
   return response.data;
 };
 
-export const getDoctors = async (): Promise<Model.Doctor[]> => {
-  const response = await apiClient.get("/doctors");
-  return response.data;
-};
-
 export const getDoctorDetails = async (id: number): Promise<Model.Doctor> => {
   const response = await apiClient.get(`/doctors/${id}`);
   return response.data;
 };
+export const getDoctors = async (
+  search?: string,
+  specialtyId?: number
+): Promise<Model.Doctor[]> => {
+  // 1. Định nghĩa rõ kiểu: object này có thể có key 'search' và 'specialty_id'
+  const params: { search?: string; specialty_id?: number } = {};
 
+  if (search) params.search = search;
+  if (specialtyId) params.specialty_id = specialtyId; // Backend cần key này
+
+  const response = await apiClient.get("/doctors", { params });
+  return response.data;
+};
 // Lấy lịch trống theo ID Bác sĩ
 export const getDoctorAvailability = async (
   doctorId: number
@@ -130,7 +136,13 @@ export const getMyAppointments = async (): Promise<Model.Appointment[]> => {
   });
   return response.data;
 };
-
+//Lấy danh sách bác sĩ đã từng khám
+export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
+  const response = await apiClient.get("/my-doctors", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 export const bookAppointment = async (
   slotId: number,
   symptoms: string,
@@ -411,7 +423,12 @@ export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
   }); // Admin/Staff dùng chung
   return response.data;
 };
-
+export const adminGetFeedbacks = async (): Promise<Model.Feedback[]> => {
+  const response = await apiClient.get("/admin/feedbacks", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 export const getAllMedicalRecords = async (
   patientId?: number
 ): Promise<Model.MedicalRecord[]> => {
@@ -468,23 +485,40 @@ export const updateProfile = async (
   return response.data;
 };
 
-// Bệnh nhân gửi đánh giá
-export const submitFeedback = async (
-  appointmentId: number,
-  rating: number,
-  comment: string
-): Promise<Model.MessageResponse> => {
-  const response = await apiClient.post(
-    `/appointments/${appointmentId}/feedback`,
-    {
-      Rating: rating,
-      Comment: comment,
-    },
-    {
-      headers: getAuthHeaders(),
-    }
-  );
-  return response.data;
+export const submitFeedback = async (data: {
+  AppointmentID?: number | null;
+  TargetType: 'Doctor' | 'System';
+  Rating: number;
+  Comment: string;
+}): Promise<Model.MessageResponse> => {
+  
+  // TRƯỜNG HỢP 1: Đánh giá Bác sĩ (Gắn với lịch hẹn cụ thể)
+  if (data.TargetType === 'Doctor' && data.AppointmentID) {
+    const response = await apiClient.post(
+      `/appointments/${data.AppointmentID}/feedback`,
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  }
+
+  // TRƯỜNG HỢP 2: Đánh giá Hệ thống (Không gắn lịch hẹn)
+  else if (data.TargetType === 'System') {
+    const response = await apiClient.post(
+      '/system-feedback', 
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  }
+
+  throw new Error("Dữ liệu đánh giá không hợp lệ (Thiếu ID lịch hẹn hoặc sai loại).");
 };
 // ==========================================
 // === 8. QUẢN LÝ NGƯỜI DÙNG (ADMIN) ===
@@ -619,4 +653,36 @@ export const sendNotification = async (data: {
     headers: getAuthHeaders(),
   });
   return response.data;
+};
+// [MỚI] Lấy danh sách lịch hẹn chờ xác nhận (Pending)
+export const getPendingAppointments = async (): Promise<
+  Model.Appointment[]
+> => {
+  // Giả sử backend có hỗ trợ filter status, hoặc dùng API lấy tất cả rồi filter ở frontend (nếu backend chưa hỗ trợ filter)
+  // Cách tốt nhất là backend có endpoint riêng hoặc param filter
+  // Ở đây dùng cách filter ở frontend từ API getAllAppointments nếu backend chưa có endpoint riêng
+  // Hoặc gọi endpoint /staff/pending-appointments nếu có.
+
+  // Cách 1: Gọi API lấy tất cả rồi lọc (Tạm thời dùng cách này nếu chưa rõ backend)
+  const allAppointments = await getAllAppointments();
+  return allAppointments.filter((app) => app.Status === "Pending");
+};
+// [MỚI] Staff tạo lịch hẹn thay mặt bệnh nhân
+export const staffCreateAppointment = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post("/staff/appointments", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+//Xem lịch tái khám ngoài bệnh nhân
+export const getFollowUpAppointments = (appointments: Model.Appointment[]) => {
+  return appointments.filter(app => 
+    //
+    //Dựa vào tên Dịch vụ
+    app.service?.ServiceName.toLowerCase().includes("tái khám") ||
+    //Hoặc dựa vào Ghi chú triệu chứng
+    app.InitialSymptoms?.toLowerCase().includes("tái khám")
+  );
 };

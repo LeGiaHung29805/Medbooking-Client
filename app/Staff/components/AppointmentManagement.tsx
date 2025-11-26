@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
 
 type AppointmentStatus =
   | "pending"
@@ -9,8 +11,9 @@ type AppointmentStatus =
   | "completed"
   | "checked-in";
 
-interface Appointment {
+interface AppointmentUI {
   id: string;
+  realId: number;
   patientName: string;
   patientPhone: string;
   patientEmail: string;
@@ -23,75 +26,238 @@ interface Appointment {
 }
 
 export default function AppointmentManagement() {
+  const [appointments, setAppointments] = useState<AppointmentUI[]>([]);
+  const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // State cho tính năng chọn Slot
+  const [doctorSlots, setDoctorSlots] = useState<Model.AvailabilitySlot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
   const [viewMode, setViewMode] = useState<"calendar" | "table">("calendar");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDoctor, setFilterDoctor] = useState<string>("all");
 
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: "APT001",
-      patientName: "Nguyễn Văn A",
-      patientPhone: "0901234567",
-      patientEmail: "nguyenvana@email.com",
-      doctorName: "BS. Trần Thị B",
-      doctorId: "DOC001",
-      date: "2025-11-15",
-      time: "09:00",
-      status: "pending",
-      reason: "Khám tổng quát",
-    },
-    {
-      id: "APT002",
-      patientName: "Lê Thị C",
-      patientPhone: "0912345678",
-      patientEmail: "lethic@email.com",
-      doctorName: "BS. Phạm Văn D",
-      doctorId: "DOC002",
-      date: "2025-11-15",
-      time: "10:30",
-      status: "confirmed",
-      reason: "Khám chuyên khoa",
-    },
-    {
-      id: "APT003",
-      patientName: "Trần Văn E",
-      patientPhone: "0923456789",
-      patientEmail: "tranvane@email.com",
-      doctorName: "BS. Trần Thị B",
-      doctorId: "DOC001",
-      date: "2025-11-15",
-      time: "14:00",
-      status: "checked-in",
-      reason: "Tái khám",
-    },
-    {
-      id: "APT004",
-      patientName: "Phạm Thị F",
-      patientPhone: "0934567890",
-      patientEmail: "phamthif@email.com",
-      doctorName: "BS. Nguyễn Văn G",
-      doctorId: "DOC003",
-      date: "2025-11-16",
-      time: "09:00",
-      status: "confirmed",
-      reason: "Khám tim mạch",
-    },
-    {
-      id: "APT005",
-      patientName: "Hoàng Văn H",
-      patientPhone: "0945678901",
-      patientEmail: "hoangvanh@email.com",
-      doctorName: "BS. Trần Thị B",
-      doctorId: "DOC001",
-      date: "2025-11-16",
-      time: "11:00",
-      status: "cancelled",
-      reason: "Khám da liễu",
-    },
-  ]);
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    address: "",
+    doctorId: "",
+    slotId: 0,
+    date: "",
+    time: "",
+    reason: "",
+  });
 
+  // --- LOAD DATA ---
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [apptData, docData] = await Promise.all([
+        Api.getAllAppointments(),
+        Api.getDoctors(),
+      ]);
+
+      const mapped: AppointmentUI[] = apptData.map((item) => {
+        const dateObj = new Date(item.StartTime);
+        return {
+          id: `APT${item.AppointmentID}`,
+          realId: item.AppointmentID,
+          patientName: item.patient?.FullName || "Khách vãng lai",
+          patientPhone: item.patient?.PhoneNumber || "",
+          patientEmail: item.patient?.Email || "",
+          doctorName: item.doctor?.user?.FullName || "Chưa xếp",
+          doctorId: item.doctor?.DoctorID.toString() || "",
+          date: dateObj.toLocaleDateString("en-CA"),
+          time: dateObj.toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          status: item.Status.toLowerCase() as AppointmentStatus,
+          reason: item.InitialSymptoms || "",
+        };
+      });
+
+      setAppointments(mapped.reverse());
+      setDoctors(docData);
+    } catch (error) {
+      console.error("Lỗi tải dữ liệu:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // --- SLOT LOGIC ---
+  const handleDoctorChange = async (docId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      doctorId: docId,
+      slotId: 0,
+      date: "",
+      time: "",
+    }));
+    if (!docId) {
+      setDoctorSlots([]);
+      return;
+    }
+
+    setLoadingSlots(true);
+    try {
+      const slots = await Api.getDoctorAvailability(parseInt(docId));
+      const availableSlots = slots
+        .filter((s) => s.Status === "Available")
+        .sort(
+          (a, b) =>
+            new Date(a.StartTime).getTime() - new Date(b.StartTime).getTime()
+        );
+      setDoctorSlots(availableSlots);
+    } catch (error) {
+      console.error(error);
+      setDoctorSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handleSelectSlot = (slot: Model.AvailabilitySlot) => {
+    const dateObj = new Date(slot.StartTime);
+    const dateStr = dateObj.toLocaleDateString("en-CA");
+    const timeStr = dateObj.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      slotId: slot.SlotID,
+      date: dateStr,
+      time: timeStr,
+    }));
+  };
+
+  const groupedSlots = useMemo(() => {
+    const groups: Record<string, Model.AvailabilitySlot[]> = {};
+    doctorSlots.forEach((slot) => {
+      const date = new Date(slot.StartTime).toLocaleDateString("vi-VN", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(slot);
+    });
+    return groups;
+  }, [doctorSlots]);
+
+  // --- CREATE HANDLER (FIX 422 Error) ---
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.slotId || !formData.doctorId) {
+      alert("Vui lòng chọn bác sĩ và khung giờ khám!");
+      return;
+    }
+
+    try {
+      // 1. TÌM HOẶC TẠO BỆNH NHÂN
+      let patientId = null;
+
+      // Tìm user theo số điện thoại (Admin API hỗ trợ search)
+      const existingUsers = await Api.adminGetUsers(undefined, formData.phone);
+      // Lọc chính xác SĐT (vì search có thể trả về kết quả gần đúng)
+      const foundPatient = existingUsers.find(
+        (u) => u.PhoneNumber === formData.phone
+      );
+
+      if (foundPatient) {
+        patientId = foundPatient.UserID;
+      } else {
+        // Nếu chưa có -> Tạo mới user (Role: BenhNhan)
+        const newPatientData = new FormData();
+        const fullName = formData.fullName.trim();
+
+        newPatientData.append("FullName", fullName);
+        newPatientData.append("PhoneNumber", formData.phone);
+        newPatientData.append(
+          "Email",
+          formData.email || `${formData.phone}@med.com`
+        ); // Fake email nếu ko có
+        newPatientData.append("Username", formData.phone); // Username là SĐT
+        newPatientData.append("Role", "BenhNhan");
+        newPatientData.append("Status", "HoatDong");
+        newPatientData.append("password", "123456"); // Mật khẩu mặc định
+
+        await Api.adminCreateUser(newPatientData);
+
+        // Tìm lại để lấy ID (do hàm create có thể chỉ trả về message)
+        const usersAfterCreate = await Api.adminGetUsers(
+          undefined,
+          formData.phone
+        );
+        const createdUser = usersAfterCreate.find(
+          (u) => u.PhoneNumber === formData.phone
+        );
+
+        if (createdUser) {
+          patientId = createdUser.UserID;
+        } else {
+          throw new Error(
+            "Không thể tạo hồ sơ bệnh nhân tự động. Vui lòng tạo thủ công trước."
+          );
+        }
+      }
+
+      // 2. GỬI API TẠO LỊCH HẸN
+      const apptData = new FormData();
+      apptData.append("PatientID", patientId.toString()); // <--- QUAN TRỌNG: Đã có ID
+      apptData.append("DoctorID", formData.doctorId);
+      apptData.append("SlotID", formData.slotId.toString());
+      apptData.append("InitialSymptoms", formData.reason);
+
+      // [UPDATE] Bổ sung Status để tránh lỗi 422
+      apptData.append("Status", "Pending");
+
+      await Api.staffCreateAppointment(apptData);
+
+      alert(
+        `✅ Đã tạo lịch hẹn thành công cho bệnh nhân: ${formData.fullName}`
+      );
+      setShowCreateModal(false);
+      loadData();
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        phone: "",
+        email: "",
+        address: "",
+        doctorId: "",
+        slotId: 0,
+        date: "",
+        time: "",
+        reason: "",
+      });
+      setDoctorSlots([]);
+    } catch (error: any) {
+      console.error(error);
+      const msg =
+        error.response?.data?.message ||
+        JSON.stringify(error.response?.data?.errors) ||
+        "Lỗi khi tạo lịch hẹn";
+      alert("❌ " + msg);
+    }
+  };
+
+  // Helper UI & Handlers cũ giữ nguyên
   const getStatusColor = (status: AppointmentStatus) => {
     switch (status) {
       case "pending":
@@ -126,15 +292,23 @@ export default function AppointmentManagement() {
     }
   };
 
-  const updateAppointmentStatus = (
-    id: string,
+  const updateAppointmentStatus = async (
+    realId: number,
     newStatus: AppointmentStatus
   ) => {
-    setAppointments(
-      appointments.map((apt) =>
-        apt.id === id ? { ...apt, status: newStatus } : apt
-      )
-    );
+    try {
+      if (newStatus === "confirmed") await Api.confirmAppointment(realId);
+      else if (newStatus === "checked-in") await Api.checkInAppointment(realId);
+      else if (newStatus === "cancelled") {
+        const r = prompt("Lý do hủy:");
+        if (r) await Api.adminCancelAppointment(realId, r);
+        else return;
+      }
+      alert("Thành công!");
+      loadData();
+    } catch (e) {
+      alert("Lỗi thao tác!");
+    }
   };
 
   const filteredAppointments = appointments.filter((apt) => {
@@ -182,59 +356,51 @@ export default function AppointmentManagement() {
       {/* Filters and View Toggle */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Tìm kiếm bệnh nhân, bác sĩ, ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="pending">Chờ xác nhận</option>
-              <option value="confirmed">Đã xác nhận</option>
-              <option value="checked-in">Đã check-in</option>
-              <option value="cancelled">Đã hủy</option>
-              <option value="completed">Hoàn thành</option>
-            </select>
-          </div>
-          <div>
-            <select
-              value={filterDoctor}
-              onChange={(e) => setFilterDoctor(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tất cả bác sĩ</option>
-              <option value="DOC001">BS. Trần Thị B</option>
-              <option value="DOC002">BS. Phạm Văn D</option>
-              <option value="DOC003">BS. Nguyễn Văn G</option>
-            </select>
-          </div>
-          <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Tìm kiếm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border p-2 rounded"
+          />
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="border p-2 rounded"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="pending">Chờ xác nhận</option>
+            <option value="confirmed">Đã xác nhận</option>
+            <option value="checked-in">Đã check-in</option>
+            <option value="cancelled">Đã hủy</option>
+            <option value="completed">Hoàn thành</option>
+          </select>
+          <select
+            value={filterDoctor}
+            onChange={(e) => setFilterDoctor(e.target.value)}
+            className="border p-2 rounded"
+          >
+            <option value="all">Tất cả bác sĩ</option>
+            {doctors.map((doc) => (
+              <option key={doc.DoctorID} value={doc.DoctorID}>
+                {doc.user?.FullName}
+              </option>
+            ))}
+          </select>
+          <div className="flex gap-2">
             <button
               onClick={() => setViewMode("calendar")}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === "calendar"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`flex-1 rounded ${viewMode === "calendar"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100"
+                }`}
             >
               Lịch
             </button>
             <button
               onClick={() => setViewMode("table")}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === "table"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`flex-1 rounded ${viewMode === "table" ? "bg-blue-600 text-white" : "bg-gray-100"
+                }`}
             >
               Bảng
             </button>
@@ -243,160 +409,119 @@ export default function AppointmentManagement() {
       </div>
 
       {/* Content Area */}
-      {viewMode === "calendar" ? (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className={`border-2 rounded-lg p-4 ${getStatusColor(
-                    appointment.status
-                  )}`}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="px-2 py-1 text-xs font-semibold rounded">
-                      {getStatusText(appointment.status)}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {appointment.id}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    {appointment.patientName}
-                  </h3>
-                  <div className="space-y-1 text-sm text-gray-600 mb-4">
-                    <p>👨‍⚕️ {appointment.doctorName}</p>
-                    <p>📅 {appointment.date}</p>
-                    <p>🕐 {appointment.time}</p>
-                    <p>📋 {appointment.reason}</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    {appointment.status === "pending" && (
-                      <button
-                        onClick={() =>
-                          updateAppointmentStatus(appointment.id, "confirmed")
-                        }
-                        className="flex-1 px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700"
-                      >
-                        Xác nhận
-                      </button>
-                    )}
-                    {appointment.status === "confirmed" && (
-                      <button
-                        onClick={() =>
-                          updateAppointmentStatus(appointment.id, "checked-in")
-                        }
-                        className="flex-1 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
-                      >
-                        Check-in
-                      </button>
-                    )}
-                    {(appointment.status === "pending" ||
-                      appointment.status === "confirmed") && (
-                      <button
-                        onClick={() =>
-                          updateAppointmentStatus(appointment.id, "cancelled")
-                        }
-                        className="flex-1 px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700"
-                      >
-                        Hủy
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">
+          Đang tải dữ liệu...
+        </div>
+      ) : viewMode === "calendar" ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {filteredAppointments.map((apt) => (
+            <div
+              key={apt.id}
+              className={`border p-4 rounded-lg bg-white shadow-sm ${getStatusColor(
+                apt.status
+              )}`}
+            >
+              <div className="flex justify-between">
+                <span className="font-bold text-sm">
+                  {apt.status.toUpperCase()}
+                </span>
+                <span className="text-xs text-gray-500">{apt.id}</span>
+              </div>
+              <h3 className="font-bold text-lg mt-2">{apt.patientName}</h3>
+              <p className="text-sm">👨‍⚕️ {apt.doctorName}</p>
+              <p className="text-sm">
+                🕒 {apt.date} - {apt.time}
+              </p>
+              <div className="flex gap-2 mt-3">
+                {apt.status === "pending" && (
+                  <button
+                    onClick={() =>
+                      updateAppointmentStatus(apt.realId, "confirmed")
+                    }
+                    className="bg-green-500 text-white px-2 py-1 rounded text-xs"
+                  >
+                    Duyệt
+                  </button>
+                )}
+                {apt.status === "confirmed" && (
+                  <button
+                    onClick={() =>
+                      updateAppointmentStatus(apt.realId, "checked-in")
+                    }
+                    className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
+                  >
+                    Check-in
+                  </button>
+                )}
+                {["pending", "confirmed"].includes(apt.status) && (
+                  <button
+                    onClick={() =>
+                      updateAppointmentStatus(apt.realId, "cancelled")
+                    }
+                    className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                  >
+                    Hủy
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bệnh nhân
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bác sĩ
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ngày
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Giờ
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hành động
-                </th>
+        <div className="bg-white rounded shadow overflow-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b">
+                <th className="p-3">ID</th>
+                <th className="p-3">Bệnh nhân</th>
+                <th className="p-3">Bác sĩ</th>
+                <th className="p-3">Thời gian</th>
+                <th className="p-3">Trạng thái</th>
+                <th className="p-3">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAppointments.map((appointment) => (
-                <tr key={appointment.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {appointment.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {appointment.patientName}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {appointment.patientPhone}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {appointment.doctorName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {appointment.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {appointment.time}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                        appointment.status
-                      )}`}
-                    >
-                      {getStatusText(appointment.status)}
+            <tbody>
+              {filteredAppointments.map((apt) => (
+                <tr key={apt.id} className="border-b hover:bg-gray-50">
+                  <td className="p-3">{apt.id}</td>
+                  <td className="p-3 font-medium">
+                    {apt.patientName}
+                    <br />
+                    <span className="text-xs text-gray-500">
+                      {apt.patientPhone}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    {appointment.status === "pending" && (
+                  <td className="p-3">{apt.doctorName}</td>
+                  <td className="p-3">
+                    {apt.date} {apt.time}
+                  </td>
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(
+                        apt.status
+                      )}`}
+                    >
+                      {getStatusText(apt.status)}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    {apt.status === "pending" && (
                       <button
                         onClick={() =>
-                          updateAppointmentStatus(appointment.id, "confirmed")
+                          updateAppointmentStatus(apt.realId, "confirmed")
                         }
-                        className="text-green-600 hover:text-green-900"
+                        className="text-green-600 hover:underline mr-2"
                       >
-                        Xác nhận
+                        Duyệt
                       </button>
                     )}
-                    {appointment.status === "confirmed" && (
+                    {["pending", "confirmed"].includes(apt.status) && (
                       <button
                         onClick={() =>
-                          updateAppointmentStatus(appointment.id, "checked-in")
+                          updateAppointmentStatus(apt.realId, "cancelled")
                         }
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Check-in
-                      </button>
-                    )}
-                    {(appointment.status === "pending" ||
-                      appointment.status === "confirmed") && (
-                      <button
-                        onClick={() =>
-                          updateAppointmentStatus(appointment.id, "cancelled")
-                        }
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:underline"
                       >
                         Hủy
                       </button>
@@ -409,113 +534,193 @@ export default function AppointmentManagement() {
         </div>
       )}
 
-      {/* Create Appointment Modal */}
+      {/* Modal Tạo Mới */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Tạo lịch hẹn mới
-            </h2>
-            <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h2 className="text-xl font-bold text-gray-900">
+                Tạo lịch hẹn mới
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-2xl text-gray-400"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form className="space-y-6" onSubmit={handleCreate}>
+              {/* Thông tin bệnh nhân */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-700 border-b pb-1 mb-2">
+                  Thông tin Bệnh nhân
+                </h3>
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Họ đệm
+                    Họ và Tên
                   </label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullName: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg"
+                    placeholder="Ví dụ: Nguyễn Văn A"
                   />
                 </div>
-                <div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email (Tùy chọn)
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên
+                    Địa chỉ (Tùy chọn)
                   </label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg"
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Số điện thoại
-                </label>
-                <input
-                  type="tel"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chọn bác sĩ
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>BS. Trần Thị B - Nội khoa</option>
-                  <option>BS. Phạm Văn D - Ngoại khoa</option>
-                  <option>BS. Nguyễn Văn G - Tim mạch</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+
+              {/* Chọn Lịch Khám */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h3 className="font-semibold text-blue-800 border-b border-blue-200 pb-1 mb-3">
+                  Chọn Lịch Khám
+                </h3>
+
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngày khám
+                    Chọn Bác sĩ <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <select
+                    required
+                    value={formData.doctorId}
+                    onChange={(e) => handleDoctorChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">-- Chọn bác sĩ --</option>
+                    {doctors.map((doc) => (
+                      <option key={doc.DoctorID} value={doc.DoctorID}>
+                        {doc.user?.FullName} - {doc.specialty?.SpecialtyName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Giờ khám
-                  </label>
-                  <input
-                    type="time"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+
+                {/* Danh sách Slot */}
+                {loadingSlots ? (
+                  <div className="text-center text-gray-500 py-4">
+                    Đang tải lịch của bác sĩ...
+                  </div>
+                ) : formData.doctorId && doctorSlots.length === 0 ? (
+                  <div className="text-center text-red-500 py-4 bg-white rounded border border-red-100">
+                    Bác sĩ này chưa có lịch trống nào.
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-60 overflow-y-auto custom-scrollbar">
+                    {Object.entries(groupedSlots).map(([date, slots]) => (
+                      <div key={date}>
+                        <h4 className="text-sm font-bold text-gray-600 mb-2 sticky top-0 bg-blue-50 py-1">
+                          {date}
+                        </h4>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {slots.map((slot) => {
+                            const timeLabel = new Date(
+                              slot.StartTime
+                            ).toLocaleTimeString("vi-VN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            });
+                            const isSelected = formData.slotId === slot.SlotID;
+                            return (
+                              <button
+                                key={slot.SlotID}
+                                type="button"
+                                onClick={() => handleSelectSlot(slot)}
+                                className={`py-2 px-1 text-sm rounded border transition-all ${isSelected
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                                  }`}
+                              >
+                                {timeLabel}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {formData.slotId !== 0 && (
+                  <div className="mt-3 p-2 bg-green-100 text-green-800 text-sm rounded text-center font-medium border border-green-200">
+                    Đã chọn: {formData.time} ngày {formData.date}
+                  </div>
+                )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lý do khám
+                  Lý do khám / Ghi chú
                 </label>
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
+                  value={formData.reason}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reason: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                  rows={2}
                 ></textarea>
               </div>
-              <div className="flex justify-end space-x-3 pt-4">
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
+                  className="px-5 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
+                  className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={!formData.slotId}
                 >
-                  Tạo lịch hẹn
+                  Xác nhận đặt lịch
                 </button>
               </div>
             </form>

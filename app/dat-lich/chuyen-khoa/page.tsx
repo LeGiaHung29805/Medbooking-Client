@@ -1,180 +1,148 @@
 "use client";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import LayoutBook from "@/components/layoutBook";
-import Image from "next/image";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious, } from "@/components/ui/pagination";
+import { AxiosError } from 'axios';
 
-// Kiểu dữ liệu chuyên khoa
-interface Specialty {
-    id: number;
-    name: string;
-    dept: string;
-    room: string;
-    avatar: string;
-    services: { name: string; price: number }[];
-    schedule: { date: string; times: string[] }[];
-    fee?: number;
-    insurance?: string;
-}
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 export default function SpecialtyBookingPage() {
     const router = useRouter();
 
-    const [selectedPerson, setSelectedPerson] = useState("Tôi - Lê Gia Hưng");
-    const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(null);
+    const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
+    const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const [selectedPerson, setSelectedPerson] = useState("");
+    const [selectedSpecialty, setSelectedSpecialty] = useState<Model.Specialty | null>(null);
+
+    // State xử lý Lịch (Slot)
+    const [availabilities, setAvailabilities] = useState<Model.AvailabilitySlot[]>([]);
     const [selectedDate, setSelectedDate] = useState("");
-    const [selectedTime, setSelectedTime] = useState("");
+    const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null); // ID để gửi API
+    const [selectedTimeLabel, setSelectedTimeLabel] = useState(""); // Giờ hiển thị (08:00)
+
     const [reason, setReason] = useState("");
     const [file, setFile] = useState<File | null>(null);
+    const [bookingLoading, setBookingLoading] = useState(false);
 
+    // STATE UI (Sheet, Pagination, Search)
     const [showSpecialtySheet, setShowSpecialtySheet] = useState(false);
-    const [showSpecialtyDetail, setShowSpecialtyDetail] = useState<Specialty | null>(null);
+    // Biến này dùng để xem chi tiết trong Sheet (chưa chọn vào form chính)
+    const [viewingSpecialty, setViewingSpecialty] = useState<Model.Specialty | null>(null);
 
-    // Tìm kiếm & phân trang
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // Dữ liệu giả
-    const specialties: Specialty[] = [
-    {
-        id: 1,
-        name: "Tim mạch",
-        dept: "Khám và điều trị các bệnh lý về tim, mạch máu và huyết áp.",
-        room: "Phòng 205 - Trung tâm Y khoa số 1 Tôn Thất Tùng",
-        avatar: "/image/tim_mach.jpg",
-        fee: 350000,
-        insurance: "Có hỗ trợ BHYT",
-        services: [{ name: "Khám Tim mạch", price: 350000 }],
-        schedule: [
-            { date: "2025-09-30", times: ["06:45", "07:00", "07:15"] },
-            { date: "2025-10-01", times: ["07:30", "07:45", "08:00"] },
-        ],
-    },
-    {
-        id: 2,
-        name: "Tiêu hoá",
-        dept: "Khám và điều trị các bệnh lý về dạ dày, ruột, gan, mật, tụy.",
-        room: "Phòng 201",
-        avatar: "/image/tieu_hoa.jpg",
-        fee: 300000,
-        insurance: "Thanh toán trực tiếp bằng BHYT",
-        services: [{ name: "Khám tiêu hoá cơ bản", price: 300000 }],
-        schedule: [
-            { date: "2025-10-02", times: ["08:00", "09:00", "10:00"] },
-            { date: "2025-10-03", times: ["13:00", "14:00", "15:00"] },
-        ],
-    },
-    {
-        id: 3,
-        name: "Răng - Hàm - Mặt",
-        dept: "Khám, điều trị các bệnh lý răng miệng, nha chu, chỉnh nha và thẩm mỹ.",
-        room: "Phòng 305",
-        avatar: "/image/rang_ham_mat.jpg",
-        fee: 250000,
-        insurance: "Có hỗ trợ BHYT",
-        services: [{ name: "Khám Răng - Hàm - Mặt", price: 250000 }],
-        schedule: [
-            { date: "2025-10-04", times: ["07:30", "08:00", "08:30"] },
-            { date: "2025-10-05", times: ["13:30", "14:00", "14:30"] },
-        ],
-    },
-    {
-        id: 4,
-        name: "Tai - Mũi - Họng",
-        dept: "Khám, chẩn đoán và điều trị các bệnh lý tai, mũi, họng và thanh quản.",
-        room: "Phòng 310",
-        avatar: "/image/tai-mui-hong.png",
-        fee: 200000,
-        insurance: "Có hỗ trợ BHYT",
-        services: [{ name: "Khám Tai - Mũi - Họng", price: 200000 }],
-        schedule: [
-            { date: "2025-10-02", times: ["09:00", "09:30", "10:00"] },
-            { date: "2025-10-03", times: ["14:00", "14:30", "15:00"] },
-        ],
-    },
-    {
-        id: 5,
-        name: "Da liễu",
-        dept: "Khám và điều trị các bệnh lý da, dị ứng và thẩm mỹ da.",
-        room: "Phòng 215",
-        avatar: "/image/da_lieu.jpg",
-        fee: 220000,
-        insurance: "Có hỗ trợ BHYT",
-        services: [{ name: "Khám Da liễu cơ bản", price: 220000 }],
-        schedule: [
-            { date: "2025-10-06", times: ["07:30", "08:00", "08:30"] },
-            { date: "2025-10-07", times: ["13:00", "13:30", "14:00"] },
-        ],
-    },
-    {
-        id: 6,
-        name: "Nhi khoa",
-        dept: "Khám và điều trị các bệnh lý cho trẻ sơ sinh, trẻ nhỏ và thanh thiếu niên.",
-        room: "Phòng 120",
-        avatar: "/image/khoa-nhi.png",
-        fee: 200000,
-        insurance: "Thanh toán trực tiếp bằng BHYT",
-        services: [{ name: "Khám Nhi tổng quát", price: 200000 }],
-        schedule: [
-            { date: "2025-10-08", times: ["08:00", "08:30", "09:00"] },
-            { date: "2025-10-09", times: ["14:00", "14:30", "15:00"] },
-        ],
-    },
-];
+    //LOAD DỮ LIỆU BAN ĐẦU
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [specsData, userData] = await Promise.all([
+                    Api.getSpecialties(),
+                    Api.getMe().catch(() => null),
+                ]);
+                setSpecialties(specsData);
 
+                if (userData) {
+                    setCurrentUser(userData);
+                    setSelectedPerson(userData.FullName);
+                }
+            } catch (error) {
+                console.error("Lỗi tải dữ liệu:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
-    // Lọc
-    const filteredSpecialties = specialties.filter(
-        (s) => s.name.toLowerCase().includes(search.toLowerCase())
-    );
+    //XỬ LÝ KHI BẤM VÀO MỘT CHUYÊN KHOA (MỞ SHEET CHI TIẾT)
+    const handleViewSpecialty = async (spec: Model.Specialty) => {
+        setViewingSpecialty(spec);
+        setSelectedDate("");
+        setSelectedSlotId(null);
+        setAvailabilities([]);
 
-    // Phân trang
+        try {
+            // Gọi API lấy lịch trống của chuyên khoa này
+            const slots = await Api.getSpecialtyAvailability(spec.SpecialtyID);
+
+            // Lọc slot tương lai & Available
+            const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
+            setAvailabilities(validSlots);
+
+            // Auto chọn ngày đầu tiên
+            if (validSlots.length > 0) {
+                const firstDate = validSlots[0].StartTime.split(" ")[0];
+                setSelectedDate(firstDate);
+            }
+        } catch (error) {
+            console.error("Lỗi lấy lịch chuyên khoa:", error);
+        }
+    };
+
+    //LOGIC TÍNH TOÁN NGÀY GIỜ (Tương tự trang Bác sĩ)
+    const uniqueDates = useMemo(() => {
+        const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
+        return Array.from(dates).sort();
+    }, [availabilities]);
+
+    const slotsOnDate = useMemo(() => {
+        return availabilities.filter(slot => slot.StartTime.startsWith(selectedDate));
+    }, [availabilities, selectedDate]);
+
+    //LỌC & PHÂN TRANG
+    const filteredSpecialties = useMemo(() => {
+        return specialties.filter((s) =>
+            s.SpecialtyName.toLowerCase().includes(search.toLowerCase())
+        );
+    }, [specialties, search]);
+
     const totalPages = Math.ceil(filteredSpecialties.length / pageSize);
     const currentSpecialties = filteredSpecialties.slice(
         (page - 1) * pageSize,
         page * pageSize
     );
 
-    // Format ngày
+    // Helper format ngày
     const weekdayNames = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
     const formatDateLabel = (dateStr: string) => {
+        if (!dateStr) return "";
         const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
         const weekday = weekdayNames[d.getDay()];
         const day = d.getDate().toString().padStart(2, "0");
         const month = (d.getMonth() + 1).toString().padStart(2, "0");
         return `${weekday} ${day}/${month}`;
     };
 
-    // Submit
-    const handleSubmit = (e: React.FormEvent) => {
+    //GỬI FORM ĐẶT LỊCH
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedSpecialty) return alert("Vui lòng chọn chuyên khoa!");
-        if (!selectedDate || !selectedTime)
-            return alert("Vui lòng chọn thời gian khám!");
+        if (!selectedSlotId) return alert("Vui lòng chọn thời gian khám!");
+        if (!reason.trim()) return alert("Vui lòng nhập triệu chứng!");
 
-        console.log({
-            patient: selectedPerson,
-            specialty: selectedSpecialty.name,
-            service: selectedSpecialty.services[0],
-            date: selectedDate,
-            time: selectedTime,
-            reason,
-            file,
-        });
-
-        alert("Đặt lịch khám thành công (demo)");
-        router.push("/dat-lich");
+        setBookingLoading(true);
+        try {
+            await Api.bookAppointment(selectedSlotId, reason, file || undefined);
+            alert("Đặt lịch thành công!");
+            router.push("/dat-lich");
+        } catch (error) {
+            const err = error as AxiosError<{ message: string }>;
+            const msg = err.response?.data?.message || "Đặt lịch thất bại.";
+            alert("" + msg);
+        } finally {
+            setBookingLoading(false);
+        }
     };
 
     return (
@@ -192,11 +160,14 @@ export default function SpecialtyBookingPage() {
                         <select
                             value={selectedPerson}
                             onChange={(e) => setSelectedPerson(e.target.value)}
-                            className="w-full border rounded px-3 py-2 focus:outline-green-600"
+                            className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
-                            <option value="Tôi - Lê Gia Hưng">Tôi - Lê Gia Hưng</option>
-                            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
-                            <option value="Trần Thị B">Trần Thị B</option>
+                            {currentUser ? (
+                                <option value={currentUser.FullName}>{currentUser.FullName}</option>
+                            ) : (
+                                <option value="">Đang tải...</option>
+                            )}
+
                         </select>
                     </div>
 
@@ -216,18 +187,16 @@ export default function SpecialtyBookingPage() {
                                 className="w-full border rounded px-3 py-3 cursor-pointer hover:border-green-600"
                             >
                                 <div className="font-semibold text-green-700">
-                                    {selectedSpecialty.name}
+                                    {selectedSpecialty.SpecialtyName}
                                 </div>
-                                <div className="text-sm text-gray-600">{selectedSpecialty.dept}</div>
-                                <div className="mt-2 text-sm text-gray-700">
-                                    Dịch vụ: {selectedSpecialty.services[0].name} –{" "}
-                                    <span className="text-red-600">
-                                        {selectedSpecialty.services[0].price.toLocaleString()}đ
-                                    </span>
+                                <div className="text-sm text-gray-600">
+                                    {selectedSpecialty.Description || "Chuyên khoa uy tín"}
                                 </div>
-                                {selectedDate && selectedTime && (
-                                    <div className="text-sm mt-1 text-blue-600">
-                                        Thời gian: {formatDateLabel(selectedDate)} – {selectedTime}
+
+                                {/* Hiển thị giờ đã chọn */}
+                                {selectedDate && selectedTimeLabel && (
+                                    <div className="mt-2 text-sm text-blue-600 font-bold">
+                                        Thời gian: {formatDateLabel(selectedDate)} – {selectedTimeLabel}
                                     </div>
                                 )}
                             </div>
@@ -267,190 +236,190 @@ export default function SpecialtyBookingPage() {
 
                     <Button
                         type="submit"
+                        disabled={bookingLoading}
                         className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
-                        Xác nhận đặt lịch
+                        {bookingLoading ? "Đang xử lý..." : "Xác nhận đặt lịch"}
                     </Button>
                 </form>
             </div>
 
             {/* Sheet chọn chuyên khoa */}
             {showSpecialtySheet && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white w-[600px] max-h-[85%] rounded-t-2xl p-4 overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold">Chọn chuyên khoa</h2>
-                            <button onClick={() => setShowSpecialtySheet(false)}>✕</button>
-                        </div>
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+                    {/* Nếu chưa chọn item nào để xem lịch -> Hiện danh sách */}
+                    {!viewingSpecialty ? (
+                        <div className="bg-white w-[600px] max-h-[85%] rounded-t-2xl p-4 overflow-y-auto rounded-b-2xl">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold">Chọn chuyên khoa</h2>
+                                <button onClick={() => setShowSpecialtySheet(false)}>✕</button>
+                            </div>
 
-                        {/* Lọc */}
-                        <div className="flex justify-center mb-4">
-                            <input
-                                type="text"
-                                placeholder="Tìm chuyên khoa..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="border rounded px-2 py-1 w-[500px] text-sm"
-                            />
-                        </div>
-
-                        {/* Danh sách chuyên khoa */}
-                        {currentSpecialties.map((spec) => (
-                            <div
-                                key={spec.id}
-                                onClick={() => setShowSpecialtyDetail(spec)}
-                                className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100"
-                            >
-                                <Image
-                                    src={spec.avatar}
-                                    alt={spec.name}
-                                    width={60}
-                                    height={60}
-                                    className="rounded-lg object-cover"
+                            <div className="flex justify-center mb-4">
+                                <input
+                                    type="text"
+                                    placeholder="Tìm chuyên khoa..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="border rounded px-2 py-1 w-[500px] text-sm"
                                 />
+                            </div>
+
+                            {loading ? (
+                                <div className="text-center py-8 text-gray-500">Đang tải danh sách...</div>
+                            ) : currentSpecialties.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">Không tìm thấy chuyên khoa nào.</div>
+                            ) : (
+                                <>
+                                    {currentSpecialties.map((spec) => (
+                                        <div
+                                            key={spec.SpecialtyID}
+                                            onClick={() => handleViewSpecialty(spec)}
+                                            className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100 transition"
+                                        >
+                                            <div className="w-[60px] h-[60px]">
+                                                <DataThumbnail
+                                                    src={spec.imageURL}
+                                                    alt={spec.SpecialtyName}
+                                                    fallbackType="specialty"
+                                                    className="w-full h-full rounded-lg"
+                                                />
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-green-800">{spec.SpecialtyName}</div>
+                                                <div className="font-medium text-sm text-gray-500 line-clamp-1">
+                                                    {spec.Description || "Chưa có mô tả"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {/* Phân trang */}
+                                    {totalPages > 1 && (
+                                        <Pagination className="mt-4">
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        onClick={() => setPage(Math.max(page - 1, 1))}
+                                                        className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                                <span className="mx-2 text-sm">Trang {page}/{totalPages}</span>
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        onClick={() => setPage(Math.min(page + 1, totalPages))}
+                                                        className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        // Nếu đã chọn xem chi tiết -> Hiện Lịch của chuyên khoa đó
+                        <div className="bg-white w-[50%] max-h-[90%] rounded-2xl p-6 overflow-y-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold text-green-700">
+                                    Lịch chuyên khoa
+                                </h2>
+                                {/* Nút Quay lại danh sách */}
+                                <button onClick={() => setViewingSpecialty(null)} className="text-gray-500 hover:text-black">Quay lại</button>
+                            </div>
+
+                            {/* Info Chuyên khoa */}
+                            <div className="flex gap-4 border-b pb-4 mb-4 items-center">
+                                <div className="w-20 h-20">
+                                    <DataThumbnail
+                                        src={viewingSpecialty.imageURL}
+                                        alt={viewingSpecialty.SpecialtyName}
+                                        fallbackType="specialty"
+                                        className="w-full h-full rounded-lg"
+                                    />
+                                </div>
                                 <div>
-                                    <div className="font-medium">{spec.name}</div>
-                                    <div className="font-medium text-sm text-gray-600">{spec.dept}</div>
-                                    <div className="text-sm text-red-600">Giá: {spec.fee}VNĐ</div>
+                                    <h3 className="text-lg font-semibold text-blue-700">
+                                        {viewingSpecialty.SpecialtyName}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 line-clamp-2">{viewingSpecialty.Description}</p>
                                 </div>
                             </div>
-                        ))}
 
-                        {/* Phân trang */}
-                        {totalPages > 1 && (
-                            <Pagination className="mt-4">
-                                <PaginationContent>
-                                    <PaginationItem>
-                                        <PaginationPrevious
-                                            onClick={() => setPage(Math.max(page - 1, 1))}
-                                            aria-disabled={page === 1}
-                                            className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                                        />
-                                    </PaginationItem>
-
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                                        <PaginationItem key={p}>
-                                            <PaginationLink
-                                                isActive={page === p}
-                                                onClick={() => setPage(p)}
-                                            >
-                                                {p}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    ))}
-
-                                    <PaginationItem>
-                                        <PaginationNext
-                                            onClick={() => setPage(Math.min(page + 1, totalPages))}
-                                            aria-disabled={page === totalPages}
-                                            className={
-                                                page === totalPages ? "pointer-events-none opacity-50" : ""
-                                            }
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-                            </Pagination>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Sheet chi tiết chuyên khoa */}
-            {showSpecialtyDetail && (
-                <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
-                    <div className="bg-white w-[50%] max-h-[90%] rounded-t-2xl p-6 overflow-y-auto">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-green-700">
-                                Lịch chuyên khoa
-                            </h2>
-                            <button onClick={() => setShowSpecialtyDetail(null)}>✕</button>
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex gap-4 border-b pb-4 mb-4">
-                            <Image
-                                src={showSpecialtyDetail.avatar}
-                                alt={showSpecialtyDetail.name}
-                                width={80}
-                                height={80}
-                                className="rounded-lg object-cover"
-                            />
-                            <div>
-                                <h3 className="text-lg font-semibold text-blue-700">
-                                    {showSpecialtyDetail.name}
-                                </h3>
-                                <p className="text-sm text-gray-600">{showSpecialtyDetail.dept}</p>
-                            </div>
-                        </div>
-
-                        {/* Chọn ngày */}
-                        <h4 className="font-semibold mb-2">Chọn ngày khám</h4>
-                        <div className="flex gap-2 overflow-x-auto mb-4">
-                            {[...showSpecialtyDetail.schedule]
-                                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                                .map((sch) => (
+                            {/* Chọn ngày */}
+                            <h4 className="font-semibold mb-2 text-gray-700">Chọn ngày khám</h4>
+                            <div className="flex gap-2 overflow-x-auto mb-4 pb-2">
+                                {uniqueDates.length > 0 ? uniqueDates.map((dateStr) => (
                                     <button
-                                        key={sch.date}
+                                        key={dateStr}
                                         onClick={() => {
-                                            setSelectedDate(sch.date);
-                                            setSelectedTime("");
+                                            setSelectedDate(dateStr);
+                                            setSelectedSlotId(null);
+                                            setSelectedTimeLabel("");
                                         }}
-                                        className={`px-3 py-2 rounded-lg border min-w-[120px] text-sm text-center ${selectedDate === sch.date
-                                            ? "bg-blue-600 text-white"
-                                            : "bg-white"
+                                        className={`px-4 py-2 rounded-lg border min-w-[100px] text-sm text-center transition whitespace-nowrap ${selectedDate === dateStr
+                                            ? "bg-green-600 text-white border-green-600 shadow-md"
+                                            : "bg-white border-gray-200 text-gray-600 hover:bg-green-50"
                                             }`}
                                     >
-                                        {formatDateLabel(sch.date)}
+                                        {formatDateLabel(dateStr)}
                                     </button>
-                                ))}
-                        </div>
-
-                        {/* Chọn giờ */}
-                        {selectedDate && (
-                            <div className="grid grid-cols-3 gap-2 mb-4">
-                                {showSpecialtyDetail.schedule
-                                    .find((s) => s.date === selectedDate)
-                                    ?.times.map((t) => (
-                                        <button
-                                            key={t}
-                                            onClick={() => setSelectedTime(t)}
-                                            className={`border rounded py-2 ${selectedTime === t
-                                                ? "bg-green-600 text-white"
-                                                : "hover:border-green-500"
-                                                }`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
+                                )) : (
+                                    <p className="text-sm text-gray-400 italic">Chưa có lịch khám trống cho chuyên khoa này.</p>
+                                )}
                             </div>
-                        )}
 
-                        <div className="border-t pt-4 mt-4 text-sm text-gray-700 space-y-3">
-                            <p>
-                                <span className="font-semibold">Giá khám:</span>{" "}
-                                {showSpecialtyDetail.fee
-                                    ? `${showSpecialtyDetail.fee.toLocaleString()} VNĐ`
-                                    : "Chưa có"}
-                            </p>
-                            <p>
-                                <span className="font-semibold">Bảo hiểm:</span>{" "}
-                                {showSpecialtyDetail.insurance || "Chưa cập nhật"}
-                            </p>
+                            {/* Chọn giờ */}
+                            {selectedDate && (
+                                <div className="animate-fade-in">
+                                    <h4 className="font-semibold mb-2 text-gray-700">Chọn giờ khám</h4>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6">
+                                        {slotsOnDate.length > 0 ? slotsOnDate.map((slot) => {
+                                            const timeStr = slot.StartTime.split(" ")[1].substring(0, 5);
+                                            return (
+                                                <button
+                                                    key={slot.SlotID}
+                                                    onClick={() => {
+                                                        setSelectedSlotId(slot.SlotID);
+                                                        setSelectedTimeLabel(timeStr);
+                                                    }}
+                                                    className={`py-2 rounded border text-sm font-semibold transition ${selectedSlotId === slot.SlotID
+                                                        ? "bg-green-600 text-white border-green-600 shadow-md"
+                                                        : "border-gray-200 text-gray-700 hover:border-green-500 hover:bg-green-50"
+                                                        }`}
+                                                >
+                                                    {timeStr}
+                                                </button>
+                                            );
+                                        }) : (
+                                            <p className="col-span-3 text-sm text-gray-400">Hết giờ ngày này.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer Sheet */}
+                            <div className="flex justify-end gap-3 border-t pt-4">
+                                <button
+                                    onClick={() => setShowSpecialtySheet(false)} // Đóng hẳn
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                >
+                                    Đóng
+                                </button>
+                                <button
+                                    disabled={!selectedDate || !selectedSlotId}
+                                    onClick={() => {
+                                        setSelectedSpecialty(viewingSpecialty); // Chọn vào form chính
+                                        setShowSpecialtySheet(false);
+                                        setViewingSpecialty(null);
+                                    }}
+                                    className="bg-green-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 transition"
+                                >
+                                    Xác nhận chọn
+                                </button>
+                            </div>
                         </div>
-
-                        <button
-                            disabled={!selectedDate || !selectedTime}
-                            onClick={() => {
-                                setSelectedSpecialty(showSpecialtyDetail);
-                                setShowSpecialtyDetail(null);
-                                setShowSpecialtySheet(false);
-                            }}
-                            className="w-full bg-green-600 text-white py-2 rounded mt-4 disabled:opacity-50"
-                        >
-                            Xác nhận chọn
-                        </button>
-                    </div>
+                    )}
                 </div>
             )}
         </LayoutBook>

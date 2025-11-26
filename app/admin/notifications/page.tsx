@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 
-// --- 1. TYPE DEFINITIONS ---
+
 interface NotificationLog {
-  id: number | string; // Chấp nhận cả string để linh hoạt
+  id: number | string;
   recipient: string;
   type: "Reminder" | "System" | "Promotion";
   content: string;
@@ -14,21 +14,18 @@ interface NotificationLog {
   status: "Sent" | "Failed" | "Pending";
 }
 
-// --- 2. MAIN COMPONENT ---
 export default function NotificationManagerPage() {
   const [activeTab, setActiveTab] = useState<"broadcast" | "logs">("broadcast");
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // State form gửi thông báo
   const [broadcastForm, setBroadcastForm] = useState({
     title: "",
     content: "",
-    targetGroup: "all", // all, patients, doctors
+    targetGroup: "all",
     channel: "in_app",
   });
 
-  // --- LOAD DATA ---
   const loadData = useCallback(async () => {
     if (activeTab !== "logs") return;
 
@@ -36,13 +33,12 @@ export default function NotificationManagerPage() {
     try {
       const data = await Api.getNotificationLogs();
 
-      // Kiểm tra nếu data không phải mảng (ví dụ trả về pagination object)
       const arrayData = Array.isArray(data) ? data : (data as any)?.data || [];
 
       if (Array.isArray(arrayData)) {
         const mappedLogs: NotificationLog[] = arrayData.map(
           (item: any, index: number) => ({
-            // Ưu tiên dùng ID từ DB, nếu không có thì dùng index + timestamp để tạo key unique tạm thời
+
             id: item.id || `temp-${index}-${Date.now()}`,
             recipient: item.recipient_name || item.target_group || "N/A",
             type: item.type || "System",
@@ -70,7 +66,6 @@ export default function NotificationManagerPage() {
     loadData();
   }, [loadData]);
 
-  // --- HANDLERS ---
   const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!broadcastForm.title || !broadcastForm.content)
@@ -86,7 +81,7 @@ export default function NotificationManagerPage() {
         Channel: broadcastForm.channel,
       });
 
-      alert("✅ Đã gửi thông báo thành công!");
+      alert("Đã gửi thông báo thành công!");
       setBroadcastForm({
         title: "",
         content: "",
@@ -97,7 +92,7 @@ export default function NotificationManagerPage() {
       if (activeTab === "logs") loadData();
     } catch (error) {
       console.error(error);
-      alert("❌ Gửi thất bại. Vui lòng thử lại.");
+      alert("Gửi thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -107,7 +102,7 @@ export default function NotificationManagerPage() {
         {/* HEADER */}
         <div className="p-6 border-b border-gray-100 bg-white">
           <h1 className="text-2xl font-bold text-gray-800">
-            📢 Quản lý Thông báo
+            Quản lý Thông báo
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Gửi thông báo hệ thống và giám sát tin nhắn tự động
@@ -117,23 +112,21 @@ export default function NotificationManagerPage() {
           <div className="flex gap-6 mt-6 border-b border-gray-200">
             <button
               onClick={() => setActiveTab("broadcast")}
-              className={`pb-3 text-sm font-bold transition border-b-2 ${
-                activeTab === "broadcast"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              className={`pb-3 text-sm font-bold transition border-b-2 ${activeTab === "broadcast"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
             >
-              ✉️ Soạn Thông Báo
+              Soạn Thông Báo
             </button>
             <button
               onClick={() => setActiveTab("logs")}
-              className={`pb-3 text-sm font-bold transition border-b-2 ${
-                activeTab === "logs"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              className={`pb-3 text-sm font-bold transition border-b-2 ${activeTab === "logs"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
             >
-              📜 Nhật Ký Gửi
+              Nhật Ký Gửi
             </button>
           </div>
         </div>
@@ -168,9 +161,9 @@ export default function NotificationManagerPage() {
                           })
                         }
                       >
-                        <option value="all">👥 Tất cả người dùng</option>
-                        <option value="patients">💊 Chỉ Bệnh nhân</option>
-                        <option value="doctors">🩺 Chỉ Bác sĩ</option>
+                        <option value="all">Tất cả người dùng</option>
+                        <option value="patients">Chỉ Bệnh nhân</option>
+                        <option value="doctors">Chỉ Bác sĩ</option>
                       </select>
                     </div>
                     <div>
@@ -188,9 +181,9 @@ export default function NotificationManagerPage() {
                         }
                       >
                         <option value="in_app">
-                          🔔 Thông báo trên App/Web
+                          Thông báo trên App/Web
                         </option>
-                        <option value="email">📧 Gửi qua Email</option>
+                        <option value="email">Gửi qua Email</option>
                       </select>
                     </div>
                   </div>

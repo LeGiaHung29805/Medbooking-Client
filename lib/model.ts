@@ -1,6 +1,3 @@
-// Tên file: lib/model.ts
-
-// === 1. CÁC ĐỐI TƯỢNG CƠ BẢN ===
 
 export interface User {
   UserID: number;
@@ -10,9 +7,12 @@ export interface User {
   Username: string;
   Role: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien";
   Status: "HoatDong" | "Khoa";
-  avatar_url: string | null; // Đường dẫn ảnh đại diện (nếu có)
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  DateOfBirth?: string | null;
+  Gender?: string | null;
+  Address?: string | null;
 }
 
 export interface Service {
@@ -30,7 +30,7 @@ export interface Specialty {
   SpecialtyName: string;
   Description: string | null;
   imageURL: string | null;
-  services?: Service[]; // (Có thể có nếu gọi API /specialties)
+  services?: Service[];
 }
 
 export interface Doctor {
@@ -39,9 +39,9 @@ export interface Doctor {
   Degree: string;
   YearsOfExperience: number;
   ProfileDescription: string | null;
-  imageURL: string | null; // Ảnh đại diện bác sĩ
-  user: User; // <-- Thông tin cá nhân (Tên, SĐT...)
-  specialty: Specialty; // <-- Thuộc chuyên khoa nào
+  imageURL: string | null; 
+  user: User; 
+  specialty: Specialty;
 }
 
 export interface AvailabilitySlot {
@@ -79,16 +79,19 @@ export interface Appointment {
   PatientID: number;
   DoctorID: number;
   SlotID: number | null;
+  ServiceID: number;
   StartTime: string;
   Status: "Pending" | "Confirmed" | "Completed" | "Cancelled" | "CheckedIn";
   InitialSymptoms: string | null;
   CancellationReason: string | null;
-  file_path: string | null; // File bệnh nhân gửi khi đặt lịch
-
-  // Các quan hệ lồng nhau (tùy API gọi)
+  file_path: string | null;
+  Type: 'New' | 'FollowUp';
+  // Các quan hệ lồng nhau
   patient?: User;
   doctor?: Doctor;
   medical_record?: MedicalRecord;
+  //Thông tin lịch khám
+  service?: Service;
 }
 
 export interface Feedback {
@@ -101,7 +104,7 @@ export interface Feedback {
   patient?: User;
 }
 
-// === 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE) ===
+// 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE)
 
 export interface LoginResponse {
   user: User;
@@ -121,4 +124,20 @@ export interface DashboardStats {
   total_appointments_count?: number;
   completed_appointments_count?: number;
   waiting_appointments_count?: number;
+}
+export interface Notification {
+  NotificationID: number;
+  UserID: number;
+  Title?: string; 
+  Content: string;
+  NotificationType: string; // 'System', 'Reminder', 'Warning'...
+  Channel: string;          // 'In-App', 'Email', 'SMS'
+  Status: string;           // 'Unread', 'Read'
+  created_at: string;
+  updated_at: string;
+}
+//nâng cấp thêm về sau
+export interface FamilyMember extends User{
+  RelationType?: string;
+  LinkedAt?: string;
 }
