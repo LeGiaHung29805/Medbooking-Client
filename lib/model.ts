@@ -1,6 +1,3 @@
-// Tên file: lib/model.ts
-
-// === 1. CÁC ĐỐI TƯỢNG CƠ BẢN ===
 
 export interface User {
   UserID: number;
@@ -82,16 +79,19 @@ export interface Appointment {
   PatientID: number;
   DoctorID: number;
   SlotID: number | null;
+  ServiceID: number;
   StartTime: string;
   Status: "Pending" | "Confirmed" | "Completed" | "Cancelled" | "CheckedIn";
   InitialSymptoms: string | null;
   CancellationReason: string | null;
-  file_path: string | null; // File bệnh nhân gửi khi đặt lịch
-
-  // Các quan hệ lồng nhau (tùy API gọi)
+  file_path: string | null;
+  Type: 'New' | 'FollowUp';
+  // Các quan hệ lồng nhau
   patient?: User;
   doctor?: Doctor;
   medical_record?: MedicalRecord;
+  //Thông tin lịch khám
+  service?: Service;
 }
 
 export interface Feedback {
@@ -104,7 +104,7 @@ export interface Feedback {
   patient?: User;
 }
 
-// === 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE) ===
+// 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE)
 
 export interface LoginResponse {
   user: User;
@@ -135,4 +135,9 @@ export interface Notification {
   Status: string;           // 'Unread', 'Read'
   created_at: string;
   updated_at: string;
+}
+//nâng cấp thêm về sau
+export interface FamilyMember extends User{
+  RelationType?: string;
+  LinkedAt?: string;
 }

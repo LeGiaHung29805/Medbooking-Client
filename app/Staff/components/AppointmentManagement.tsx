@@ -390,19 +390,17 @@ export default function AppointmentManagement() {
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("calendar")}
-              className={`flex-1 rounded ${
-                viewMode === "calendar"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100"
-              }`}
+              className={`flex-1 rounded ${viewMode === "calendar"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100"
+                }`}
             >
               Lịch
             </button>
             <button
               onClick={() => setViewMode("table")}
-              className={`flex-1 rounded ${
-                viewMode === "table" ? "bg-blue-600 text-white" : "bg-gray-100"
-              }`}
+              className={`flex-1 rounded ${viewMode === "table" ? "bg-blue-600 text-white" : "bg-gray-100"
+                }`}
             >
               Bảng
             </button>
@@ -538,7 +536,7 @@ export default function AppointmentManagement() {
 
       {/* Modal Tạo Mới */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 border-b pb-2">
               <h2 className="text-xl font-bold text-gray-900">
@@ -673,11 +671,10 @@ export default function AppointmentManagement() {
                                 key={slot.SlotID}
                                 type="button"
                                 onClick={() => handleSelectSlot(slot)}
-                                className={`py-2 px-1 text-sm rounded border transition-all ${
-                                  isSelected
-                                    ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105"
-                                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600"
-                                }`}
+                                className={`py-2 px-1 text-sm rounded border transition-all ${isSelected
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                                  }`}
                               >
                                 {timeLabel}
                               </button>

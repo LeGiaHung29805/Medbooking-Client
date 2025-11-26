@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import * as Model from "./model";
 
@@ -136,7 +135,13 @@ export const getMyAppointments = async (): Promise<Model.Appointment[]> => {
   });
   return response.data;
 };
-
+//Lấy danh sách bác sĩ đã từng khám
+export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
+  const response = await apiClient.get("/my-doctors", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 export const bookAppointment = async (
   slotId: number,
   symptoms: string,
@@ -417,7 +422,12 @@ export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
   }); // Admin/Staff dùng chung
   return response.data;
 };
-
+export const adminGetFeedbacks = async (): Promise<Model.Feedback[]> => {
+  const response = await apiClient.get("/admin/feedbacks", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 export const getAllMedicalRecords = async (
   patientId?: number
 ): Promise<Model.MedicalRecord[]> => {
@@ -474,23 +484,41 @@ export const updateProfile = async (
   return response.data;
 };
 
-// Bệnh nhân gửi đánh giá
-export const submitFeedback = async (
-  appointmentId: number,
-  rating: number,
-  comment: string
-): Promise<Model.MessageResponse> => {
-  const response = await apiClient.post(
-    `/appointments/${appointmentId}/feedback`,
-    {
-      Rating: rating,
-      Comment: comment,
-    },
-    {
-      headers: getAuthHeaders(),
-    }
+export const submitFeedback = async (data: {
+  AppointmentID?: number | null;
+  TargetType: "Doctor" | "System";
+  Rating: number;
+  Comment: string;
+}): Promise<Model.MessageResponse> => {
+  // TRƯỜNG HỢP 1: Đánh giá Bác sĩ (Gắn với lịch hẹn cụ thể)
+  if (data.TargetType === "Doctor" && data.AppointmentID) {
+    const response = await apiClient.post(
+      `/appointments/${data.AppointmentID}/feedback`,
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  }
+
+  // TRƯỜNG HỢP 2: Đánh giá Hệ thống (Không gắn lịch hẹn)
+  else if (data.TargetType === "System") {
+    const response = await apiClient.post(
+      "/system-feedback",
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  }
+
+  throw new Error(
+    "Dữ liệu đánh giá không hợp lệ (Thiếu ID lịch hẹn hoặc sai loại)."
   );
-  return response.data;
 };
 // ==========================================
 // === 8. QUẢN LÝ NGƯỜI DÙNG (ADMIN) ===
@@ -584,6 +612,22 @@ export const adminDeleteSlot = async (slotId: number): Promise<void> => {
     headers: getAuthHeaders(),
   });
 };
+
+// ... các hàm khác
+
+// [MỚI] Cập nhật thông tin Bệnh nhân (JSON - Method PUT chuẩn)
+// Dùng hàm này thay cho adminUpdateUser khi sửa thông tin bệnh nhân cụ thể
+export const adminUpdatePatient = async (
+  id: number,
+  data: any // Object chứa FullName, Email, v.v.
+): Promise<Model.MessageResponse> => {
+  // Axios mặc định gửi JSON khi data là object (không phải FormData)
+  const response = await apiClient.put(`/admin/patients/${id}`, data, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
 // ==========================================
 // === 10. QUẢN LÝ THÔNG BÁO (ADMIN) ===
 // ==========================================

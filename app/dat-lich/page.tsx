@@ -168,12 +168,10 @@ export default function BookingPage() {
                             >
                                 <div className="relative w-full h-48 bg-gray-100">
                                     <Image
-                                        src={doc.image} // Lưu ý: Cần đảm bảo file ảnh tồn tại trong public/image/doctors/
+                                        src={doc.image}
                                         alt={doc.name}
                                         fill
                                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                    // Fallback nếu ảnh lỗi (Optional)
-                                    // onError={(e) => { e.currentTarget.src = "/default-avatar.png" }}
                                     />
                                 </div>
                                 <div className="p-3">

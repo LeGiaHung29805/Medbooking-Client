@@ -65,10 +65,10 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
 
       if (isEdit && specialty) {
         await Api.adminUpdateSpecialty(specialty.SpecialtyID, data);
-        alert("✅ Cập nhật chuyên khoa thành công!");
+        alert("Cập nhật chuyên khoa thành công!");
       } else {
         await Api.adminCreateSpecialty(data);
-        alert("✅ Tạo chuyên khoa mới thành công!");
+        alert("Tạo chuyên khoa mới thành công!");
       }
 
       onSuccess();
@@ -77,10 +77,10 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
       if (error instanceof AxiosError) {
         console.error("Error:", error);
         const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-        alert("❌ " + msg);
+        alert("" + msg);
       } else {
         console.error("Unexpected Error:", error);
-        alert("❌ Có lỗi không xác định xảy ra!");
+        alert("Có lỗi không xác định xảy ra!");
       }
     } finally {
       setLoading(false);
@@ -92,7 +92,7 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
       <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg border border-gray-100">
         <div className="flex justify-between items-center mb-4 border-b pb-2">
           <h2 className="text-2xl font-bold text-gray-800">
-            {isEdit ? "📝 Sửa Chuyên khoa" : "✨ Thêm Chuyên khoa mới"}
+            {isEdit ? "Sửa Chuyên khoa" : "Thêm Chuyên khoa mới"}
           </h2>
           <button
             onClick={onClose}
@@ -125,7 +125,6 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
             </label>
             <div className="flex items-center space-x-4 mt-2">
               <div className="w-16 h-16 relative rounded-full border bg-gray-50 flex-shrink-0 overflow-hidden">
-                {/* Vẫn dùng Image trực tiếp cho Preview Modal */}
                 <Image
                   src={
                     previewUrl || "https://placehold.co/64x64/E0E0E0/000?text=CK"
@@ -179,11 +178,11 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
             >
               {loading ? (
                 <>
-                  <span className="mr-2 animate-spin">⌛</span> Đang lưu...
+                  <span className="mr-2 animate-spin"></span> Đang lưu...
                 </>
               ) : (
                 <>
-                  <span className="mr-2">💾</span>{" "}
+                  <span className="mr-2"></span>{" "}
                   {isEdit ? "Cập nhật" : "Thêm mới"}
                 </>
               )}
@@ -194,10 +193,6 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
     </div>
   );
 };
-
-// ===============================================
-// 2. MAIN COMPONENT
-// ===============================================
 
 export default function SpecialtyManagementPage() {
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
@@ -255,10 +250,10 @@ export default function SpecialtyManagementPage() {
         setSpecialties((prev) =>
           prev.filter((s) => s.SpecialtyID !== specialtyId)
         );
-        alert("🗑️ Đã xóa thành công.");
+        alert("Đã xóa thành công.");
       } catch (error) {
         console.error(error);
-        alert("❌ Xóa thất bại. Có thể do ràng buộc dữ liệu (còn Bác sĩ).");
+        alert("Xóa thất bại. Có thể do ràng buộc dữ liệu (còn Bác sĩ).");
       }
     }
   };
@@ -266,7 +261,7 @@ export default function SpecialtyManagementPage() {
   return (
     <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen font-sans">
       <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2 flex items-center gap-2">
-        🏥 Quản lý Danh mục Chuyên khoa
+        Quản lý Danh mục Chuyên khoa
       </h1>
 
       {/* Thanh Điều khiển */}
@@ -282,7 +277,6 @@ export default function SpecialtyManagementPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              🔍
             </span>
           </div>
 
@@ -291,7 +285,7 @@ export default function SpecialtyManagementPage() {
             onClick={() => handleOpenModal()}
             className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md w-full md:w-auto"
           >
-            <span>➕</span>
+            <span></span>
             <span>Thêm Chuyên khoa</span>
           </button>
         </div>

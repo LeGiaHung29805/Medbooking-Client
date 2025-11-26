@@ -1,28 +1,91 @@
-"use client"
+"use client";
+
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { logout } from "@/lib/ApiClient"; // Import hàm logout từ API
+import { LogOut, Home } from "lucide-react"; // Icon cho đẹp
 
 export default function Header() {
+    const router = useRouter();
     const [query, setQuery] = useState("");
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             handleSubmit();
         }
     };
+
     const handleSubmit = () => {
         console.log("Search submitted:", query);
         // TODO: Redirect hoặc lọc sản phẩm
     };
+
+    // --- HÀM ĐĂNG XUẤT ---
+    const handleLogout = async () => {
+        if (!confirm("Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị?")) return;
+
+        setIsLoggingOut(true);
+
+        try {
+            // 1. Gọi API để Server hủy token (nếu có)
+            await logout();
+        } catch (error) {
+            console.error("Lỗi khi gọi API logout:", error);
+        }
+
+        // 2. XÓA SẠCH TOKEN (QUAN TRỌNG)
+        // Xóa LocalStorage
+        localStorage.removeItem("api_token");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("username");
+
+        // Xóa Cookies (nếu Middleware dùng cookie)
+        document.cookie = "token=; path=/; max-age=0";
+        document.cookie = "api_token=; path=/; max-age=0";
+
+        // 3. Điều hướng về trang login
+        router.push("/login");
+
+        // Hoặc dùng window.location.href để tải lại trang hoàn toàn (xóa sạch state React cũ)
+        // window.location.href = "/login"; 
+    };
+
     return (
         <header className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-md sticky top-0 z-50">
             <div className="max-w-8xl mx-auto flex justify-between items-center p-4">
-                <Link href="/" className="hover:opacity-60">
+                {/* Logo / Tên hệ thống */}
+                <Link href="/" className="hover:opacity-80 flex items-center gap-2">
                     <h1 className="text-xl font-bold">HUNRE Hospital</h1>
                 </Link>
+
+                {/* Các nút hành động bên phải */}
                 <div className="flex items-center space-x-6">
-                    <Link href="/admin" className="hover:opacity-80">
-                         Quay về trang chủ
+                    {/* Link ra trang chủ Website (phía bệnh nhân) */}
+                    <Link
+                        href="/"
+                        className="flex items-center gap-2 hover:bg-white/20 px-3 py-1.5 rounded-md transition text-sm font-medium"
+                        target="_blank" // Mở tab mới để không mất trang admin
+                    >
+                        <Home className="w-4 h-4" />
+                        <span>Xem Website</span>
                     </Link>
+
+                    {/* Nút Đăng xuất */}
+                    <button
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-md transition text-sm font-bold shadow-sm disabled:opacity-50"
+                    >
+                        {isLoggingOut ? (
+                            <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        ) : (
+                            <LogOut className="w-4 h-4" />
+                        )}
+                        <span>{isLoggingOut ? "Đang thoát..." : "Đăng xuất"}</span>
+                    </button>
                 </div>
             </div>
         </header>
