@@ -1,255 +1,290 @@
 "use client";
-
-import { useState, Fragment } from "react"; // 👈 thêm Fragment
-import { CalendarPlus, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { CalendarPlus, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import LayoutUsers from "@/components/layoutUsers";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
-interface Appointment {
-  id: number;
-  doctor: string;
-  specialty: string;
-  date: string;
-  status: "Đã xác nhận" | "Đang chờ" | "Đã hủy";
-  note?: string;
-}
+import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 export default function LichHenKhamLai() {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: 1,
-      doctor: "BS. Nguyễn Văn A",
-      specialty: "Nội khoa",
-      date: "2025-10-05 14:00",
-      status: "Đã xác nhận",
-      note: "Mang theo kết quả xét nghiệm cũ.",
-    },
-    {
-      id: 2,
-      doctor: "BS. Trần Thị B",
-      specialty: "Da liễu",
-      date: "2025-10-07 09:30",
-      status: "Đang chờ",
-    },
-  ]);
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [appointments, setAppointments] = useState<Model.Appointment[]>([]);
 
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [formDate, setFormDate] = useState("");
-  const [formTime, setFormTime] = useState("");
-  const [formNote, setFormNote] = useState("");
+  // --- STATE CHO MODAL TÁI KHÁM ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOldAppt, setSelectedOldAppt] = useState<Model.Appointment | null>(null);
 
-  // Hủy lịch
-  const cancelAppointment = (id: number) => {
-    setAppointments((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "Đã hủy" } : a))
-    );
+  // Dữ liệu lịch trống (Slots)
+  const [availabilities, setAvailabilities] = useState<Model.AvailabilitySlot[]>([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [selectedTimeLabel, setSelectedTimeLabel] = useState("");
+
+  const [reason, setReason] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  //LOAD DỮ LIỆU LỊCH SỬ (Để chọn cái nào cần tái khám)
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await Api.getMyAppointments();
+        // Chỉ lấy các lịch ĐÃ HOÀN THÀNH (Completed) để tái khám
+        // Sắp xếp mới nhất lên đầu
+        const completed = data
+          .filter(a => a.Status === 'Completed')
+          .sort((a, b) => new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime());
+
+        setAppointments(completed);
+      } catch (error) {
+        console.error("Lỗi tải lịch sử:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // XỬ LÝ KHI BẤM "ĐẶT TÁI KHÁM"
+  const handleOpenReBook = async (appt: Model.Appointment) => {
+    setSelectedOldAppt(appt);
+    setIsModalOpen(true);
+    // Reset form
+    setSelectedDate("");
+    setSelectedSlotId(null);
+    setAvailabilities([]);
+    setReason(`Tái khám theo lịch hẹn #${appt.AppointmentID}`); // Gợi ý lý do
+
+    // Tải lịch trống của chính Bác sĩ cũ
+    if (appt.DoctorID) {
+      try {
+        const slots = await Api.getDoctorAvailability(appt.DoctorID);
+        const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
+        setAvailabilities(validSlots);
+
+        if (validSlots.length > 0) {
+          const firstDate = validSlots[0].StartTime.split(" ")[0];
+          setSelectedDate(firstDate);
+        }
+      } catch (error) {
+        alert("Không tải được lịch của bác sĩ này.");
+      }
+    }
   };
 
-  // Đặt lịch tái khám
-  const bookReExam = (base: Appointment) => {
-    if (!formDate || !formTime) return;
+  //LOGIC TÍNH TOÁN NGÀY GIỜ (Tái sử dụng)
+  const uniqueDates = useMemo(() => {
+    const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
+    return Array.from(dates).sort();
+  }, [availabilities]);
 
-    const newId = appointments.length + 1;
-    const newAppointment: Appointment = {
-      ...base,
-      id: newId,
-      date: `${formDate} ${formTime}`,
-      status: "Đang chờ",
-      note: formNote || `Tái khám từ lịch hẹn #${base.id}`,
-    };
-    setAppointments((prev) => [...prev, newAppointment]);
-    setExpandedId(null);
-    setFormDate("");
-    setFormTime("");
-    setFormNote("");
+  const slotsOnDate = useMemo(() => {
+    return availabilities.filter(slot => slot.StartTime.startsWith(selectedDate));
+  }, [availabilities, selectedDate]);
+
+  // Format ngày hiển thị
+  const formatDateLabel = (dateStr: string) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    return `${day}/${month}`;
+  };
+
+  //GỬI YÊU CẦU ĐẶT LỊCH
+  const handleConfirmBooking = async () => {
+    if (!selectedSlotId) return alert("Vui lòng chọn giờ khám!");
+
+    setBookingLoading(true);
+    try {
+      // Gọi API đặt lịch mới
+      // Truyền ServiceID cũ để hệ thống biết khám dịch vụ gì
+      await Api.bookAppointment(
+        selectedSlotId,
+        reason,
+        undefined, // Không có file
+      );
+
+      alert("✅ Đặt lịch tái khám thành công!");
+      setIsModalOpen(false);
+      router.push("/dat-lich");
+    } catch (error) {
+      let msg = "Đặt lịch thất bại.";
+
+      // Kiểm tra nếu lỗi là từ Axios (API trả về lỗi 400, 500...)
+      if (error instanceof AxiosError && error.response?.data?.message) {
+        msg = error.response.data.message;
+      }
+      else if (error instanceof Error) {
+      }
+      alert(" " + msg);
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   return (
     <LayoutUsers>
-      <div className="p-6">
-        <h1 className="text-xl font-semibold text-green-700 mb-2">
-          Lịch hẹn khám lại
+      <div className="p-6 min-h-screen bg-gray-50">
+        <h1 className="text-xl font-bold text-green-700 mb-2 flex items-center gap-2">
+          <CalendarCheck className="w-6 h-6" /> Đặt lịch tái khám
         </h1>
-        <p className="text-gray-600 mb-6">
-          Dựa trên lịch sử đặt lịch trước đó, bạn có thể xem chi tiết, hủy hoặc
-          đặt lịch tái khám dễ dàng.
+        <p className="text-gray-600 mb-6 text-sm">
+          Chọn các lần khám trước đây để đặt lịch hẹn lại với cùng bác sĩ và dịch vụ.
         </p>
 
-        <div className="bg-white border rounded-lg shadow-sm">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="py-3 px-4">Bác sĩ</th>
-                <th className="py-3 px-4">Chuyên khoa</th>
-                <th className="py-3 px-4">Thời gian</th>
-                <th className="py-3 px-4">Trạng thái</th>
-                <th className="py-3 px-4 text-center">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((a) => (
-                <Fragment key={a.id}>
-                  <tr className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{a.doctor}</td>
-                    <td className="py-3 px-4">{a.specialty}</td>
-                    <td className="py-3 px-4">{a.date}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 rounded-md text-sm ${
-                          a.status === "Đã xác nhận"
-                            ? "bg-green-100 text-green-700"
-                            : a.status === "Đang chờ"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {a.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 flex gap-3 justify-center">
-                      {/* Đặt tái khám */}
-                      {a.status !== "Đã hủy" && (
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="rounded-full hover:bg-green-50 hover:text-green-600"
-                          onClick={() =>
-                            setExpandedId(expandedId === a.id ? null : a.id)
-                          }
-                        >
-                          <CalendarPlus className="w-4 h-4" />
-                        </Button>
-                      )}
+        {loading ? (
+          <div className="text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
+        ) : appointments.length === 0 ? (
+          <div className="bg-white border rounded-lg shadow-sm p-10 flex flex-col items-center justify-center min-h-[250px]">
+            <p className="font-medium mb-1">Chưa có lịch sử khám</p>
+            <p className="text-gray-500 text-sm">Bạn chưa hoàn thành buổi khám nào để tái khám.</p>
+          </div>
+        ) : (
+          <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+            <table className="w-full border-collapse text-left">
+              <thead className="bg-gray-50 border-b">
+                <tr className="text-sm text-gray-600 uppercase">
+                  <th className="py-3 px-4">Bác sĩ</th>
+                  <th className="py-3 px-4">Chuyên khoa / Dịch vụ</th>
+                  <th className="py-3 px-4">Ngày khám cũ</th>
+                  <th className="py-3 px-4 text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {appointments.map((a) => {
+                  const doctorName = a.doctor?.user?.FullName || "---";
+                  const avatar = a.doctor?.imageURL || a.doctor?.user?.avatar_url;
 
-                      {/* Hủy */}
-                      {a.status !== "Đã hủy" && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="rounded-full hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Xác nhận hủy lịch
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Bạn có chắc chắn muốn hủy lịch hẹn này không?
-                                Thao tác này không thể hoàn tác.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Quay lại</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-red-600 hover:bg-red-700"
-                                onClick={() => cancelAppointment(a.id)}
-                              >
-                                Xác nhận hủy
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </td>
-                  </tr>
-
-                  {/* Form đặt lịch tái khám */}
-                  {expandedId === a.id && (
-                    <tr className="bg-gray-50 border-b">
-                      <td colSpan={5} className="p-4">
-                        <div className="p-4 border rounded-md bg-white space-y-3">
-                          <p>
-                            <span className="font-medium">Bác sĩ:</span>{" "}
-                            {a.doctor}
-                          </p>
-                          <p>
-                            <span className="font-medium">Chuyên khoa:</span>{" "}
-                            {a.specialty}
-                          </p>
-                          <p>
-                            <span className="font-medium">
-                              Lịch khám trước:
-                            </span>{" "}
-                            {a.date}
-                          </p>
-
-                          <div className="flex gap-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">
-                                Ngày tái khám
-                              </label>
-                              <input
-                                type="date"
-                                className="border rounded-md p-2 w-full"
-                                value={formDate}
-                                onChange={(e) => setFormDate(e.target.value)}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">
-                                Giờ tái khám
-                              </label>
-                              <input
-                                type="time"
-                                className="border rounded-md p-2 w-full"
-                                value={formTime}
-                                onChange={(e) => setFormTime(e.target.value)}
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium mb-1">
-                              Ghi chú
-                            </label>
-                            <textarea
-                              className="border rounded-md p-2 w-full"
-                              rows={2}
-                              value={formNote}
-                              onChange={(e) => setFormNote(e.target.value)}
-                              placeholder="Nhập ghi chú thêm nếu có..."
+                  return (
+                    <tr key={a.AppointmentID} className="hover:bg-blue-50 transition">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10">
+                            <DataThumbnail
+                              src={avatar}
+                              alt={doctorName}
+                              fallbackType="doctor"
+                              className="w-full h-full rounded-full border"
                             />
                           </div>
-
-                          <div className="flex justify-end gap-3">
-                            <Button
-                              variant="outline"
-                              onClick={() => setExpandedId(null)}
-                            >
-                              Hủy
-                            </Button>
-                            <Button
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => bookReExam(a)}
-                            >
-                              Xác nhận đặt
-                            </Button>
+                          <div>
+                            <div className="font-bold text-gray-800 text-sm">{doctorName}</div>
+                            <div className="text-xs text-gray-500">BS. Điều trị</div>
                           </div>
                         </div>
                       </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-sm text-blue-700">
+                          {a.service?.ServiceName || "Khám dịch vụ"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {a.doctor?.specialty?.SpecialtyName}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700">
+                        {new Date(a.StartTime).toLocaleDateString('vi-VN')}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold flex items-center gap-1 mx-auto shadow-sm"
+                          onClick={() => handleOpenReBook(a)}
+                        >
+                          <CalendarPlus className="w-4 h-4" /> Tái khám
+                        </Button>
+                      </td>
                     </tr>
-                  )}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* --- MODAL CHỌN LỊCH TÁI KHÁM --- */}
+        {isModalOpen && selectedOldAppt && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="bg-green-600 p-4 flex justify-between items-center text-white">
+                <h3 className="font-bold text-lg">Đặt lịch tái khám</h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white text-2xl">&times;</button>
+              </div>
+
+              <div className="p-6 overflow-y-auto flex-1 space-y-4">
+                <div className="bg-green-50 p-3 rounded-lg border border-green-100 text-sm">
+                  <p><span className="font-bold">Bác sĩ:</span> {selectedOldAppt.doctor?.user?.FullName}</p>
+                  <p><span className="font-bold">Dịch vụ:</span> {selectedOldAppt.service?.ServiceName}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Chọn ngày:</label>
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {uniqueDates.length > 0 ? uniqueDates.map(date => (
+                      <button
+                        key={date}
+                        onClick={() => { setSelectedDate(date); setSelectedSlotId(null); setSelectedTimeLabel(""); }}
+                        className={`px-3 py-2 rounded border whitespace-nowrap text-sm font-medium transition
+                                            ${selectedDate === date ? 'bg-green-600 text-white border-green-600' : 'bg-white border-gray-200 hover:bg-green-50'}
+                                        `}
+                      >
+                        {formatDateLabel(date)}
+                      </button>
+                    )) : (
+                      <p className="text-sm text-red-500 italic">Bác sĩ chưa có lịch trống gần đây.</p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedDate && (
+                  <div className="animate-fade-in">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Chọn giờ:</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {slotsOnDate.map(slot => {
+                        const timeStr = slot.StartTime.split(" ")[1].substring(0, 5);
+                        return (
+                          <button
+                            key={slot.SlotID}
+                            onClick={() => { setSelectedSlotId(slot.SlotID); setSelectedTimeLabel(timeStr); }}
+                            className={`py-1.5 rounded border text-sm font-semibold transition ${selectedSlotId === slot.SlotID ? "bg-green-600 text-white shadow-md" : "hover:border-green-500 bg-white"
+                              }`}
+                          >
+                            {timeStr}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Ghi chú / Triệu chứng:</label>
+                  <Textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="focus-visible:ring-green-600"
+                    placeholder="Nhập tình trạng hiện tại..."
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+                <Button
+                  onClick={handleConfirmBooking}
+                  disabled={!selectedSlotId || bookingLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                >
+                  {bookingLoading ? "Đang xử lý..." : "Xác nhận"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </LayoutUsers>
   );

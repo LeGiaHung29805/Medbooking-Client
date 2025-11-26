@@ -1,18 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Image from "next/image"; // Dùng cho preview trong Modal
+import Image from "next/image";
 import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
-
-// 1. IMPORT COMPONENT DÙNG CHUNG
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
-// ===============================================
-// 1. MODAL FORM (Thêm/Sửa Dịch Vụ)
-// ===============================================
 
 interface ServiceFormProps {
   service: Model.Service | null;
@@ -91,10 +86,10 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       if (isEdit && service) {
         data.append("_method", "PUT"); // Method Spoofing cho Laravel
         await Api.adminUpdateService(service.ServiceID, data);
-        alert("✅ Cập nhật dịch vụ thành công!");
+        alert("Cập nhật dịch vụ thành công!");
       } else {
         await Api.adminCreateService(data);
-        alert("✅ Thêm dịch vụ mới thành công!");
+        alert("Thêm dịch vụ mới thành công!");
       }
 
       onSuccess();
@@ -103,10 +98,10 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       if (error instanceof AxiosError) {
         console.error("Error:", error);
         const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-        alert("❌ " + msg);
+        alert("" + msg);
       } else {
         console.error("Unexpected Error:", error);
-        alert("❌ Có lỗi không xác định xảy ra!");
+        alert("Có lỗi không xác định xảy ra!");
       }
     } finally {
       setLoading(false);
@@ -118,7 +113,7 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100">
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
           <h2 className="text-xl font-bold text-gray-800">
-            {isEdit ? "📝 Sửa Dịch vụ" : "✨ Thêm Dịch vụ mới"}
+            {isEdit ? "Sửa Dịch vụ" : "Thêm Dịch vụ mới"}
           </h2>
           <button
             onClick={onClose}
@@ -251,11 +246,11 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
             >
               {loading ? (
                 <>
-                  <span className="mr-2 animate-spin">⌛</span> Đang lưu...
+                  <span className="mr-2 animate-spin"></span> Đang lưu...
                 </>
               ) : (
                 <>
-                  <span className="mr-2">💾</span>{" "}
+                  <span className="mr-2"></span>{" "}
                   {isEdit ? "Lưu thay đổi" : "Tạo mới"}
                 </>
               )}
@@ -267,9 +262,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
   );
 };
 
-// ===============================================
-// 2. MAIN COMPONENT
-// ===============================================
 
 export default function ServiceManagementPage() {
   const [services, setServices] = useState<Model.Service[]>([]);
@@ -343,14 +335,14 @@ export default function ServiceManagementPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn xóa dịch vụ này?")) {
+    if (confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
       try {
         await Api.adminDeleteService(id);
         setServices((prev) => prev.filter((s) => s.ServiceID !== id));
-        alert("🗑️ Đã xóa thành công.");
+        alert("Đã xóa thành công.");
       } catch (error) {
         console.error(error);
-        alert("❌ Xóa thất bại.");
+        alert("Xóa thất bại.");
       }
     }
   };
@@ -360,7 +352,7 @@ export default function ServiceManagementPage() {
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-            💰 Quản lý Dịch vụ & Bảng giá
+            Quản lý Dịch vụ & Bảng giá
           </h1>
           <p className="text-gray-500 mt-1 ml-1">
             Danh sách dịch vụ khám chữa bệnh và bảng giá.
@@ -379,7 +371,7 @@ export default function ServiceManagementPage() {
         <div className="relative max-w-md">
           <input
             type="text"
-            placeholder="🔍 Tìm theo tên, chuyên khoa..."
+            placeholder="Tìm theo tên, chuyên khoa..."
             className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
             value={searchQuery}
             onChange={(e) => {
@@ -388,7 +380,6 @@ export default function ServiceManagementPage() {
             }}
           />
           <span className="absolute left-4 top-3.5 text-gray-400 text-lg">
-            🔎
           </span>
         </div>
       </div>

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CalendarX2, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LayoutUsers from "@/components/layoutUsers";
-
 import {
   Dialog,
   DialogContent,
@@ -23,42 +22,64 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Appointment {
-  id: number;
-  doctor: string;
-  specialty: string;
-  date: string;
-  status: "Đã xác nhận" | "Đang chờ" | "Đã hủy";
-  note?: string;
-}
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 export default function LichSuDatLich() {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: 1,
-      doctor: "BS. Vũ Mạnh Tiến",
-      specialty: "Tim mạch",
-      date: "2025-10-02 9:00",
-      status: "Đã xác nhận",
-      note: "Mang theo kết quả xét nghiệm cũ.",
-    },
-    {
-      id: 2,
-      doctor: "BS. Trần Thị B",
-      specialty: "Da liễu",
-      date: "2025-10-07 09:30",
-      status: "Đang chờ",
-    },
-  ]);
+  const [appointments, setAppointments] = useState<Model.Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Model.Appointment | null>(null);
 
-  const [selected, setSelected] = useState<Appointment | null>(null);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await Api.getMyAppointments();
+      console.log("API Response:", data);
 
-  // Hàm hủy lịch
-  const cancelAppointment = (id: number) => {
-    setAppointments((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "Đã hủy" } : a))
-    );
+      setAppointments(
+        data.sort((a, b) => new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime())
+      );
+    } catch (error) {
+      console.error("Lỗi tải lịch sử:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleCancelAppointment = async (id: number) => {
+    try {
+      await Api.cancelAppointment(id);
+      alert("Đã hủy lịch hẹn thành công.");
+      setAppointments((prev) =>
+        prev.map((a) => (a.AppointmentID === id ? { ...a, Status: "Cancelled" } : a))
+      );
+    } catch (error) {
+      alert("Hủy lịch thất bại.");
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Confirmed": return <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-medium">Đã xác nhận</span>;
+      case "Pending": return <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-sm font-medium">Đang chờ</span>;
+      case "Cancelled": return <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-medium">Đã hủy</span>;
+      case "Completed": return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-medium">Hoàn thành</span>;
+      default: return <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm">{status}</span>;
+    }
+  };
+
+  const formatDateTime = (dateStr: string) => {
+    if (!dateStr) return "---";
+    return new Date(dateStr).toLocaleString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
 
   return (
     <LayoutUsers>
@@ -66,128 +87,130 @@ export default function LichSuDatLich() {
         <h1 className="text-xl font-semibold text-green-700 mb-2">
           Lịch sử đặt lịch khám bệnh
         </h1>
-        <p className="text-gray-600 mb-6">
-          Xem chi tiết các lịch hẹn khám bệnh đã đặt, thông tin chuyên khoa, bác
-          sĩ và trạng thái đặt lịch.
-        </p>
 
-        {appointments.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-10">Đang tải dữ liệu...</div>
+        ) : appointments.length === 0 ? (
           <div className="bg-white border rounded-lg shadow-sm p-10 flex flex-col items-center justify-center min-h-[250px]">
             <CalendarX2 className="w-12 h-12 text-gray-400 mb-3" />
-            <p className="font-medium mb-1">Chưa có lịch sử đặt lịch</p>
-            <p className="text-gray-500">Bạn chưa có lịch hẹn khám bệnh nào.</p>
+            <p className="text-gray-500">Bạn chưa có lịch hẹn nào.</p>
           </div>
         ) : (
-          <div className="bg-white border rounded-lg shadow-sm">
+          <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
             <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="py-3 px-4">Bác sĩ</th>
+              <thead className="bg-gray-50">
+                <tr className="border-b text-sm text-gray-600 uppercase">
+                  <th className="py-3 px-4">Mã Phiếu</th>
                   <th className="py-3 px-4">Chuyên khoa</th>
-                  <th className="py-3 px-4">Thời gian</th>
+                  <th className="py-3 px-4">Bác sĩ phụ trách</th>
+                  <th className="py-3 px-4">Thời gian khám</th>
                   <th className="py-3 px-4">Trạng thái</th>
-                  <th className="py-3 px-4 text-center">Thao tác</th>
+                  <th className="py-3 px-4 text-center">Hành động</th>
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((a) => (
-                  <tr key={a.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{a.doctor}</td>
-                    <td className="py-3 px-4">{a.specialty}</td>
-                    <td className="py-3 px-4">{a.date}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 rounded-md text-sm ${a.status === "Đã xác nhận"
-                          ? "bg-green-100 text-green-700"
-                          : a.status === "Đang chờ"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                          }`}
-                      >
-                        {a.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 flex gap-3 justify-center">
-                      {/* Nút xem chi tiết */}
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="rounded-full hover:bg-blue-50 hover:text-blue-600"
-                        onClick={() => setSelected(a)}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                {appointments.map((a) => {
+                  const doctorName = a.doctor?.user?.FullName || "Đang xếp lịch...";
+                  const specialtyName = a.doctor?.specialty?.SpecialtyName || "---";
+                  const avatar = a.doctor?.user?.avatar_url || a.doctor?.imageURL;
 
-                      {/* Nút hủy có popup xác nhận */}
-                      {a.status !== "Đã hủy" && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="rounded-full hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Xác nhận hủy lịch
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Bạn có chắc chắn muốn hủy lịch hẹn này không?
-                                Thao tác này không thể hoàn tác.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Quay lại</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-red-600 hover:bg-red-700"
-                                onClick={() => cancelAppointment(a.id)}
-                              >
-                                Xác nhận hủy
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                  return (
+                    <tr key={a.AppointmentID} className="border-b hover:bg-gray-50 transition text-sm">
+                      <td className="py-3 px-4 font-mono text-gray-500">#{a.AppointmentID}</td>
+                      <td className="py-3 px-4 font-medium text-blue-600">
+                        {specialtyName}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          {a.doctor && (
+                            <div className="w-8 h-8">
+                              <DataThumbnail
+                                src={avatar}
+                                alt={doctorName}
+                                fallbackType="doctor"
+                                className="w-full h-full rounded-full"
+                              />
+                            </div>
+                          )}
+                          <span className={a.doctor ? "text-gray-800" : "text-gray-400 italic"}>
+                            {doctorName}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4">{formatDateTime(a.StartTime)}</td>
+
+                      <td className="py-3 px-4">
+                        {getStatusBadge(a.Status)}
+                      </td>
+
+                      <td className="py-3 px-4 flex gap-2 justify-center">
+                        <Button size="icon" variant="ghost" className="hover:bg-blue-50 text-blue-600" onClick={() => setSelected(a)}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+
+                        {(a.Status === "Pending" || a.Status === "Confirmed") && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" className="hover:bg-red-50 text-red-600">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Hủy lịch hẹn?</AlertDialogTitle>
+                                <AlertDialogDescription>Bạn có chắc chắn muốn hủy không?</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Không</AlertDialogCancel>
+                                <AlertDialogAction className="bg-red-600" onClick={() => handleCancelAppointment(a.AppointmentID)}>
+                                  Hủy ngay
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         )}
 
-        {/* Modal xem chi tiết */}
+        {/* Modal chi tiết */}
         <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Chi tiết lịch hẹn</DialogTitle>
+              <DialogTitle className="text-green-700">Chi tiết lịch hẹn #{selected?.AppointmentID}</DialogTitle>
             </DialogHeader>
             {selected && (
               <div className="space-y-3 text-sm">
-                <p>
-                  <span className="font-medium">Bác sĩ:</span> {selected.doctor}
-                </p>
-                <p>
-                  <span className="font-medium">Chuyên khoa:</span>{" "}
-                  {selected.specialty}
-                </p>
-                <p>
-                  <span className="font-medium">Thời gian:</span>{" "}
-                  {selected.date}
-                </p>
-                <p>
-                  <span className="font-medium">Trạng thái:</span>{" "}
-                  {selected.status}
-                </p>
-                {selected.note && (
-                  <p>
-                    <span className="font-medium">Ghi chú:</span>{" "}
-                    {selected.note}
-                  </p>
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded">
+                  <div>
+                    <span className="block text-gray-500 text-xs uppercase">Bác sĩ</span>
+                    <span className="font-bold">{selected.doctor?.user?.FullName || "Chưa phân công"}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 text-xs uppercase">Chuyên khoa</span>
+                    <span className="font-bold">{selected.doctor?.specialty?.SpecialtyName || "---"}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 text-xs uppercase">Ngày giờ</span>
+                    <span className="font-bold text-blue-600">{formatDateTime(selected.StartTime)}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 text-xs uppercase">Trạng thái</span>
+                    {getStatusBadge(selected.Status)}
+                  </div>
+                </div>
+                <div>
+                  <span className="font-bold block mb-1">Triệu chứng:</span>
+                  <p className="bg-gray-50 p-2 rounded border">{selected.InitialSymptoms}</p>
+                </div>
+                {selected.CancellationReason && (
+                  <p className="text-red-600 bg-red-50 p-2 rounded">Lý do hủy: {selected.CancellationReason}</p>
                 )}
               </div>
             )}

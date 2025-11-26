@@ -31,7 +31,7 @@ export default function SpecialtyBookingPage() {
     const [file, setFile] = useState<File | null>(null);
     const [bookingLoading, setBookingLoading] = useState(false);
 
-    // --- STATE UI (Sheet, Pagination, Search) ---
+    // STATE UI (Sheet, Pagination, Search)
     const [showSpecialtySheet, setShowSpecialtySheet] = useState(false);
     // Biến này dùng để xem chi tiết trong Sheet (chưa chọn vào form chính)
     const [viewingSpecialty, setViewingSpecialty] = useState<Model.Specialty | null>(null);
@@ -40,7 +40,7 @@ export default function SpecialtyBookingPage() {
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // 1. LOAD DỮ LIỆU BAN ĐẦU
+    //LOAD DỮ LIỆU BAN ĐẦU
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -64,7 +64,7 @@ export default function SpecialtyBookingPage() {
         fetchData();
     }, []);
 
-    // 2. XỬ LÝ KHI BẤM VÀO MỘT CHUYÊN KHOA (MỞ SHEET CHI TIẾT)
+    //XỬ LÝ KHI BẤM VÀO MỘT CHUYÊN KHOA (MỞ SHEET CHI TIẾT)
     const handleViewSpecialty = async (spec: Model.Specialty) => {
         setViewingSpecialty(spec);
         setSelectedDate("");
@@ -73,7 +73,6 @@ export default function SpecialtyBookingPage() {
 
         try {
             // Gọi API lấy lịch trống của chuyên khoa này
-            // (Lưu ý: Backend cần có endpoint này, hoặc logic tổng hợp slot của các bác sĩ trong khoa)
             const slots = await Api.getSpecialtyAvailability(spec.SpecialtyID);
 
             // Lọc slot tương lai & Available
@@ -90,7 +89,7 @@ export default function SpecialtyBookingPage() {
         }
     };
 
-    // 3. LOGIC TÍNH TOÁN NGÀY GIỜ (Tương tự trang Bác sĩ)
+    //LOGIC TÍNH TOÁN NGÀY GIỜ (Tương tự trang Bác sĩ)
     const uniqueDates = useMemo(() => {
         const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
         return Array.from(dates).sort();
@@ -100,7 +99,7 @@ export default function SpecialtyBookingPage() {
         return availabilities.filter(slot => slot.StartTime.startsWith(selectedDate));
     }, [availabilities, selectedDate]);
 
-    // 4. LỌC & PHÂN TRANG
+    //LỌC & PHÂN TRANG
     const filteredSpecialties = useMemo(() => {
         return specialties.filter((s) =>
             s.SpecialtyName.toLowerCase().includes(search.toLowerCase())
@@ -125,7 +124,7 @@ export default function SpecialtyBookingPage() {
         return `${weekday} ${day}/${month}`;
     };
 
-    // 5. GỬI FORM ĐẶT LỊCH
+    //GỬI FORM ĐẶT LỊCH
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedSpecialty) return alert("Vui lòng chọn chuyên khoa!");
@@ -135,12 +134,12 @@ export default function SpecialtyBookingPage() {
         setBookingLoading(true);
         try {
             await Api.bookAppointment(selectedSlotId, reason, file || undefined);
-            alert("✅ Đặt lịch thành công!");
+            alert("Đặt lịch thành công!");
             router.push("/dat-lich");
         } catch (error) {
             const err = error as AxiosError<{ message: string }>;
             const msg = err.response?.data?.message || "Đặt lịch thất bại.";
-            alert("❌ " + msg);
+            alert("" + msg);
         } finally {
             setBookingLoading(false);
         }

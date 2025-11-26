@@ -91,11 +91,11 @@ export default function AppointmentsPage() {
     if (!selectedAppt) return;
     try {
       await Api.confirmAppointment(selectedAppt.AppointmentID);
-      alert(`✅ Đã duyệt lịch hẹn #${selectedAppt.AppointmentID}`);
+      alert(`Đã duyệt lịch hẹn #${selectedAppt.AppointmentID}`);
       setIsModalOpen(false);
       loadData();
     } catch (error) {
-      alert("❌ Duyệt thất bại. Vui lòng thử lại.");
+      alert("Duyệt thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -103,11 +103,11 @@ export default function AppointmentsPage() {
     if (!selectedAppt) return;
     try {
       await Api.checkInAppointment(selectedAppt.AppointmentID);
-      alert(`✅ Đã check-in cho lịch hẹn #${selectedAppt.AppointmentID}`);
+      alert(`Đã check-in cho lịch hẹn #${selectedAppt.AppointmentID}`);
       setIsModalOpen(false);
       loadData();
     } catch (error) {
-      alert("❌ Check-in thất bại. Vui lòng thử lại.");
+      alert("Check-in thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -122,11 +122,11 @@ export default function AppointmentsPage() {
         selectedAppt.AppointmentID,
         cancelReason
       );
-      alert(`🗑️ Đã hủy lịch hẹn #${selectedAppt.AppointmentID}`);
+      alert(`Đã hủy lịch hẹn #${selectedAppt.AppointmentID}`);
       setIsModalOpen(false);
       loadData();
     } catch (error) {
-      alert("❌ Hủy thất bại. Vui lòng thử lại.");
+      alert("Hủy thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -156,7 +156,7 @@ export default function AppointmentsPage() {
           <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                📅 Quản lý Lịch Hẹn
+                Quản lý Lịch Hẹn
               </h1>
               <p className="text-gray-500 mt-1">
                 Xem và xử lý các yêu cầu đặt khám.
@@ -166,7 +166,7 @@ export default function AppointmentsPage() {
               onClick={loadData}
               className="text-blue-600 hover:underline text-sm flex items-center gap-1"
             >
-              ↻ Làm mới dữ liệu
+              Làm mới dữ liệu
             </button>
           </div>
 
@@ -174,7 +174,7 @@ export default function AppointmentsPage() {
             <div className="relative flex-grow max-w-md">
               <input
                 type="text"
-                placeholder="🔍 Tìm theo mã, tên bệnh nhân, bác sĩ..."
+                placeholder="Tìm theo mã, tên bệnh nhân, bác sĩ..."
                 className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -284,7 +284,7 @@ export default function AppointmentsPage() {
                           colSpan={6}
                           className="px-6 py-12 text-center text-gray-500"
                         >
-                          <span className="text-2xl block mb-2">📭</span>
+                          <span className="text-2xl block mb-2"></span>
                           Không tìm thấy dữ liệu.
                         </td>
                       </tr>
@@ -296,7 +296,7 @@ export default function AppointmentsPage() {
           </div>
 
           {isModalOpen && selectedAppt && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100">
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                   <h3 className="text-lg font-bold text-gray-900">
@@ -373,7 +373,7 @@ export default function AppointmentsPage() {
                               onClick={handleConfirm}
                               className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-bold"
                             >
-                              ✅ Duyệt Lịch
+                              Duyệt Lịch
                             </button>
                           )}
                           {selectedAppt.Status === "Confirmed" && (
@@ -381,7 +381,7 @@ export default function AppointmentsPage() {
                               onClick={handleCheckIn}
                               className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-bold"
                             >
-                              🏥 Check-in
+                              Check-in
                             </button>
                           )}
                         </div>
@@ -407,7 +407,7 @@ export default function AppointmentsPage() {
                   {selectedAppt.Status === "Cancelled" && (
                     <div className="col-span-1 md:col-span-2 bg-gray-100 p-4 rounded-lg border border-gray-200">
                       <p className="text-sm text-red-600 font-bold uppercase">
-                        🚫 Lịch đã bị hủy
+                        Lịch đã bị hủy
                       </p>
                       <p className="text-sm text-gray-700 mt-1">
                         Lý do: {selectedAppt.CancellationReason}

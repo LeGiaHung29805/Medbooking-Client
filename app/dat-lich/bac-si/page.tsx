@@ -158,12 +158,12 @@ export default function DoctorBookingPage() {
             // GỌI API ĐẶT LỊCH
             await Api.bookAppointment(selectedSlotId, reason, file || undefined);
 
-            alert("✅ Đặt lịch khám thành công!");
+            alert("Đặt lịch khám thành công!");
             router.push("/dat-lich");
         } catch (error) {
             const err = error as AxiosError<{ message: string }>;
             const msg = err.response?.data?.message || "Đặt lịch thất bại.";
-            alert("❌ " + msg);
+            alert("" + msg);
         } finally {
             setBookingLoading(false);
         }

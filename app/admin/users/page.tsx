@@ -248,7 +248,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
                     onClick={() => setIsResettingPassword(true)}
                     className="text-sm text-blue-600 hover:underline mt-2 font-medium flex items-center"
                   >
-                    🔑 Đổi mật khẩu
+                    Đổi mật khẩu
                   </button>
                 )}
               </div>
@@ -344,7 +344,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
                         onClick={handleRemoveImage}
                         className="text-xs text-red-500 hover:text-red-700 font-semibold text-left mt-1 w-fit"
                       >
-                        ✖ Xóa ảnh
+                        Xóa ảnh
                       </button>
                     )}
                   </div>
@@ -368,11 +368,11 @@ const UserFormModal: React.FC<UserFormProps> = ({
             >
               {loading ? (
                 <>
-                  <span className="mr-2 animate-spin">⌛</span> Đang lưu...
+                  <span className="mr-2 animate-spin"></span> Đang lưu...
                 </>
               ) : (
                 <>
-                  <span className="mr-2">💾</span>{" "}
+                  <span className="mr-2"></span>{" "}
                   {isEdit ? "Lưu thay đổi" : "Tạo người dùng"}
                 </>
               )}
@@ -435,14 +435,14 @@ export default function UserManagementPage() {
   };
 
   const handleDelete = async (userId: number) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn XÓA VĨNH VIỄN tài khoản này?")) {
+    if (confirm("Bạn có chắc chắn muốn XÓA VĨNH VIỄN tài khoản này?")) {
       try {
         await Api.adminDeleteUser(userId);
         setUsers((prev) => prev.filter((u) => u.UserID !== userId));
-        alert("🗑️ Đã xóa thành công.");
+        alert("Đã xóa thành công.");
       } catch (error) {
         console.log(error);
-        alert("❌ Xóa thất bại.");
+        alert("Xóa thất bại.");
       }
     }
   };
@@ -483,7 +483,7 @@ export default function UserManagementPage() {
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen font-sans">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-          👤 Quản lý Người dùng
+          Quản lý Người dùng
         </h1>
         <button
           onClick={() => handleOpenModal()}
@@ -497,13 +497,13 @@ export default function UserManagementPage() {
         <div className="flex-grow w-full md:w-auto relative">
           <input
             type="text"
-            placeholder="🔍 Tìm theo tên, email, số điện thoại..."
+            placeholder="Tìm theo tên, email, số điện thoại..."
             className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <span className="absolute left-4 top-3.5 text-gray-400 text-lg">
-            🔎
+
           </span>
         </div>
 
@@ -521,7 +521,6 @@ export default function UserManagementPage() {
             ))}
           </select>
           <span className="absolute right-4 top-3.5 text-gray-400 pointer-events-none">
-            ▼
           </span>
         </div>
       </div>

@@ -4,26 +4,23 @@ import React, { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 
-// --- 1. TYPE DEFINITIONS ---
 interface FeedbackUI {
   id: number;
   patientName: string;
-  targetName: string; // Tên Bác sĩ hoặc Dịch vụ
+  targetName: string;
   rating: number;
   comment: string;
   date: string;
 }
 
-// --- 2. HELPER COMPONENTS ---
 const StarRating = ({ rating }: { rating: number }) => {
   return (
     <div className="flex">
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
-          className={`w-5 h-5 ${
-            star <= rating ? "text-yellow-400" : "text-gray-300"
-          }`}
+          className={`w-5 h-5 ${star <= rating ? "text-yellow-400" : "text-gray-300"
+            }`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -34,13 +31,11 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-// --- 3. MAIN PAGE COMPONENT ---
 export default function FeedbacksPage() {
   const [feedbacks, setFeedbacks] = useState<FeedbackUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterRating, setFilterRating] = useState<number | "all">("all");
 
-  // --- LOAD DATA ---
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -69,7 +64,7 @@ export default function FeedbacksPage() {
     loadData();
   }, [loadData]);
 
-  // --- FILTER ---
+  //FILTER
   const filteredFeedbacks = feedbacks.filter((fb) =>
     filterRating === "all" ? true : fb.rating === filterRating
   );
@@ -77,7 +72,6 @@ export default function FeedbacksPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <section className="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
-        {/* HEADER & FILTER */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -95,31 +89,28 @@ export default function FeedbacksPage() {
             <div className="flex gap-1">
               <button
                 onClick={() => setFilterRating("all")}
-                className={`px-3 py-1 text-sm rounded-full border ${
-                  filterRating === "all"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-1 text-sm rounded-full border ${filterRating === "all"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 Tất cả
               </button>
               <button
                 onClick={() => setFilterRating(5)}
-                className={`px-3 py-1 text-sm rounded-full border ${
-                  filterRating === 5
-                    ? "bg-yellow-500 text-white border-yellow-500"
-                    : "bg-white text-gray-600 hover:bg-yellow-50"
-                }`}
+                className={`px-3 py-1 text-sm rounded-full border ${filterRating === 5
+                  ? "bg-yellow-500 text-white border-yellow-500"
+                  : "bg-white text-gray-600 hover:bg-yellow-50"
+                  }`}
               >
                 5★
               </button>
               <button
                 onClick={() => setFilterRating(1)}
-                className={`px-3 py-1 text-sm rounded-full border ${
-                  filterRating === 1
-                    ? "bg-red-500 text-white border-red-500"
-                    : "bg-white text-gray-600 hover:bg-red-50"
-                }`}
+                className={`px-3 py-1 text-sm rounded-full border ${filterRating === 1
+                  ? "bg-red-500 text-white border-red-500"
+                  : "bg-white text-gray-600 hover:bg-red-50"
+                  }`}
               >
                 1★
               </button>
@@ -133,7 +124,6 @@ export default function FeedbacksPage() {
           </div>
         </div>
 
-        {/* FEEDBACK LIST */}
         <div className="p-6 bg-gray-50/50 space-y-4 min-h-[500px]">
           {loading ? (
             <div className="text-center py-12 text-gray-500">

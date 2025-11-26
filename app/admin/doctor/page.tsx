@@ -6,11 +6,7 @@ import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
-import DataThumbnail from "@/components/thumnail/DataThumbnail"; // Đã sửa đường dẫn import cho đúng chuẩn
-
-// ===============================================
-// 1. MODAL FORM (Thêm/Sửa Bác sĩ)
-// ===============================================
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 interface DoctorFormProps {
   doctor: Model.Doctor | null;
@@ -101,7 +97,6 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
       data.append("FullName", formData.FullName);
       data.append("Username", formData.Username);
 
-      // QUAN TRỌNG: Gửi key Email (Hoa) khớp với Backend
       data.append("Email", formData.Email);
 
       data.append("PhoneNumber", formData.PhoneNumber);
@@ -117,13 +112,13 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
         data.append("Password", formData.Password);
       }
 
-      // QUAN TRỌNG: Gửi file vào key 'image'
+      //Gửi file vào key 'image'
       if (selectedFile) {
         data.append("image", selectedFile);
       }
 
       if (isEdit && doctor) {
-        // QUAN TRỌNG: Method Spoofing cho Laravel
+        //Method Spoofing cho Laravel
         data.append("_method", "PUT");
 
         await Api.adminUpdateDoctor(doctor.DoctorID, data);
@@ -137,10 +132,10 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
       if (error instanceof AxiosError) {
         console.error("Error:", error);
         const msg = error.response?.data?.message || "Có lỗi xảy ra!";
-        alert("❌ " + msg);
+        alert("" + msg);
       } else {
         console.error("Unexpected Error:", error);
-        alert("❌ Có lỗi không xác định xảy ra!");
+        alert("Có lỗi không xác định xảy ra!");
       }
     } finally {
       setLoading(false);
@@ -265,7 +260,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                   onClick={() => setIsResettingPassword(true)}
                   className="text-sm text-blue-600 hover:underline mt-4 font-medium"
                 >
-                  🔑 Đổi mật khẩu
+                  Đổi mật khẩu
                 </button>
               )}
             </div>
@@ -335,7 +330,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                       onClick={handleRemoveImage}
                       className="text-xs text-red-500 hover:text-red-700 font-semibold text-left mt-1 w-fit"
                     >
-                      ✖ Xóa ảnh
+                      Xóa ảnh
                     </button>
                   )}
                 </div>
@@ -390,11 +385,11 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
             >
               {loading ? (
                 <>
-                  <span className="mr-2 animate-spin">💾</span> Đang lưu...
+                  <span className="mr-2 animate-spin"></span> Đang lưu...
                 </>
               ) : (
                 <>
-                  <span className="mr-2">💾</span>{" "}
+                  <span className="mr-2"></span>{" "}
                   {isEdit ? "Cập nhật" : "Tạo hồ sơ"}
                 </>
               )}
@@ -406,10 +401,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   );
 };
 
-// ===============================================
-// 2. MAIN COMPONENT
-// ===============================================
-
+//MAIN COMPONENT
 export default function DoctorManagementPage() {
   const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
@@ -494,7 +486,7 @@ export default function DoctorManagementPage() {
   return (
     <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">
-        🧑‍⚕️ Quản lý Hồ sơ Bác sĩ
+        Quản lý Hồ sơ Bác sĩ
       </h1>
 
       {/* Thanh Điều khiển */}
@@ -510,7 +502,7 @@ export default function DoctorManagementPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                🔍
+                
               </span>
             </div>
 
@@ -528,7 +520,7 @@ export default function DoctorManagementPage() {
                 ))}
               </select>
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                ▼
+                
               </span>
             </div>
           </div>
@@ -537,7 +529,7 @@ export default function DoctorManagementPage() {
             onClick={() => handleOpenModal()}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md w-full md:w-auto"
           >
-            <span>➕</span>
+            <span></span>
             <span>Thêm Bác sĩ Mới</span>
           </button>
         </div>
@@ -575,8 +567,6 @@ export default function DoctorManagementPage() {
             <tbody className="divide-y divide-gray-200">
               {currentDoctors.map((doctor) => {
                 const fullName = doctor.user?.FullName || "N/A";
-
-                // Lấy Email (ưu tiên chữ Hoa)
                 const email = doctor.user?.Email || "N/A";
 
                 const phone = doctor.user?.PhoneNumber || "N/A";

@@ -136,7 +136,13 @@ export const getMyAppointments = async (): Promise<Model.Appointment[]> => {
   });
   return response.data;
 };
-
+//Lấy danh sách bác sĩ đã từng khám
+export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
+  const response = await apiClient.get("/my-doctors", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 export const bookAppointment = async (
   slotId: number,
   symptoms: string,
@@ -417,7 +423,12 @@ export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
   }); // Admin/Staff dùng chung
   return response.data;
 };
-
+export const adminGetFeedbacks = async (): Promise<Model.Feedback[]> => {
+  const response = await apiClient.get("/admin/feedbacks", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 export const getAllMedicalRecords = async (
   patientId?: number
 ): Promise<Model.MedicalRecord[]> => {
@@ -474,23 +485,40 @@ export const updateProfile = async (
   return response.data;
 };
 
-// Bệnh nhân gửi đánh giá
-export const submitFeedback = async (
-  appointmentId: number,
-  rating: number,
-  comment: string
-): Promise<Model.MessageResponse> => {
-  const response = await apiClient.post(
-    `/appointments/${appointmentId}/feedback`,
-    {
-      Rating: rating,
-      Comment: comment,
-    },
-    {
-      headers: getAuthHeaders(),
-    }
-  );
-  return response.data;
+export const submitFeedback = async (data: {
+  AppointmentID?: number | null;
+  TargetType: 'Doctor' | 'System';
+  Rating: number;
+  Comment: string;
+}): Promise<Model.MessageResponse> => {
+  
+  // TRƯỜNG HỢP 1: Đánh giá Bác sĩ (Gắn với lịch hẹn cụ thể)
+  if (data.TargetType === 'Doctor' && data.AppointmentID) {
+    const response = await apiClient.post(
+      `/appointments/${data.AppointmentID}/feedback`,
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  }
+
+  // TRƯỜNG HỢP 2: Đánh giá Hệ thống (Không gắn lịch hẹn)
+  else if (data.TargetType === 'System') {
+    const response = await apiClient.post(
+      '/system-feedback', 
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  }
+
+  throw new Error("Dữ liệu đánh giá không hợp lệ (Thiếu ID lịch hẹn hoặc sai loại).");
 };
 // ==========================================
 // === 8. QUẢN LÝ NGƯỜI DÙNG (ADMIN) ===
@@ -631,4 +659,14 @@ export const staffCreateAppointment = async (
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
   return response.data;
+};
+//Xem lịch tái khám ngoài bệnh nhân
+export const getFollowUpAppointments = (appointments: Model.Appointment[]) => {
+  return appointments.filter(app => 
+    //
+    //Dựa vào tên Dịch vụ
+    app.service?.ServiceName.toLowerCase().includes("tái khám") ||
+    //Hoặc dựa vào Ghi chú triệu chứng
+    app.InitialSymptoms?.toLowerCase().includes("tái khám")
+  );
 };
