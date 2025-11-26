@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import * as Model from "./model";
 
@@ -487,13 +486,12 @@ export const updateProfile = async (
 
 export const submitFeedback = async (data: {
   AppointmentID?: number | null;
-  TargetType: 'Doctor' | 'System';
+  TargetType: "Doctor" | "System";
   Rating: number;
   Comment: string;
 }): Promise<Model.MessageResponse> => {
-  
   // TRƯỜNG HỢP 1: Đánh giá Bác sĩ (Gắn với lịch hẹn cụ thể)
-  if (data.TargetType === 'Doctor' && data.AppointmentID) {
+  if (data.TargetType === "Doctor" && data.AppointmentID) {
     const response = await apiClient.post(
       `/appointments/${data.AppointmentID}/feedback`,
       {
@@ -506,9 +504,9 @@ export const submitFeedback = async (data: {
   }
 
   // TRƯỜNG HỢP 2: Đánh giá Hệ thống (Không gắn lịch hẹn)
-  else if (data.TargetType === 'System') {
+  else if (data.TargetType === "System") {
     const response = await apiClient.post(
-      '/system-feedback', 
+      "/system-feedback",
       {
         Rating: data.Rating,
         Comment: data.Comment,
@@ -518,7 +516,9 @@ export const submitFeedback = async (data: {
     return response.data;
   }
 
-  throw new Error("Dữ liệu đánh giá không hợp lệ (Thiếu ID lịch hẹn hoặc sai loại).");
+  throw new Error(
+    "Dữ liệu đánh giá không hợp lệ (Thiếu ID lịch hẹn hoặc sai loại)."
+  );
 };
 // ==========================================
 // === 8. QUẢN LÝ NGƯỜI DÙNG (ADMIN) ===
@@ -676,13 +676,29 @@ export const staffCreateAppointment = async (
   });
   return response.data;
 };
-//Xem lịch tái khám ngoài bệnh nhân
-export const getFollowUpAppointments = (appointments: Model.Appointment[]) => {
-  return appointments.filter(app => 
-    //
-    //Dựa vào tên Dịch vụ
-    app.service?.ServiceName.toLowerCase().includes("tái khám") ||
-    //Hoặc dựa vào Ghi chú triệu chứng
-    app.InitialSymptoms?.toLowerCase().includes("tái khám")
+export const staffUpdateSlot = async (
+  slotId: number,
+  doctorId: number,
+  startTime: string,
+  endTime: string
+): Promise<Model.MessageResponse> => {
+  // Vì không có file upload, ta dùng JSON bình thường cho gọn
+  const response = await apiClient.put(
+    `/staff/availability/${slotId}`,
+    {
+      DoctorID: doctorId,
+      StartTime: startTime,
+      EndTime: endTime,
+    },
+    {
+      headers: getAuthHeaders(),
+    }
   );
+  return response.data;
+};
+// [MỚI] Staff xóa slot rảnh
+export const staffDeleteSlot = async (id: number): Promise<void> => {
+  await apiClient.delete(`/staff/availability/${id}`, {
+    headers: getAuthHeaders(),
+  });
 };
