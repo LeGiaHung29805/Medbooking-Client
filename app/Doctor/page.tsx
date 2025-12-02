@@ -1,5 +1,3 @@
-// app/Doctor/page.tsx – ĐÃ SỬA 100%, KHÔNG CÒN LỖI ĐỎ
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,7 +35,7 @@ export default function DoctorDashboardPage() {
     phone: "0901234567",
   };
 
-  // Helper functions – giữ nguyên
+  // Helper functions
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "emergency": return "bg-red-100 text-red-800 border-red-300";
@@ -56,7 +54,7 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  // === LOAD DATA – ĐÃ SỬA TYPE AN TOÀN ===
+  // === LOAD DATA ===
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -68,22 +66,18 @@ export default function DoctorDashboardPage() {
           getDoctorMyMedicalRecords(),
         ]);
 
-        // Vì ApiClient trả về any → ép kiểu an toàn
         const dashData = dashRes as any;
         const queueData = queueRes as any;
         const recordsData = recordsRes as any;
 
-        // Dashboard: có thể trả về { today_appointments: 10 } hoặc { appointments: [...] }
         setAppointments((dashData?.appointments || dashData?.today_appointments ? [] : []) as Appointment[]);
 
-        // Queue: có thể là mảng hoặc { patients: [...] }
         const patients = Array.isArray(queueData)
           ? queueData
           : queueData?.patients || queueData || [];
 
         setWaitingPatients(patients as Patient[]);
 
-        // Medical Records: luôn là mảng
         const records = Array.isArray(recordsData) ? recordsData : recordsData || [];
         setMedicalRecords(records as MedicalRecord[]);
 
