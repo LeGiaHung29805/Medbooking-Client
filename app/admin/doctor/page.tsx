@@ -28,7 +28,6 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   // --- Map dữ liệu API vào Form ---
   const [formData, setFormData] = useState({
     FullName: doctor?.user?.FullName || "",
-    // Lấy Email (Hoa) hoặc email (thường)
     Email: doctor?.user?.Email || "",
     Username: doctor?.user?.Username || "",
     Password: "",
@@ -109,7 +108,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
         data.append("ProfileDescription", formData.ProfileDescription);
 
       if (formData.Password && (isResettingPassword || !isEdit)) {
-        data.append("Password", formData.Password);
+        data.append("password", formData.Password);
       }
 
       //Gửi file vào key 'image'
@@ -303,7 +302,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ảnh đại diện
               </label>
-              <div className="flex items-center space-x-3 p-2 border border-dashed rounded-lg bg-gray-50">
+              <div className="flex items-center space-x-3 p-2 border border-rounded rounded-lg bg-gray-50">
                 <div className="w-16 h-16 relative rounded-full border bg-white overflow-hidden flex-shrink-0">
                   {/* Preview Modal */}
                   <Image
@@ -502,7 +501,7 @@ export default function DoctorManagementPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                
+
               </span>
             </div>
 
@@ -520,7 +519,7 @@ export default function DoctorManagementPage() {
                 ))}
               </select>
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                
+
               </span>
             </div>
           </div>
