@@ -50,7 +50,8 @@ export default function LoginPage() {
         if (mockUser && password === "password") {
             // Lưu vào localStorage giống API thật
             localStorage.setItem("user", JSON.stringify(mockUser.user));
-            localStorage.setItem("token", "mock-token-development");
+            localStorage.setItem("api_token", "mock-token-development");
+            localStorage.setItem("user_role", mockUser.user.Role);
 
             console.log(`Mock login successful - redirecting to ${mockUser.redirect}`);
             router.push(mockUser.redirect);
@@ -69,7 +70,7 @@ export default function LoginPage() {
             return;
         }
 
-        //Thử mock login trước khi gọi API
+        // Thử mock login trước khi gọi API
         if (handleMockLogin()) {
             return; // Mock login thành công thì dừng lại
         }
@@ -79,27 +80,57 @@ export default function LoginPage() {
         // Gọi API thật nếu mock login không thành công
         try {
             const formData = new FormData();
-            formData.append("Username", username);
+            formData.append("username", username); // SỬA: "username" thay vì "Username"
             formData.append("password", password);
 
+            console.log("🚀 Calling REAL login API...");
             const response = await login(formData);
 
-            const role = response.user?.Role ? response.user.Role.toLowerCase() : "benhnhan";
+            console.log("🔧 Login response:", response);
 
-            switch (role) {
-                case "quantrivien":
-                    router.push("/admin");
-                    break;
-                case "bacsi":
-                    router.push("/doctor");
-                    break;
-                case "nhanvien":
-                    router.push("/staff");
-                    break;
-                case "benhnhan":
-                default:
-                    router.push("/dat-lich");
-                    break;
+            // Xử lý response - sử dụng type assertion
+            const responseData = response as any;
+            let token, user, role;
+
+            if (responseData.token) {
+                token = responseData.token;
+                user = responseData.user;
+                role = responseData.user?.Role || responseData.user?.role;
+            } else if (responseData.data?.token) {
+                token = responseData.data.token;
+                user = responseData.data.user;
+                role = responseData.data.user?.Role || responseData.data.user?.role;
+            }
+
+            if (token) {
+                // Lưu token từ API response
+                localStorage.setItem("api_token", token);
+                localStorage.setItem("user", JSON.stringify(user));
+                if (role) {
+                    localStorage.setItem("user_role", role.toLowerCase());
+                }
+
+                console.log("✅ Real API login successful, role:", role);
+                
+                const normalizedRole = role ? role.toLowerCase() : "benhnhan";
+
+                switch (normalizedRole) {
+                    case "quantrivien":
+                        router.push("/admin");
+                        break;
+                    case "bacsi":
+                        router.push("/Doctor");
+                        break;
+                    case "nhanvien":
+                        router.push("/Staff");
+                        break;
+                    case "benhnhan":
+                    default:
+                        router.push("/dat-lich");
+                        break;
+                }
+            } else {
+                throw new Error("Token không tồn tại trong response");
             }
 
         } catch (err) {
@@ -109,8 +140,9 @@ export default function LoginPage() {
             // Dùng mock accounts khi API fail
             if (error.code === "ERR_NETWORK" || error.code === "ERR_CONNECTION_REFUSED") {
                 setError("Backend đang bảo trì. Dùng tài khoản demo:\n Bác sĩ: bacsia / password\n Staff: staff / password\n Admin: admin / password");
-            } else if (error.response && error.response.data && error.response.data.message) {
-                setError(error.response.data.message);
+            } else if (error.response && error.response.data) {
+                const errorData = error.response.data as any;
+                setError(errorData.message || errorData.error || "Đăng nhập thất bại");
             } else {
                 setError("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");
             }
