@@ -2,15 +2,53 @@ import axios from "axios";
 import * as Model from "./model";
 
 // 1. Cấu hình URL Backend
-// (Đảm bảo server Laravel đang chạy ở cổng này)
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    Accept: "application/json", // Bắt buộc để nhận lỗi JSON
+    Accept: "application/json",
   },
 });
+
+// === THÊM DEBUG INTERCEPTORS ===
+apiClient.interceptors.request.use(
+  (config) => {
+    const fullURL = config.baseURL ? config.baseURL + config.url : config.url;
+    console.log('🚀 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      fullURL: fullURL,
+      baseURL: config.baseURL,
+      headers: config.headers
+    });
+    return config;
+  },
+  (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log('✅ API Response Success:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error('❌ API Response Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      message: error.message,
+      response: error.response?.data
+    });
+    return Promise.reject(error);
+  }
+);
 
 // 2. Hàm lấy Token từ LocalStorage
 const getAuthHeaders = () => {
@@ -157,6 +195,7 @@ export const bookAppointment = async (
   });
   return response.data;
 };
+
 
 export const cancelAppointment = async (
   id: number

@@ -408,9 +408,8 @@ export default function HomePage() {
     if (!isDraggingRef.current || !trackRef.current) return;
     const x = e.touches[0].pageX;
     const walk = x - startXRef.current;
-    trackRef.current.style.transform = `translate3d(${
-      scrollLeftRef.current + walk
-    }px,0,0)`;
+    trackRef.current.style.transform = `translate3d(${scrollLeftRef.current + walk
+      }px,0,0)`;
   };
 
   const handleTouchEnd = () => {
@@ -439,11 +438,10 @@ export default function HomePage() {
                 width={1400}
                 height={400}
                 priority={index === 0}
-                className={`w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-                  index === currentBanner
-                    ? "opacity-100 relative"
-                    : "opacity-0 absolute top-0 left-0"
-                }`}
+                className={`w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${index === currentBanner
+                  ? "opacity-100 relative"
+                  : "opacity-0 absolute top-0 left-0"
+                  }`}
               />
             ))}
             <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
@@ -451,11 +449,10 @@ export default function HomePage() {
                 <button
                   key={index}
                   onClick={() => setCurrentBanner(index)}
-                  className={`h-3 rounded-full bg-white/50 cursor-pointer transition-all duration-300 ${
-                    index === currentBanner
-                      ? "bg-white w-[30px] rounded-[6px]"
-                      : "w-3"
-                  }`}
+                  className={`h-3 rounded-full bg-white/50 cursor-pointer transition-all duration-300 ${index === currentBanner
+                    ? "bg-white w-[30px] rounded-[6px]"
+                    : "w-3"
+                    }`}
                 />
               ))}
             </div>
@@ -640,25 +637,22 @@ export default function HomePage() {
               ].map((item, index) => (
                 <div
                   key={index}
-                  className={`relative mb-12 md:mb-16 ${
-                    index % 2 === 0
-                      ? "md:text-right md:pr-1/2"
-                      : "md:text-left md:pl-1/2"
-                  }`}
+                  className={`relative mb-12 md:mb-16 ${index % 2 === 0
+                    ? "md:text-right md:pr-1/2"
+                    : "md:text-left md:pl-1/2"
+                    }`}
                 >
                   <div
-                    className={`md:w-1/2 ${
-                      index % 2 === 0
-                        ? "md:mr-auto md:pr-12"
-                        : "md:ml-auto md:pl-12"
-                    }`}
+                    className={`md:w-1/2 ${index % 2 === 0
+                      ? "md:mr-auto md:pr-12"
+                      : "md:ml-auto md:pl-12"
+                      }`}
                   >
                     <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 border-blue-500">
                       <div className="flex items-center gap-4 mb-3">
                         <div
-                          className={`text-4xl ${
-                            index % 2 === 0 ? "order-1" : "md:order-2"
-                          }`}
+                          className={`text-4xl ${index % 2 === 0 ? "order-1" : "md:order-2"
+                            }`}
                         >
                           {item.icon}
                         </div>
