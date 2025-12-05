@@ -18,7 +18,6 @@ import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 
 export default function HospitalPage() {
-  // ================= STATE API & DATA =================
   // Thay thế mảng cứng bằng State quản lý dữ liệu từ API
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +48,6 @@ export default function HospitalPage() {
     "/image/anh7.jpg",
   ];
 
-  // ================= HANDLER =================
   const showImage = (index: number) => setCurrentIndex(index);
   const nextImage = () => setCurrentIndex((prev) => (prev + 1) % images.length);
   const prevImage = () =>
@@ -63,7 +61,6 @@ export default function HospitalPage() {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-24">
-        {/* ================= DANH SÁCH CHUYÊN KHOA (Dynamic Data) ================= */}
         <section>
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
             <h1 className="text-3xl font-bold mb-4 sm:mb-0">
@@ -89,7 +86,6 @@ export default function HospitalPage() {
                   key={sp.SpecialtyID}
                   className="flex flex-col items-center p-6 hover:shadow-lg transition cursor-pointer"
                 >
-                  {/* ⚠️ THAY THẾ KHỐI IMAGE NÀY BẰNG DATA THUMBNAIL */}
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden relative">
                     <DataThumbnail
                       // Dùng DataThumbnail để tự động nối link Backend
@@ -199,7 +195,7 @@ export default function HospitalPage() {
           {/* Thumbnail */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-8">
             {images.map((src, index) => (
-              <button
+              <Button
                 key={index}
                 onClick={() => showImage(index)}
                 className={`overflow-hidden rounded-lg border-2 transition ${currentIndex === index ? "border-white" : "border-transparent"
@@ -209,10 +205,10 @@ export default function HospitalPage() {
                   src={src}
                   alt={`Thumb ${index}`}
                   width={200}
-                  height={120}
+                  height={300}
                   className="object-cover hover:scale-105 transition-transform"
                 />
-              </button>
+              </Button>
             ))}
           </div>
         </section>

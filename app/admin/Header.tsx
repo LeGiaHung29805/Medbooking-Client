@@ -49,7 +49,6 @@ export default function Header() {
         // 3. Điều hướng về trang login
         router.push("/login");
 
-        // Hoặc dùng window.location.href để tải lại trang hoàn toàn (xóa sạch state React cũ)
         // window.location.href = "/login"; 
     };
 
@@ -65,12 +64,12 @@ export default function Header() {
                 <div className="flex items-center space-x-6">
                     {/* Link ra trang chủ Website (phía bệnh nhân) */}
                     <Link
-                        href="/"
+                        href="/admin"
                         className="flex items-center gap-2 hover:bg-white/20 px-3 py-1.5 rounded-md transition text-sm font-medium"
-                        target="_blank" // Mở tab mới để không mất trang admin
+                        target="_blank"
                     >
                         <Home className="w-4 h-4" />
-                        <span>Xem Website</span>
+                        <span>Xem Quản Trị</span>
                     </Link>
 
                     {/* Nút Đăng xuất */}

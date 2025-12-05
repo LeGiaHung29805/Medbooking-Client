@@ -30,7 +30,7 @@ export default function Header() {
   return (
     <header className="shadow-md sticky top-0 z-50 bg-white">
       {/* Top green bar - Giảm padding */}
-      <div className="bg-gradient-to-r from-green-700 via-green-600 to-green-700">
+      <div className="bg-gradient-to-r from-green-500 via-green-500 to-green-500">
         <div className="container mx-auto flex justify-between md:justify-end items-center gap-2 md:gap-3 py-2 px-4 md:px-6">
           {/* Mobile menu button */}
           <button

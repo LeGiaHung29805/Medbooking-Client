@@ -4,6 +4,22 @@ import { useState, useEffect, useRef } from "react";
 import Layout from "@/components/layout";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  Hospital02Icon,
+  Calendar02Icon,
+  Doctor01Icon,
+  Analytics01Icon,
+  Mail01Icon,
+  CheckmarkSquare02Icon,
+  ClipboardIcon,
+  GiftIcon,
+  Message02Icon,
+  YoutubeIcon,
+  CameraVideoIcon,
+  Location01Icon,
+  Time03Icon,
+  CallIcon,
+} from "hugeicons-react";
 
 export default function HomePage() {
   const [banners] = useState<string[]>([
@@ -13,7 +29,6 @@ export default function HomePage() {
   ]);
 
   const [currentBanner, setCurrentBanner] = useState(0);
-  const [showChat, setShowChat] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [counted, setCounted] = useState(false);
   const [stats, setStats] = useState({
@@ -198,7 +213,7 @@ export default function HomePage() {
     },
   ];
 
-  // Scroll Progress Bar
+  //tiến trình cuộn trang
   useEffect(() => {
     const handleScroll = () => {
       const totalHeight =
@@ -259,7 +274,7 @@ export default function HomePage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 3000);
+    }, 3000); // 3s đổi ảnh 1 lần
     return () => clearInterval(interval);
   }, [banners.length]);
 
@@ -393,9 +408,8 @@ export default function HomePage() {
     if (!isDraggingRef.current || !trackRef.current) return;
     const x = e.touches[0].pageX;
     const walk = x - startXRef.current;
-    trackRef.current.style.transform = `translate3d(${
-      scrollLeftRef.current + walk
-    }px,0,0)`;
+    trackRef.current.style.transform = `translate3d(${scrollLeftRef.current + walk
+      }px,0,0)`;
   };
 
   const handleTouchEnd = () => {
@@ -424,11 +438,10 @@ export default function HomePage() {
                 width={1400}
                 height={400}
                 priority={index === 0}
-                className={`w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-                  index === currentBanner
-                    ? "opacity-100 relative"
-                    : "opacity-0 absolute top-0 left-0"
-                }`}
+                className={`w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${index === currentBanner
+                  ? "opacity-100 relative"
+                  : "opacity-0 absolute top-0 left-0"
+                  }`}
               />
             ))}
             <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
@@ -436,18 +449,17 @@ export default function HomePage() {
                 <button
                   key={index}
                   onClick={() => setCurrentBanner(index)}
-                  className={`h-3 rounded-full bg-white/50 cursor-pointer transition-all duration-300 ${
-                    index === currentBanner
-                      ? "bg-white w-[30px] rounded-[6px]"
-                      : "w-3"
-                  }`}
+                  className={`h-3 rounded-full bg-white/50 cursor-pointer transition-all duration-300 ${index === currentBanner
+                    ? "bg-white w-[30px] rounded-[6px]"
+                    : "w-3"
+                    }`}
                 />
               ))}
             </div>
           </section>
         )}
 
-        {/* Phần Thống Kê Ấn Tượng với Counter Animation */}
+        {/* Phần Thống Kê Ấn Tượng với Counter Animation // \\dùng javascrip tính dữ liệu động*/}
         <section
           id="stats-section"
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 my-8 md:my-12"
@@ -483,8 +495,10 @@ export default function HomePage() {
 
         {/* Slideshow bác sĩ */}
         <div className="w-full my-10 bg-white px-5 py-[50px] rounded-2xl shadow-2xl overflow-hidden">
-          <h2 className="text-center text-zinc-800 text-2xl md:text-3xl font-bold mb-5">
-            🏥 Đội Ngũ Bác Sĩ Chuyên Nghiệp 🏥
+          <h2 className=" flex justify-center iteams-center text-black text-[28px] md:text-4xl font-bold mb-8 tracking-[1px]">
+            <Hospital02Icon className="w-10 h-10" />
+            Đội Ngũ Bác Sĩ Chuyên Nghiệp
+            <Hospital02Icon className="w-10 h-10" />
           </h2>
           <h4 className="text-center my-[5px] text-sm md:text-base">
             Hơn 1.000 bác sĩ, đội ngũ hàng đầu cùng với hơn 4.300 nhân viên y tế
@@ -555,15 +569,16 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <Link
                 href="/dat-lich"
-                className="bg-white text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg inline-block"
+                className="flex items-center gap-2 justify-center bg-transparent border-2 border-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
               >
-                📅 Đặt Lịch Khám
+                <Calendar02Icon className="text-red-600" />
+                Đặt Lịch Khám
               </Link>
               <Link
                 href="/doctors"
-                className="bg-transparent border-2 border-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors inline-block"
+                className="flex bg-transparent border-2 border-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors "
               >
-                👨‍⚕️ Tìm Bác Sĩ
+                <Doctor01Icon className="text-green-500" /> Tìm Bác Sĩ
               </Link>
             </div>
           </div>
@@ -571,8 +586,10 @@ export default function HomePage() {
 
         {/* Timeline Quy Trình Khám Bệnh */}
         <section className="my-12 md:my-16 bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 md:p-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            🔄 Quy Trình Khám Bệnh Đơn Giản
+          <h2 className="flex justify-center text-3xl md:text-4xl font-bold text-center mb-4">
+            <Analytics01Icon className="h-10 w-10" />
+            Quy Trình Khám Bệnh Đơn Giản
+            <Analytics01Icon className="h-10 w-10" />
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
             Chỉ với 5 bước đơn giản, bạn đã hoàn tất quy trình khám bệnh
@@ -581,7 +598,7 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto">
             <div className="relative">
               {/* Timeline Line */}
-              <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-200 via-blue-400 to-blue-600"></div>
+              <div className=" md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-200 via-blue-400 to-blue-600"></div>
 
               {/* Steps */}
               {[
@@ -589,54 +606,53 @@ export default function HomePage() {
                   step: 1,
                   title: "Đặt Lịch Hẹn",
                   desc: "Đặt lịch online hoặc qua hotline, chọn bác sĩ và thời gian phù hợp",
-                  icon: "📅",
+                  icon: <Calendar02Icon className="w-8 h-8 text-blue-600" />,
                 },
                 {
                   step: 2,
                   title: "Nhận Xác Nhận",
                   desc: "Nhận SMS/Email xác nhận lịch hẹn và hướng dẫn chuẩn bị",
-                  icon: "✉️",
+                  icon: <Mail01Icon className="w-8 h-8 text-blue-600" />,
                 },
                 {
                   step: 3,
                   title: "Check-in",
                   desc: "Đến bệnh viện, làm thủ tục tại quầy lễ tân nhanh chóng",
-                  icon: "✓",
+                  icon: (
+                    <CheckmarkSquare02Icon className="w-8 h-8 text-blue-600" />
+                  ),
                 },
                 {
                   step: 4,
                   title: "Khám Bệnh",
                   desc: "Gặp bác sĩ chuyên khoa, được thăm khám và tư vấn chi tiết",
-                  icon: "👨‍⚕️",
+                  icon: <Doctor01Icon className="w-8 h-8 text-blue-600" />,
                 },
                 {
                   step: 5,
                   title: "Nhận Kết Quả",
                   desc: "Nhận kết quả, đơn thuốc và hướng dẫn điều trị (nếu có)",
-                  icon: "📋",
+                  icon: <ClipboardIcon className="w-8 h-8 text-blue-600" />,
                 },
               ].map((item, index) => (
                 <div
                   key={index}
-                  className={`relative mb-12 md:mb-16 ${
-                    index % 2 === 0
-                      ? "md:text-right md:pr-1/2"
-                      : "md:text-left md:pl-1/2"
-                  }`}
+                  className={`relative mb-12 md:mb-16 ${index % 2 === 0
+                    ? "md:text-right md:pr-1/2"
+                    : "md:text-left md:pl-1/2"
+                    }`}
                 >
                   <div
-                    className={`md:w-1/2 ${
-                      index % 2 === 0
-                        ? "md:mr-auto md:pr-12"
-                        : "md:ml-auto md:pl-12"
-                    }`}
+                    className={`md:w-1/2 ${index % 2 === 0
+                      ? "md:mr-auto md:pr-12"
+                      : "md:ml-auto md:pl-12"
+                      }`}
                   >
                     <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 border-blue-500">
                       <div className="flex items-center gap-4 mb-3">
                         <div
-                          className={`text-4xl ${
-                            index % 2 === 0 ? "order-1" : "md:order-2"
-                          }`}
+                          className={`text-4xl ${index % 2 === 0 ? "order-1" : "md:order-2"
+                            }`}
                         >
                           {item.icon}
                         </div>
@@ -704,8 +720,10 @@ export default function HomePage() {
 
         {/* So Sánh Gói Khám Sức Khỏe */}
         <section className="my-12 md:my-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            💰 Gói Khám Sức Khỏe Tổng Quát
+          <h2 className="flex justify-center text-3xl md:text-4xl font-bold text-center mb-4 gap-3">
+            <GiftIcon className="w-10 h-10 text-yellow-500" />
+            Gói Khám Sức Khỏe Tổng Quát
+            <GiftIcon className="w-10 h-10 text-yellow-500" />
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
             Chọn gói khám phù hợp với nhu cầu của bạn
@@ -845,8 +863,10 @@ export default function HomePage() {
 
         {/* Phần Đánh Giá Của Bệnh Nhân */}
         <section className="my-12 md:my-16 bg-white rounded-2xl p-6 md:p-12 shadow-xl">
-          <h2 className="text-2xl md:text-4xl font-bold text-center mb-8 md:mb-12">
-            💬 Bệnh Nhân Nói Gì Về Chúng Tôi
+          <h2 className="flex text-2xl md:text-4xl font-bold text-center mb-8 md:mb-12 gap-3 justify-center ">
+            <Message02Icon className="w-10 h-10 text-yellow-500" />
+            Bệnh Nhân Nói Gì Về Chúng Tôi
+            <Message02Icon className="w-10 h-10 text-yellow-500" />
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((review, i) => (
@@ -879,8 +899,9 @@ export default function HomePage() {
         <section className="my-12 md:my-16 bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl overflow-hidden shadow-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <div className="p-8 md:p-12 flex flex-col justify-center text-white order-2 lg:order-1">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                🎥 Khám Phá Bệnh Viện Của Chúng Tôi
+              <h2 className="flex gap-2 text-3xl md:text-4xl font-bold mb-6">
+                <CameraVideoIcon className="w-8 h-8" />
+                Khám Phá Bệnh Viện Của Chúng Tôi
               </h2>
               <p className="text-lg mb-6 opacity-90 leading-relaxed">
                 Cùng tham quan cơ sở vật chất hiện đại, gặp gỡ đội ngũ y bác sĩ
@@ -922,9 +943,13 @@ export default function HomePage() {
             <div className="relative h-[300px] lg:h-auto min-h-[400px] order-1 lg:order-2">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-600/30 to-purple-600/30 flex items-center justify-center">
                 <div className="text-white text-center">
-                  <div className="text-6xl mb-4">🎬</div>
-                  <p className="text-lg font-semibold">Video Giới Thiệu</p>
-                  <p className="text-sm opacity-80 mt-2">Sắp ra mắt</p>
+                  <div className="flex">
+                    <div className="text-6xl mb-4">
+                      <YoutubeIcon className="w-12 h-12" />
+                    </div>
+                    <p className="text-lg font-semibold">Video Giới Thiệu</p>
+                  </div>
+                  <p className="text-sm opacity-100 mt-2">Sắp ra mắt</p>
                 </div>
               </div>
             </div>
@@ -1067,13 +1092,17 @@ export default function HomePage() {
         <section className="my-12 md:my-16 bg-white rounded-2xl overflow-hidden shadow-xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <div className="p-8 md:p-12">
-              <h2 className="text-3xl font-bold mb-6 text-gray-800">
-                📍 Tìm Đường Đến Bệnh Viện
+              <h2 className="flex gap-3 text-3xl font-bold mb-6 text-gray-800">
+                <Location01Icon className="w-8 h-8 text-red-500" /> Tìm Đường
+                Đến Bệnh Viện
               </h2>
               <div className="space-y-6">
                 <div>
                   <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                    <span className="text-2xl">🏥</span> Địa chỉ
+                    <span className="text-2xl">
+                      <Hospital02Icon className="w-8 h-8 text-red-500" />
+                    </span>{" "}
+                    Địa chỉ
                   </h3>
                   <p className="text-gray-600 ml-9">
                     41A P. Phú Diễn, TP Hà Nội
@@ -1081,7 +1110,10 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                    <span className="text-2xl">🕐</span> Giờ làm việc
+                    <span className="text-2xl">
+                      <Time03Icon className="w-8 h-8 text-red-500" />
+                    </span>{" "}
+                    Giờ làm việc
                   </h3>
                   <div className="ml-9 space-y-1 text-gray-600">
                     <p>• Khám bệnh: 7:00 - 20:00 (T2-CN)</p>
@@ -1118,9 +1150,15 @@ export default function HomePage() {
             <div className="relative h-[400px] lg:h-auto bg-gray-200">
               <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                 <div className="text-center">
-                  <div className="text-6xl mb-4">🗺️</div>
-                  <p className="text-lg font-semibold">Google Maps</p>
-                  <p className="text-sm mt-2">41A P. Phú Diễn, Hà Nội</p>
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3723.6409580475993!2d105.75982837525714!3d21.047047480606874!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313454c3a52297a9%3A0x5cc20ae75ad69645!2zNDFBIMSQLiBQaMO6IERp4buFbiwgQ-G6p3UgRGnhu4VuLCBC4bqvYyBU4burIExpw6ptLCBIw6AgTuG7mWk!5e0!3m2!1svi!2s!4v1764761958627!5m2!1svi!2s"
+                    width="650"
+                    height="580"
+                    style={{ border: 0, borderRadius: "12px" }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
                 </div>
               </div>
             </div>
@@ -1134,7 +1172,7 @@ export default function HomePage() {
             className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center hover:from-blue-100 hover:to-blue-200 transition-all duration-300 shadow-md hover:shadow-lg group"
           >
             <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform">
-              📞
+              <CallIcon className="w-12 h-12 mx-auto" />
             </div>
             <h3 className="font-bold text-lg mb-2">Hotline 24/7</h3>
             <p className="text-blue-600 font-semibold text-xl md:text-2xl">
@@ -1144,7 +1182,7 @@ export default function HomePage() {
           </a>
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 text-center hover:from-green-100 hover:to-green-200 transition-all duration-300 shadow-md hover:shadow-lg group">
             <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform">
-              📍
+              <Location01Icon className="w-12 h-12 mx-auto" />
             </div>
             <h3 className="font-bold text-lg mb-2">Địa Chỉ</h3>
             <p className="text-gray-600">41A P. Phú Diễn</p>
@@ -1155,7 +1193,7 @@ export default function HomePage() {
             className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 text-center hover:from-orange-100 hover:to-orange-200 transition-all duration-300 shadow-md hover:shadow-lg group"
           >
             <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform">
-              ✉️
+              <Mail01Icon className="w-12 h-12 mx-auto" />
             </div>
             <h3 className="font-bold text-lg mb-2">Email</h3>
             <p className="text-orange-600 font-semibold text-lg">
@@ -1192,128 +1230,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        <Link
-          href="/dat-lich"
-          className="bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all hover:scale-110 text-2xl"
-          title="Đặt lịch khám"
-        >
-          📅
-        </Link>
-        <a
-          href="tel:1900xxxx"
-          className="bg-green-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:bg-green-700 transition-all hover:scale-110 text-2xl"
-          title="Gọi hotline"
-        >
-          📞
-        </a>
-        <button
-          onClick={() => setShowChat(!showChat)}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:from-purple-700 hover:to-pink-700 transition-all hover:scale-110 text-2xl relative"
-          title="Chat tư vấn"
-        >
-          💬
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></span>
-        </button>
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="bg-gray-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:bg-gray-700 transition-all hover:scale-110 text-2xl"
-          title="Lên đầu trang"
-        >
-          ↑
-        </button>
-      </div>
-
-      {/* Live Chat Widget */}
-      {showChat && (
-        <div className="fixed bottom-24 right-6 w-80 md:w-96 bg-white rounded-2xl shadow-2xl z-40 overflow-hidden animate-fadeIn">
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl">
-                  👨‍⚕️
-                </div>
-                <div>
-                  <h3 className="font-bold">Tư Vấn Y Tế</h3>
-                  <p className="text-xs opacity-90">
-                    Online • Phản hồi trong 2 phút
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowChat(false)}
-                className="text-white hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Messages */}
-          <div className="h-64 overflow-y-auto p-4 bg-gray-50">
-            <div className="flex gap-2 mb-4">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                👨‍⚕️
-              </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
-                <p className="text-sm text-gray-800">
-                  Xin chào! Tôi có thể giúp gì cho bạn?
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Vừa xong</p>
-              </div>
-            </div>
-
-            {/* Quick Options */}
-            <div className="space-y-2">
-              <button className="w-full bg-white hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-left text-sm transition-colors">
-                📅 Đặt lịch khám bệnh
-              </button>
-              <button className="w-full bg-white hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-left text-sm transition-colors">
-                💰 Hỏi về giá dịch vụ
-              </button>
-              <button className="w-full bg-white hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-left text-sm transition-colors">
-                🏥 Tìm bác sĩ chuyên khoa
-              </button>
-              <button className="w-full bg-white hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-left text-sm transition-colors">
-                ❓ Câu hỏi khác
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Input */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Nhập tin nhắn..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:from-purple-700 hover:to-pink-700 transition-colors">
-                ➤
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
     </Layout>
   );
 }
