@@ -1,12 +1,12 @@
 "use client"
 
 import { User, Clock } from "lucide-react"
-import type { Patient, PatientDetail, MedicalRecord } from "./types"
+import type { Patient, PatientDetail, MedicalRecord } from "../types"
 
 interface WaitingPatientsProps {
   waitingPatients: Patient[]
-  medicalRecords: MedicalRecord[]
-  getStatusInfo: (status: string) => any
+  medicalRecords: MedicalRecord[] 
+  getStatusInfo: (status: string) => any 
   getPriorityColor: (priority: string) => string
   getPriorityText: (priority: string) => string
   handleViewPatientDetail: (id: number) => void

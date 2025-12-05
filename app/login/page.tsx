@@ -70,17 +70,17 @@ export default function LoginPage() {
             return;
         }
 
-        // Thử mock login trước khi gọi API
-        if (handleMockLogin()) {
-            return; // Mock login thành công thì dừng lại
-        }
+        // // Thử mock login trước khi gọi API
+        // if (handleMockLogin()) {
+        //     return; // Mock login thành công thì dừng lại
+        // }
 
         setIsLoading(true);
 
         // Gọi API thật nếu mock login không thành công
         try {
             const formData = new FormData();
-            formData.append("username", username); // SỬA: "username" thay vì "Username"
+            formData.append("email", username); // SỬA: "username" thay vì "Username"
             formData.append("password", password);
 
             console.log("🚀 Calling REAL login API...");
@@ -92,15 +92,16 @@ export default function LoginPage() {
             const responseData = response as any;
             let token, user, role;
 
-            if (responseData.token) {
-                token = responseData.token;
+            if (responseData.access_token) {
+                token = responseData.access_token;
                 user = responseData.user;
                 role = responseData.user?.Role || responseData.user?.role;
-            } else if (responseData.data?.token) {
-                token = responseData.data.token;
+            } else if (responseData.data?.access_token) {
+                token = responseData.data.access_token;
                 user = responseData.data.user;
                 role = responseData.data.user?.Role || responseData.data.user?.role;
             }
+            console.log("Parsed login data - token:", responseData);
 
             if (token) {
                 // Lưu token từ API response

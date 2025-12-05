@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type React from "react"
-import type { PatientDetail, MedicalExamFormData, Prescription, VitalSigns } from "./types"
+import type { PatientDetail, MedicalExamFormData, Prescription, VitalSigns } from "../types"
 
 interface MedicalExamFormProps {
   patient: PatientDetail
@@ -29,14 +29,14 @@ const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps)
   })
 
   const updateVitalSign = (field: keyof VitalSigns, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      vitalSigns: {
-        ...prev.vitalSigns,
-        [field]: value
-      }
-    }))
-  }
+  setFormData(prev => ({
+    ...prev,
+    vitalSigns: {
+      ...prev.vitalSigns,
+      [field]: value
+    }
+  }))
+}
 
   const updatePrescription = (index: number, field: keyof Prescription, value: string) => {
     const updated = prescriptions.map((p, i) =>

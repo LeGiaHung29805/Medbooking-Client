@@ -1,7 +1,7 @@
 "use client"
 
 import { User, Clock, Calendar, Stethoscope } from "lucide-react"
-import type { Appointment, Patient, PatientDetail, MedicalRecord } from "./types"
+import type { Appointment, Patient, PatientDetail, MedicalRecord } from "../types"
 
 interface ExamInProgressProps {
   appointments: Appointment[]
@@ -61,13 +61,13 @@ export default function ExamInProgress({
                           <span>ĐANG KHÁM</span>
                         </div>
 
-                        {fullPatient && (
-                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border ${getPriorityColor(fullPatient.priority)}`}>
-                            {fullPatient.priority === 'emergency' && '🚨'}
-                            {fullPatient.priority === 'high' && '⚠️'}
-                            {getPriorityText(fullPatient.priority)}
-                          </span>
-                        )}
+                        {fullPatient ? (
+  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border ${getPriorityColor(fullPatient.priority)}`}>
+    {fullPatient.priority === 'emergency' && '🚨'}
+    {fullPatient.priority === 'high' && '⚠️'}
+    {getPriorityText(fullPatient.priority)}
+  </span>
+) : null}
                       </div>
 
                       <p className="text-slate-700 mb-2 font-medium">
@@ -112,6 +112,7 @@ export default function ExamInProgress({
                             medicalHistory: patientDetail.medicalHistory,
                             priority: patientDetail.priority,
                             medicalRecords: medicalRecords.filter(r => r.patientName === patientDetail.name)
+                            
                           }
                           handleStartExam(detail)
                         }
