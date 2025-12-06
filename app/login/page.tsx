@@ -80,7 +80,7 @@ export default function LoginPage() {
         // Gọi API thật nếu mock login không thành công
         try {
             const formData = new FormData();
-            formData.append("username", username); // SỬA: "username" thay vì "Username"
+            formData.append("Username", username);
             formData.append("password", password);
 
             console.log("🚀 Calling REAL login API...");
@@ -111,7 +111,7 @@ export default function LoginPage() {
                 }
 
                 console.log("✅ Real API login successful, role:", role);
-                
+
                 const normalizedRole = role ? role.toLowerCase() : "benhnhan";
 
                 switch (normalizedRole) {
@@ -122,7 +122,7 @@ export default function LoginPage() {
                         router.push("/Doctor");
                         break;
                     case "nhanvien":
-                        router.push("/Staff");
+                        router.push("/staff");
                         break;
                     case "benhnhan":
                     default:
