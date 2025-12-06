@@ -9,9 +9,8 @@ import { Calendar, Download, Printer, Filter, Plus } from "lucide-react";
 import type { 
   Appointment, 
   Patient, 
-  ScheduleDay,
   PatientDetail 
-} from "@/types";
+} from  "@/lib/model";
 
 export default function SchedulePage() {
   // ==================== STATES ====================

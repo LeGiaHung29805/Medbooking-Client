@@ -1,7 +1,7 @@
 "use client"
 
 import { User, Clock } from "lucide-react"
-import type { Patient, PatientDetail, MedicalRecord } from "../types"
+import type { Patient, PatientDetail, MedicalRecord } from "@/lib/model"
 
 interface WaitingPatientsProps {
   waitingPatients: Patient[]

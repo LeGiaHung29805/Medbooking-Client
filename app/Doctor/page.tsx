@@ -20,7 +20,7 @@ import type {
   Patient, 
   Prescription,
   VitalSigns
-} from "@/types";
+} from "@/lib/model";
 
 export default function DoctorDashboardPage() {
   // ==================== STATES ====================

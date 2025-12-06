@@ -70,10 +70,10 @@ export default function LoginPage() {
             return;
         }
 
-        // // Thử mock login trước khi gọi API
-        // if (handleMockLogin()) {
-        //     return; // Mock login thành công thì dừng lại
-        // }
+         // Thử mock login trước khi gọi API
+         if (handleMockLogin()) {
+             return; // Mock login thành công thì dừng lại
+         }
 
         setIsLoading(true);
 
@@ -101,7 +101,6 @@ export default function LoginPage() {
                 user = responseData.data.user;
                 role = responseData.data.user?.Role || responseData.data.user?.role;
             }
-            console.log("Parsed login data - token:", responseData);
 
             if (token) {
                 // Lưu token từ API response
