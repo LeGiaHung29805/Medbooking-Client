@@ -1,8 +1,7 @@
 "use client"
 
 import { User, Clock, Calendar, Stethoscope } from "lucide-react"
-import type { Appointment, Patient, PatientDetail, MedicalRecord } from "./types"
-
+import type { Appointment, Patient, PatientDetail, MedicalRecord } from "@/lib/model"
 interface ExamInProgressProps {
   appointments: Appointment[]
   waitingPatients: Patient[]
@@ -39,7 +38,7 @@ export default function ExamInProgress({
       <div className="space-y-3">
         {inProgressAppointments.length > 0 ? (
           inProgressAppointments.map((appointment) => {
-            const fullPatient = waitingPatients.find(p => p.id === appointment.id)
+           const fullPatient = waitingPatients.find(p => p.id === appointment.patientId || p.id === appointment.id);
             return (
               <div key={appointment.id} className="bg-white rounded-xl p-4 border-2 border-blue-400 shadow-md hover:shadow-lg transition-all duration-200">
                 <div className="flex items-center justify-between">
@@ -61,13 +60,13 @@ export default function ExamInProgress({
                           <span>ĐANG KHÁM</span>
                         </div>
 
-                        {fullPatient && (
-                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border ${getPriorityColor(fullPatient.priority)}`}>
-                            {fullPatient.priority === 'emergency' && '🚨'}
-                            {fullPatient.priority === 'high' && '⚠️'}
-                            {getPriorityText(fullPatient.priority)}
-                          </span>
-                        )}
+                        {fullPatient ? (
+  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border ${getPriorityColor(fullPatient.priority)}`}>
+    {fullPatient.priority === 'emergency' && '🚨'}
+    {fullPatient.priority === 'high' && '⚠️'}
+    {getPriorityText(fullPatient.priority)}
+  </span>
+) : null}
                       </div>
 
                       <p className="text-slate-700 mb-2 font-medium">
@@ -98,24 +97,15 @@ export default function ExamInProgress({
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => {
-                        const patientDetail = waitingPatients.find(p => p.id === appointment.id)
-                        if (patientDetail) {
-                          const detail: PatientDetail = {
-                            id: patientDetail.id,
-                            name: patientDetail.name,
-                            age: patientDetail.age,
-                            gender: patientDetail.gender,
-                            phone: patientDetail.phone,
-                            symptoms: patientDetail.symptoms,
-                            appointmentTime: patientDetail.appointmentTime,
-                            allergies: patientDetail.allergies,
-                            medicalHistory: patientDetail.medicalHistory,
-                            priority: patientDetail.priority,
-                            medicalRecords: medicalRecords.filter(r => r.patientName === patientDetail.name)
-                          }
-                          handleStartExam(detail)
-                        }
-                      }}
+  const patientDetail = waitingPatients.find(p => p.id === appointment.patientId || p.id === appointment.id);
+  if (patientDetail) {
+    const detail: PatientDetail = {
+      ...patientDetail,
+      medicalRecords: medicalRecords.filter(r => r.patientName === patientDetail.name)
+    };
+    handleStartExam(detail);
+  }
+}}
                       className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
                     >
                       <Stethoscope className="w-4 h-4" />

@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { AlertTriangle } from "lucide-react"
-import type { PatientDetail } from "./types"
-
+import type { PatientDetail } from  "@/lib/model"
 interface PatientDetailModalProps {
   patient: PatientDetail
   onClose: () => void
@@ -113,7 +112,10 @@ const PatientDetailModal = ({
             </div>
             <div>
               <label className="text-sm text-gray-600">Triệu chứng chính</label>
-              <p className="font-semibold">{patient.symptoms}</p>
+              <p className="font-semibold">
+  {patient.gender === 'male' ? 'Nam' : 
+   patient.gender === 'female' ? 'Nữ' : 'Khác'}
+</p>
             </div>
           </div>
         )}

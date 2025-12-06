@@ -92,12 +92,12 @@ export default function LoginPage() {
             const responseData = response as any;
             let token, user, role;
 
-            if (responseData.token) {
-                token = responseData.token;
+            if (responseData.access_token) {
+                token = responseData.access_token;
                 user = responseData.user;
                 role = responseData.user?.Role || responseData.user?.role;
-            } else if (responseData.data?.token) {
-                token = responseData.data.token;
+            } else if (responseData.data?.access_token) {
+                token = responseData.data.access_token;
                 user = responseData.data.user;
                 role = responseData.data.user?.Role || responseData.data.user?.role;
             }

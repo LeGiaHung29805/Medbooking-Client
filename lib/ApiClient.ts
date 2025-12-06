@@ -14,19 +14,11 @@ const apiClient = axios.create({
 // === THÊM DEBUG INTERCEPTORS ===
 apiClient.interceptors.request.use(
   (config) => {
-    const fullURL = config.baseURL ? config.baseURL + config.url : config.url;
-    console.log('🚀 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      fullURL: fullURL,
-      baseURL: config.baseURL,
-      headers: config.headers
-    });
+    const token = localStorage.getItem("api_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
-  },
-  (error) => {
-    console.error('❌ API Request Error:', error);
-    return Promise.reject(error);
   }
 );
 
@@ -82,10 +74,13 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
     headers: { "Content-Type": "multipart/form-data" },
   });
   // Lưu token tự động khi login thành công
-  if (response.data.token && typeof window !== "undefined") {
-    localStorage.setItem("api_token", response.data.token);
-    localStorage.setItem("user_role", response.data.user.Role); // Lưu Role để phân quyền UI
+  const token = response.data.access_token || response.data.token;
+  if (token && typeof window !== "undefined") {
+    localStorage.setItem("api_token", token);
+    localStorage.setItem("user_role", response.data.user.Role || response.data.user.role);
+    console.log("Đã lưu token:", token); // thêm dòng này để debug
   }
+
   return response.data;
 };
 
@@ -212,10 +207,8 @@ export const cancelAppointment = async (
 // === 4. NHÓM BÁC SĨ (DOCTOR) ===
 // ==========================================
 
-export const doctorGetDashboard = async (): Promise<Model.DashboardStats> => {
-  const response = await apiClient.get("/doctor/dashboard-stats", {
-    headers: getAuthHeaders(),
-  });
+export const doctorGetDashboard = async (): Promise<any> => {
+  const response = await apiClient.get("/doctor/dashboard-stats-test");
   return response.data;
 };
 
@@ -226,12 +219,11 @@ export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
   return response.data;
 };
 
-export const doctorGetQueue = async (): Promise<Model.Appointment[]> => {
-  const response = await apiClient.get("/doctor/queue", {
-    headers: getAuthHeaders(),
-  });
+export const doctorGetQueue = async (): Promise<any> => {
+  const response = await apiClient.get("/doctor/queue-test");
   return response.data;
 };
+
 
 export const doctorCreateSlot = async (
   start: string,
@@ -437,12 +429,8 @@ export const adminDeleteService = async (id: number): Promise<void> => {
 };
 
 // --- Tra cứu & Lịch sử (Bác sĩ / Admin) ---
-export const getDoctorMyMedicalRecords = async (): Promise<
-  Model.MedicalRecord[]
-> => {
-  const response = await apiClient.get("/doctor/my-medical-records", {
-    headers: getAuthHeaders(),
-  });
+export const getDoctorMyMedicalRecords = async (): Promise<any> => {
+  const response = await apiClient.get("/doctor/my-medical-records-test");
   return response.data;
 };
 
