@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Search } from "lucide-react";
-import { MedicalRecord } from "../types"
+import { MedicalRecord } from  "@/lib/model"
 
 interface MedicalRecordsTabProps {
   medicalRecords: MedicalRecord[]

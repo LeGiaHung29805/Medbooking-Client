@@ -22,7 +22,7 @@ import type {
   MedicalRecord, 
   Prescription,
   PatientDetail
-} from "@/types";
+} from  "@/lib/model";
 
 export default function RecordsPage() {
   // ==================== STATES ====================

@@ -1,9 +1,7 @@
-// app/Doctor/TodayAppointments.tsx – HOÀN CHỈNH, KHÔNG CÒN LỖI ĐỎ
 "use client";
 
 import { Search, Filter, ChevronLeft, ChevronRight, Calendar, User, Clock } from "lucide-react";
-import type { Appointment, Patient, PatientDetail, MedicalRecord } from "../types";
-
+import type { Appointment, Patient, PatientDetail, MedicalRecord } from  "@/lib/model"
 interface TodayAppointmentsProps {
   appointments: Appointment[];
   waitingPatients: Patient[];

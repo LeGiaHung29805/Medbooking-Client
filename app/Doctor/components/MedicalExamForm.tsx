@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type React from "react"
-import type { PatientDetail, MedicalExamFormData, Prescription, VitalSigns } from "../types"
+import type { PatientDetail, MedicalExamFormData, Prescription, VitalSigns } from  "@/lib/model"
 
 interface MedicalExamFormProps {
   patient: PatientDetail

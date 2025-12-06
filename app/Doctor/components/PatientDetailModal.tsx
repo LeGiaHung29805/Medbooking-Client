@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { AlertTriangle } from "lucide-react"
-import type { PatientDetail } from "../types"
-
+import type { PatientDetail } from  "@/lib/model"
 interface PatientDetailModalProps {
   patient: PatientDetail
   onClose: () => void

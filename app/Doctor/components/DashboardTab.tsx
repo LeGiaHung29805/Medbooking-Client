@@ -4,7 +4,7 @@ import DashboardStats from "./DashboardStats";
 import TodayAppointments from "./TodayAppointments";
 import WaitingPatients from "./WaitingPatients";
 import ExamInProgress from "./ExamInProgress";
-import type { Appointment, Patient, MedicalRecord, PatientDetail } from "@/types";
+import type { Appointment, Patient, MedicalRecord, PatientDetail } from  "@/lib/model";
 
 interface DashboardTabProps {
   dashboardStats: { 
