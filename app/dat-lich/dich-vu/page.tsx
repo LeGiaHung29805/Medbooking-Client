@@ -24,17 +24,17 @@ interface AggregatedService extends Model.Service {
 export default function ServiceBookingPage() {
     const router = useRouter();
 
-    // --- STATE DỮ LIỆU API & CACHE ---
+    //State dữ liệu API & cache
     const [services, setServices] = useState<AggregatedService[]>([]);
     const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
     const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
 
-    // State cache lịch trống theo ServiceID (để không gọi lại API)
+    //State cache lịch trống theo ServiceID (để không gọi lại API)
     const [slotsCache, setSlotsCache] = useState<Map<number, Model.AvailabilitySlot[]>>(new Map());
 
-    // --- STATE FORM ĐẶT LỊCH ---
+    //State form đặt lịch
     const [selectedPerson, setSelectedPerson] = useState("");
     const [selectedService, setSelectedService] = useState<AggregatedService | null>(null);
 
@@ -47,7 +47,7 @@ export default function ServiceBookingPage() {
     const [file, setFile] = useState<File | null>(null);
     const [bookingLoading, setBookingLoading] = useState(false);
 
-    // --- STATE UI (Sheet, Pagination, Search) ---
+    //STATE UI (Sheet, Pagination, Search)
     const [showServiceSheet, setShowServiceSheet] = useState(false);
     const [viewingService, setViewingService] = useState<AggregatedService | null>(null);
 
@@ -55,12 +55,12 @@ export default function ServiceBookingPage() {
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // 1. LOAD DỮ LIỆU BAN ĐẦU
+    //LOAD DỮ LIỆU BAN ĐẦU
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Gọi song song các API cần thiết
+                // Gọi các API cần thiết
                 const [specsData, servicesData, userData, familyData] = await Promise.all([
                     Api.getSpecialties(),
                     Api.getAllServices(),
@@ -136,7 +136,7 @@ export default function ServiceBookingPage() {
         }
     };
 
-    // 3. LOGIC TÍNH TOÁN NGÀY GIỜ (Lấy từ Cache hoặc State)
+    //LOGIC TÍNH TOÁN NGÀY GIỜ (Lấy từ Cache hoặc State)
     const serviceIdToView = viewingService?.ServiceID;
     const currentSlots = serviceIdToView ? slotsCache.get(serviceIdToView) || [] : [];
 
@@ -149,7 +149,7 @@ export default function ServiceBookingPage() {
         return currentSlots.filter(slot => slot.StartTime.startsWith(selectedDate));
     }, [currentSlots, selectedDate]);
 
-    // 4. LỌC VÀ PHÂN TRANG (Client-side)
+    //LỌC VÀ PHÂN TRANG (Client-side)
     const filteredServices = useMemo(() => {
         return services.filter((srv) =>
             srv.ServiceName.toLowerCase().includes(search.toLowerCase()) ||

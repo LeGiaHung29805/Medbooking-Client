@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import LayoutBook from "@/components/layoutBook";
-import * as Api from "@/lib/ApiClient"; // Import API
+import * as Api from "@/lib/ApiClient";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -25,24 +25,19 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            // 1. Chuẩn bị FormData để gửi (Vì API yêu cầu multipart/form-data)
+            //Chuẩn bị FormData để gửi (Vì API yêu cầu multipart/form-data)
             const formData = new FormData();
-            formData.append("Username", username); // Lưu ý chữ hoa/thường khớp với backend (thường là 'username' hoặc 'Username')
+            formData.append("Username", username);
             formData.append("password", password);
 
-            // 2. Gọi API
             const response = await Api.login(formData);
-
-            // 3. Kiểm tra kết quả và lưu vào LocalStorage
-            // (Lưu ý: Hàm Api.login trong ApiClient.ts của bạn đã có logic lưu token rồi, 
-            // nhưng ta có thể lưu thêm thông tin user ở đây nếu cần thiết)
 
             if (response.token) {
                 // Đảm bảo lưu thông tin user để dùng ở các trang khác
                 localStorage.setItem("user", JSON.stringify(response.user));
 
-                // 4. Điều hướng dựa trên Role
-                const role = response.user.Role; // Role từ DB: 'QuanTriVien', 'BacSi', 'NhanVien', 'BenhNhan'
+                //Điều hướng dựa trên Role
+                const role = response.user.Role;
 
                 alert(`Đăng nhập thành công! Xin chào ${response.user.FullName}`);
 
@@ -64,10 +59,14 @@ export default function LoginPage() {
                 setError("Không nhận được token xác thực.");
             }
 
-        } catch (err: any) {
+        } catch (err) {
             console.error("Login failed:", err);
-            // Xử lý lỗi hiển thị
-            const msg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+
+            //Ép kiểu lỗi về dạng AxiosError có chứa { message: string }
+            const error = err as AxiosError<{ message: string }>;
+
+            const msg = error.response?.data?.message || error.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+
             setError(msg);
         } finally {
             setIsLoading(false);

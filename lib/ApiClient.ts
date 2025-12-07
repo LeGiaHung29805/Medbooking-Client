@@ -205,7 +205,7 @@ export const cancelAppointment = async (
 // === 4. NHÓM BÁC SĨ (DOCTOR) ===
 // ==========================================
 
-export const doctorGetDashboard = async (): Promise<any> => {
+export const doctorGetDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/doctor/dashboard-stats-test");
   return response.data;
 };
@@ -217,7 +217,7 @@ export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
   return response.data;
 };
 
-export const doctorGetQueue = async (): Promise<any> => {
+export const doctorGetQueue = async (): Promise<Model.Appointment[]> => {
   const response = await apiClient.get("/doctor/queue-test");
   return response.data;
 };
@@ -427,7 +427,7 @@ export const adminDeleteService = async (id: number): Promise<void> => {
 };
 
 // --- Tra cứu & Lịch sử (Bác sĩ / Admin) ---
-export const getDoctorMyMedicalRecords = async (): Promise<any> => {
+export const getDoctorMyMedicalRecords = async (): Promise<Model.MedicalRecord[]> => {
   const response = await apiClient.get("/doctor/my-medical-records-test");
   return response.data;
 };
@@ -644,7 +644,7 @@ export const adminDeleteSlot = async (slotId: number): Promise<void> => {
 // Dùng hàm này thay cho adminUpdateUser khi sửa thông tin bệnh nhân cụ thể
 export const adminUpdatePatient = async (
   id: number,
-  data: any // Object chứa FullName, Email, v.v.
+  data: Model.AdminUpdatePatientRequest // Object chứa FullName, Email, v.v.
 ): Promise<Model.MessageResponse> => {
   // Axios mặc định gửi JSON khi data là object (không phải FormData)
   const response = await apiClient.put(`/admin/patients/${id}`, data, {
@@ -658,7 +658,7 @@ export const adminUpdatePatient = async (
 // ==========================================
 
 // Lấy lịch sử thông báo
-export const getNotificationLogs = async (): Promise<any[]> => {
+export const getNotificationLogs = async (): Promise<Model.Notification[]> => {
   // Giả định Backend có route GET /api/admin/notifications
   const response = await apiClient.get("/admin/notifications", {
     headers: getAuthHeaders(),

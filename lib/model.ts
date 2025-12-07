@@ -314,5 +314,12 @@ export interface PatientDetail extends Patient {
   medicalRecords: MedicalRecord[]
   vitalSigns?: VitalSigns
 }
-
-
+export interface AdminUpdatePatientRequest {
+  FullName: string;
+  PhoneNumber: string;
+  Email?: string | null;
+  DateOfBirth?: string | null; // YYYY-MM-DD
+  Gender?: string | null;      // "Nam", "Nữ", "Khác"
+  Address?: string | null;
+  Status?: string;             // Admin có quyền sửa trạng thái (VD: "HoatDong", "Khoa")
+}
