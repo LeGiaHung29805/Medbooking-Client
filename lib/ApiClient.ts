@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as Model from "./model";
+import { relative } from "path";
 
 // 1. Cấu hình URL Backend
 const API_BASE_URL = "http://127.0.0.1:8000/api";
@@ -176,10 +177,7 @@ export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
   return response.data;
 };
 export const bookAppointment = async (
-  slotId: number,
-  symptoms: string,
-  file?: File
-): Promise<Model.MessageResponse> => {
+slotId: number, symptoms: string, file?: File, ServiceID?: number): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("SlotID", slotId.toString());
   if (symptoms) formData.append("InitialSymptoms", symptoms);
@@ -728,4 +726,37 @@ export const staffDeleteSlot = async (id: number): Promise<void> => {
   await apiClient.delete(`/staff/availability/${id}`, {
     headers: getAuthHeaders(),
   });
+};
+
+//9. Quản lí gia đình
+export const getFamilyMembers = async (): Promise<Model.FamilyMember[]> => {
+  const response = await apiClient.get("user/family-members", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+export const addFamilyMember = async (
+    relativeUserId: number, 
+    relationType: string
+): Promise<Model.MessageResponse> => {
+    const response = await apiClient.post("/user/family-members", 
+        { 
+            RelativeUserID: relativeUserId, 
+            RelationType: relationType 
+        }, 
+        { headers: getAuthHeaders() }
+    );
+    return response.data;
+};
+export const removeFamilyMember = async (relativeUserId: number): Promise<Model.MessageResponse> => {
+    const response = await apiClient.delete(`/user/family-members/${relativeUserId}`, {
+        headers: getAuthHeaders(),
+    });
+    return response.data;
+};
+export const searchUserPublic = async (query: string): Promise<Model.User[]> => {
+    const response = await apiClient.get(`/users/search-public?query=${query}`, {
+        headers: getAuthHeaders(),
+    });
+    return response.data;
 };

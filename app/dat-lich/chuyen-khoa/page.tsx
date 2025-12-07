@@ -17,6 +17,7 @@ export default function SpecialtyBookingPage() {
     const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
 
     const [selectedPerson, setSelectedPerson] = useState("");
     const [selectedSpecialty, setSelectedSpecialty] = useState<Model.Specialty | null>(null);
@@ -45,15 +46,22 @@ export default function SpecialtyBookingPage() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [specsData, userData] = await Promise.all([
+                const [specsData, userData, familyData] = await Promise.all([
                     Api.getSpecialties(),
                     Api.getMe().catch(() => null),
+                    Api.getFamilyMembers().catch(() => [])
                 ]);
                 setSpecialties(specsData);
-
+                setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
-                    setSelectedPerson(userData.FullName);
+                    const savedPerson = localStorage.getItem("booking_for_person");
+                    if (savedPerson) {
+                        setSelectedPerson(savedPerson);
+                        // localStorage.removeItem("booking_for_person");
+                    } else {
+                        setSelectedPerson(userData.FullName);
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi tải dữ liệu:", error);
@@ -63,7 +71,16 @@ export default function SpecialtyBookingPage() {
         };
         fetchData();
     }, []);
-
+    const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        if (value === "ADD_NEW_MEMBER") {
+            router.push("/Users/quan-li-gia-dinh");
+            return;
+        }
+        setSelectedPerson(value);
+        // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
+        localStorage.setItem("booking_for_person", value);
+    };
     //XỬ LÝ KHI BẤM VÀO MỘT CHUYÊN KHOA (MỞ SHEET CHI TIẾT)
     const handleViewSpecialty = async (spec: Model.Specialty) => {
         setViewingSpecialty(spec);
@@ -159,13 +176,28 @@ export default function SpecialtyBookingPage() {
                         <label className="block font-semibold mb-2">Người tới khám</label>
                         <select
                             value={selectedPerson}
-                            onChange={(e) => setSelectedPerson(e.target.value)}
+                            onChange={handlePersonChange}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
                             {currentUser ? (
-                                <option value={currentUser.FullName}>{currentUser.FullName}</option>
+                                <>
+                                    <option value={currentUser.FullName}>{currentUser.FullName}</option>
+
+                                    {/* Render danh sách người thân */}
+                                    {familyMembers.length > 0 && (
+                                        <optgroup label="Người thân">
+                                            {familyMembers.map((mem) => (
+                                                <option key={mem.UserID} value={mem.FullName}>
+                                                    {mem.FullName} ({mem.RelationType || mem.pivot?.RelationType})
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+
+                                    <option value="ADD_NEW_MEMBER" className="text-blue-600 font-bold">+ Thêm người thân mới...</option>
+                                </>
                             ) : (
-                                <option value="">Đang tải...</option>
+                                <option value="">Đang tải thông tin...</option>
                             )}
 
                         </select>

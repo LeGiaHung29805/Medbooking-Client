@@ -66,7 +66,6 @@ export default function Header() {
                     <Link
                         href="/admin"
                         className="flex items-center gap-2 hover:bg-white/20 px-3 py-1.5 rounded-md transition text-sm font-medium"
-                        target="_blank"
                     >
                         <Home className="w-4 h-4" />
                         <span>Xem Quản Trị</span>

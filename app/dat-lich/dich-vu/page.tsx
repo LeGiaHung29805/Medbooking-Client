@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, ChangeEventHandler } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/pagination";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
+import { AxiosError } from "axios";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 interface AggregatedService extends Model.Service {
@@ -28,6 +29,7 @@ export default function ServiceBookingPage() {
     const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
 
     // State cache lịch trống theo ServiceID (để không gọi lại API)
     const [slotsCache, setSlotsCache] = useState<Map<number, Model.AvailabilitySlot[]>>(new Map());
@@ -59,10 +61,11 @@ export default function ServiceBookingPage() {
             setLoading(true);
             try {
                 // Gọi song song các API cần thiết
-                const [specsData, servicesData, userData] = await Promise.all([
+                const [specsData, servicesData, userData, familyData] = await Promise.all([
                     Api.getSpecialties(),
                     Api.getAllServices(),
                     Api.getMe().catch(() => null),
+                    Api.getFamilyMembers().catch(() => [])
                 ]);
 
                 // Tạo Map Specialty Name để nối dữ liệu vào Service
@@ -76,10 +79,17 @@ export default function ServiceBookingPage() {
 
                 setServices(aggregatedServices);
                 setSpecialties(specsData);
-
+                setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
                     setSelectedPerson(userData.FullName);
+                    const savedPerson = localStorage.getItem("booking_for_person");
+                    if (savedPerson) {
+                        setSelectedPerson(savedPerson);
+                        // localStorage.removeItem("booking_for_person");
+                    } else {
+                        setSelectedPerson(userData.FullName);
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi tải dữ liệu:", error);
@@ -89,7 +99,15 @@ export default function ServiceBookingPage() {
         };
         fetchData();
     }, []);
-
+    const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        if (value === "ADD_NEW_MEMBER") {
+            router.push("/Users/quan-li-gia-dinh");
+            return;
+        }
+        setSelectedPerson(value);
+        localStorage.setItem("booking_for_person", value);
+    }
     // 2. XỬ LÝ KHI BẤM VÀO DỊCH VỤ (MỞ SHEET CHỌN LỊCH)
     const handleViewService = async (service: AggregatedService) => {
         setViewingService(service);
@@ -175,11 +193,16 @@ export default function ServiceBookingPage() {
                 selectedService.ServiceID
             );
 
-            alert("✅ Đặt lịch thành công! Vui lòng chờ xác nhận.");
+            alert("Đặt lịch thành công! Vui lòng chờ xác nhận.");
             router.push("/dat-lich");
-        } catch (error: any) {
-            const msg = error.response?.data?.message || "Đặt lịch thất bại.";
-            alert("❌ " + msg);
+        } catch (error: unknown) {
+            let msg = "Đặt lịch thất bại.";
+
+            // Kiểm tra nếu đây là lỗi từ Axios và có response từ server
+            if (error instanceof AxiosError && error.response?.data?.message) {
+                msg = error.response.data.message;
+            }
+            alert(" " + msg);
         } finally {
             setBookingLoading(false);
         }
@@ -199,15 +222,26 @@ export default function ServiceBookingPage() {
                         <label className="block font-semibold mb-2">Người tới khám</label>
                         <select
                             value={selectedPerson}
-                            onChange={(e) => setSelectedPerson(e.target.value)}
+                            onChange={handlePersonChange}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
                             {currentUser ? (
-                                <option value={currentUser.FullName}>{currentUser.FullName} - {currentUser.PhoneNumber} (Tôi)</option>
+                                <>
+                                    <option value={currentUser.FullName}>{currentUser.FullName}</option>
+                                    {familyMembers.length > 0 && (
+                                        <optgroup label="Người thân">
+                                            {familyMembers.map((mem) => (
+                                                <option key={mem.UserID} value={mem.FullName}>
+                                                    {mem.FullName} ({mem.RelationType || mem.pivot?.RelationType})
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+                                    <option value="ADD_NEW_MEMBER" className="text-blue-600 font-bold">+ Thêm người thân mới...</option>
+                                </>
                             ) : (
                                 <option value="">Đang tải thông tin...</option>
                             )}
-                            <option value="other">Đặt hộ người thân</option>
                         </select>
                     </div>
 

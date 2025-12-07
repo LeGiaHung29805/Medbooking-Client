@@ -28,7 +28,7 @@ export default function DoctorBookingPage() {
     const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null); // <--- 1. THÊM STATE USER
     const [loading, setLoading] = useState(true);
-
+    const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
     // --- STATE FORM ---
     const [selectedPerson, setSelectedPerson] = useState(""); // Để rỗng ban đầu
     const [selectedDoctor, setSelectedDoctor] = useState<Model.Doctor | null>(null);
@@ -56,19 +56,27 @@ export default function DoctorBookingPage() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [docsData, specsData, userData] = await Promise.all([
+                const [docsData, specsData, userData, familyData] = await Promise.all([
                     Api.getDoctors(),
                     Api.getSpecialties(),
-                    Api.getMe().catch(() => null)
+                    Api.getMe().catch(() => null),
+                    Api.getFamilyMembers().catch(() => [])
                 ]);
 
                 setDoctors(docsData);
                 setSpecialties(specsData);
-
+                setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
-                    // Tự động chọn tên người dùng làm mặc định
-                    setSelectedPerson(userData.FullName);
+
+                    // --- LOGIC GHI NHỚ ---
+                    const savedPerson = localStorage.getItem("booking_for_person");
+                    if (savedPerson) {
+                        setSelectedPerson(savedPerson);
+                        // localStorage.removeItem("booking_for_person"); // Bỏ comment nếu muốn chỉ nhớ 1 lần
+                    } else {
+                        setSelectedPerson(userData.FullName); // Mặc định chọn chính mình
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi tải dữ liệu:", error);
@@ -78,7 +86,16 @@ export default function DoctorBookingPage() {
         };
         fetchData();
     }, []);
-
+    const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        if (value === "ADD_NEW_MEMBER") {
+            router.push("/Users/quan-li-gia-dinh");
+            return;
+        }
+        setSelectedPerson(value);
+        // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
+        localStorage.setItem("booking_for_person", value);
+    };
     // 2. XỬ LÝ KHI MỞ SHEET CHỌN BÁC SĨ
     // Khi bấm vào 1 bác sĩ trong list, ta gọi API lấy lịch ngay
     const handleViewDoctor = async (doctor: Model.Doctor) => {
@@ -182,13 +199,26 @@ export default function DoctorBookingPage() {
                         <label className="block font-semibold mb-2">Người tới khám</label>
                         <select
                             value={selectedPerson}
-                            onChange={(e) => setSelectedPerson(e.target.value)}
+                            onChange={handlePersonChange}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
                             {currentUser ? (
-                                <option value={currentUser.FullName}>
-                                    {currentUser.FullName}
-                                </option>
+                                <>
+                                    <option value={currentUser.FullName}>{currentUser.FullName}</option>
+
+                                    {/* Render danh sách người thân */}
+                                    {familyMembers.length > 0 && (
+                                        <optgroup label="Người thân">
+                                            {familyMembers.map((mem) => (
+                                                <option key={mem.UserID} value={mem.FullName}>
+                                                    {mem.FullName} ({mem.RelationType || mem.pivot?.RelationType})
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+
+                                    <option value="ADD_NEW_MEMBER" className="text-blue-600 font-bold">+ Thêm người thân mới...</option>
+                                </>
                             ) : (
                                 <option value="">Đang tải thông tin...</option>
                             )}

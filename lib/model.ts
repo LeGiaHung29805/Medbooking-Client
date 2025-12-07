@@ -14,7 +14,14 @@ export interface User {
   Gender?: string | null;
   Address?: string | null;
 }
-
+export interface FamilyMember extends User{
+  RelationType?: string;
+    pivot?: {
+        UserID: number;
+        RelativeUserID: number;
+        RelationType: string;
+    }
+}
 export interface Service {
   ServiceID: number;
   SpecialtyID: number;
@@ -135,11 +142,6 @@ export interface Notification {
   Status: string;           // 'Unread', 'Read'
   created_at: string;
   updated_at: string;
-}
-//nâng cấp thêm về sau
-export interface FamilyMember extends User{
-  RelationType?: string;
-  LinkedAt?: string;
 }
 
 // Type cho Doctor

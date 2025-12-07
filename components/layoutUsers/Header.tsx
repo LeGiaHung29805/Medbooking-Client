@@ -166,7 +166,7 @@ export default function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link href="/Users/profile">Thông tin cá nhân</Link>
+                  <Link href="/Users/profile">Hồ sơ cá nhân</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/Users/quan-ly-gia-dinh">Quản lý gia đình</Link>
@@ -175,7 +175,16 @@ export default function Header() {
                   <Link href="/Users/ket-qua-benh-kham">Kết quả bệnh khám</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/Users/lich-su-kham">Lịch sử đặt lịch khám</Link>
+                  <Link href="/Users/lich-su-kham">Lịch hẹn khám lại</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/Users/bac-si-cua-toi">Bác sĩ của tôi</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/Users/nhan-xet">Nhận xét, góp ý</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/Users/thong-bao">Thông báo</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/Users/thay-doi-mat-khau">Thay đổi mật khẩu</Link>

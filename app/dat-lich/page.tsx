@@ -4,68 +4,86 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
 import { FaHospitalUser } from "react-icons/fa";
-import Image from "next/image";
 import Link from "next/link";
-import { getMe } from "@/lib/ApiClient";
-import { User } from "@/lib/model";
+import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
+import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 export default function BookingPage() {
     const router = useRouter();
     const [isChecking, setIsChecking] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<Model.User | null>(null);
+
+    // State danh sách người thân & Bác sĩ
+    const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
+    const [featuredDoctors, setFeaturedDoctors] = useState<Model.Doctor[]>([]);
 
     const [selectedPerson, setSelectedPerson] = useState("");
 
-    const featuredDoctors = [
-        {
-            id: 1,
-            name: "BS. Nguyễn Văn A",
-            specialty: "Tim mạch",
-            image: "/image/doctors/doctor1.jpg",
-        },
-        {
-            id: 2,
-            name: "BS. Trần Thị B",
-            specialty: "Nhi khoa",
-            image: "/image/doctors/doctor2.jpg",
-        },
-        {
-            id: 3,
-            name: "BS. Lê Văn C",
-            specialty: "Da liễu",
-            image: "/image/doctors/doctor3.jpg",
-        },
-    ];
-
     useEffect(() => {
-        const checkAuth = async () => {
+        const checkAuthAndLoadData = async () => {
             const token = localStorage.getItem("api_token");
 
             if (!token) {
-                router.push("/login");
+                router.push("/dang-nhap");
                 return;
             }
 
             try {
-                const userData = await getMe();
+                // 1. Gọi song song các API cần thiết
+                const [userData, doctorsData, familyData] = await Promise.all([
+                    Api.getMe(),
+                    Api.getDoctors(),
+                    Api.getFamilyMembers() // Lấy danh sách người thân
+                ]);
+
+                // Set User
                 setUser(userData);
-                setSelectedPerson(`Tôi - ${userData.FullName}`);
+                setSelectedPerson(userData.FullName); // Mặc định chọn chính mình (lưu tên hoặc ID tùy logic)
                 setIsLoggedIn(true);
+
+                // Set Family
+                setFamilyMembers(familyData);
+                //ghi nhớ người dùng
+                const savedPerson = localStorage.getItem("booking_for_person");
+                if (savedPerson) {
+                    setSelectedPerson(savedPerson);
+                } else {
+                    setSelectedPerson(userData.FullName);
+
+                    localStorage.setItem("booking_for_person", userData.FullName);
+                }
+                // Set Doctors (Top 3 mới nhất)
+                const top3Doctors = doctorsData
+                    .sort((a, b) => b.DoctorID - a.DoctorID)
+                    .slice(0, 3);
+                setFeaturedDoctors(top3Doctors);
+
             } catch (error) {
-                console.error("Lỗi xác thực:", error);
-                localStorage.removeItem("api_token");
-                router.push("/login");
+                console.error("Lỗi tải dữ liệu:", error);
             } finally {
                 setIsChecking(false);
             }
         };
 
-        checkAuth();
+        checkAuthAndLoadData();
     }, [router]);
+    //Chọn người đặt lịch
+    const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
 
-    // Màn hình chờ khi đang check login
+        if (value === "ADD_NEW_MEMBER") {
+            router.push("/Users/quan-ly-gia-dinh");
+            return;
+        }
+        setSelectedPerson(value);
+
+        localStorage.setItem("booking_for_person", value);
+    };
+
+    // Màn hình chờ
     if (isChecking) {
         return (
             <LayoutBook>
@@ -80,7 +98,7 @@ export default function BookingPage() {
 
     return (
         <LayoutBook>
-            <div className="max-w-3xl mx-auto bg-white rounded shadow p-6 min-h-[80vh] mt-6 mb-10">
+            <div className="max-w-4xl mx-auto bg-white rounded shadow p-6 min-h-[80vh] mt-6 mb-10">
                 <h1 className="text-2xl font-bold text-green-700 text-center mb-6">
                     Đặt lịch khám
                 </h1>
@@ -92,23 +110,39 @@ export default function BookingPage() {
                     </div>
                     <div className="flex-1">
                         <label className="font-semibold text-gray-700 block mb-1">
-                            Chọn người đăng ký
+                            Chọn người tới khám
                         </label>
                         <select
                             value={selectedPerson}
-                            onChange={(e) => setSelectedPerson(e.target.value)}
-                            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
+                            onChange={handlePersonChange}
+                            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white cursor-pointer"
                         >
-                            {/* Hiển thị tên thật lấy từ API */}
-                            <option value={`Tôi - ${user?.FullName}`}>Tôi - {user?.FullName}</option>
-                            <option value="Người thân - Nguyễn Văn A">Người thân - Nguyễn Văn A</option>
-                            <option value="Người thân - Trần Thị B">Người thân - Trần Thị B</option>
+                            {/* Mặc định là chọn chính mình*/}
+                            <option value={user?.FullName} className="font-bold">
+                                {user?.FullName}
+                            </option>
+
+                            {/*Lấy danh sách người thân */}
+                            {familyMembers.length > 0 && (
+                                <optgroup label="Người thân">
+                                    {familyMembers.map((mem) => (
+                                        <option key={mem.UserID} value={mem.FullName}>
+                                            {mem.FullName} ({mem.RelationType || mem.pivot?.RelationType})
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+
+                            {/* Chưa có người thân có thể chọn */}
+                            <option value="ADD_NEW_MEMBER" className="text-blue-600 font-semibold">
+                                + Thêm hồ sơ người thân mới...
+                            </option>
                         </select>
                     </div>
                 </div>
 
-                {/* Các nút điều hướng đặt lịch */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                {/* Các nút điều hướng đặt lịch (Giữ nguyên) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     <Link
                         href="/dat-lich/bac-si"
                         className="group border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md hover:border-green-500 cursor-pointer transition bg-white"
@@ -146,43 +180,53 @@ export default function BookingPage() {
                     </Link>
                 </div>
 
-                {/* Danh sách bác sĩ nổi bật */}
+                {/* Danh sách bác sĩ nổi bật (Giữ nguyên) */}
                 <div>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-4 border-b pb-2 border-gray-100">
                         <h2 className="text-xl font-semibold text-green-700">
-                            Bác sĩ nổi bật
+                            Bác sĩ mới nhất
                         </h2>
-                        <Link href="/doctors" className="text-sm text-green-600 hover:underline">
-                            Xem tất cả
+                        <Link href="/dat-lich/bac-si" className="text-sm text-green-600 hover:underline font-medium">
+                            Xem tất cả &rarr;
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {featuredDoctors.map((doc) => (
-                            <div
-                                key={doc.id}
-                                onClick={() =>
-                                    router.push(`/doctors/${doc.id}`) // Điều hướng đến chi tiết bác sĩ
-                                }
-                                className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition overflow-hidden bg-white group"
-                            >
-                                <div className="relative w-full h-48 bg-gray-100">
-                                    <Image
-                                        src={doc.image}
-                                        alt={doc.name}
-                                        fill
-                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
+                    {featuredDoctors.length === 0 ? (
+                        <p className="text-gray-500 text-center py-4">Đang cập nhật danh sách bác sĩ...</p>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {featuredDoctors.map((doc) => (
+                                <div
+                                    key={doc.DoctorID}
+                                    onClick={() => router.push(`/dat-lich/bac-si`)}
+                                    className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition overflow-hidden bg-white group flex flex-col"
+                                >
+                                    <div className="relative w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
+                                        <div className="w-full h-full relative">
+                                            <DataThumbnail
+                                                src={doc.imageURL || doc.user?.avatar_url}
+                                                alt={doc.user?.FullName}
+                                                fallbackType="doctor"
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3">
+                                        <h3 className="font-bold text-gray-800 group-hover:text-green-700 transition-colors line-clamp-1">
+                                            {doc.user?.FullName}
+                                        </h3>
+                                        <p className="text-green-600 text-sm font-medium mt-1">
+                                            {doc.specialty?.SpecialtyName}
+                                        </p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            {doc.Degree}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="p-3">
-                                    <h3 className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors">
-                                        {doc.name}
-                                    </h3>
-                                    <p className="text-green-600 text-sm font-medium">{doc.specialty}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </LayoutBook>
