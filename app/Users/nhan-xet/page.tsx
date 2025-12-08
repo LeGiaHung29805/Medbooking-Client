@@ -8,7 +8,7 @@ import * as Model from "@/lib/model";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
+import { AxiosError } from 'axios';
 // Component chọn sao (Star Rating)
 const StarRatingInput = ({ rating, setRating }: { rating: number, setRating: (r: number) => void }) => {
     return (
@@ -100,16 +100,24 @@ export default function FeedbackPage() {
             // Reload nếu ở tab bác sĩ
             if (activeTab === 'doctor') loadData();
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            const msg = error.response?.data?.message || "Lỗi hệ thống";
 
-            // Xử lý riêng lỗi "đã đánh giá rồi"
-            if (msg.includes("đã đánh giá")) {
-                alert("⚠️ Bạn đã đánh giá lượt khám này rồi.");
-            } else {
-                alert("❌ Gửi thất bại: " + msg);
+            let msg = "Lỗi hệ thống"; // Giá trị mặc định
+
+            if (error instanceof AxiosError) {
+                msg = error.response?.data?.message || msg;
             }
+
+            else if (error instanceof Error) {
+                msg = error.message;
+            }
+            if (msg.toLowerCase().includes("đã đánh giá")) {
+                alert("Bạn đã đánh giá lượt khám này rồi.");
+            } else {
+                alert("Gửi thất bại: " + msg);
+            }
+
         } finally {
             setSubmitting(false);
         }
@@ -222,7 +230,7 @@ export default function FeedbackPage() {
                         </div>
                     )}
 
-                    {/* === TAB 2: ĐÁNH GIÁ HỆ THỐNG === */}
+                    {/*ĐÁNH GIÁ HỆ THỐNG*/}
                     {activeTab === 'system' && (
                         <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 animate-in fade-in">
                             <div className="text-center mb-6">

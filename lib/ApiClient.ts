@@ -290,6 +290,15 @@ export const getMySlots = async (date?: string): Promise<Model.AvailabilitySlot[
   });
   return response.data;
 };
+
+//Lấy chi tiết lịch hẹn (Để hiển thị Popup thông tin bệnh nhân)
+export const getAppointmentDetail = async (id: number): Promise<Model.Appointment> => {
+  const response = await apiClient.get<Model.Appointment>(`/doctor/appointments/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  
+  return response.data;
+};
 // ==========================================
 // === 5. NHÓM STAFF & ADMIN ===
 // ==========================================
