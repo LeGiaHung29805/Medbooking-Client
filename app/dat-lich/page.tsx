@@ -27,7 +27,7 @@ export default function BookingPage() {
             const token = localStorage.getItem("api_token");
 
             if (!token) {
-                router.push("/dang-nhap");
+                router.push("/login");
                 return;
             }
 

@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
-import Image from "next/image";
 import {
     Pagination,
     PaginationContent,
     PaginationItem,
-    PaginationLink,
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -23,14 +21,14 @@ import DataThumbnail from "@/components/thumnail/DataThumbnail";
 export default function DoctorBookingPage() {
     const router = useRouter();
 
-    // --- STATE DỮ LIỆU ---
+    //state dữ liệu
     const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
     const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
-    const [currentUser, setCurrentUser] = useState<Model.User | null>(null); // <--- 1. THÊM STATE USER
+    const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
     const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
-    // --- STATE FORM ---
-    const [selectedPerson, setSelectedPerson] = useState(""); // Để rỗng ban đầu
+    //state form
+    const [selectedPerson, setSelectedPerson] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState<Model.Doctor | null>(null);
 
     // State cho lịch
@@ -51,7 +49,7 @@ export default function DoctorBookingPage() {
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // 1. LOAD DỮ LIỆU (SỬA ĐỔI)
+    //LOAD DỮ LIỆU
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -69,7 +67,7 @@ export default function DoctorBookingPage() {
                 if (userData) {
                     setCurrentUser(userData);
 
-                    // --- LOGIC GHI NHỚ ---
+                    //logic ghi nhớ
                     const savedPerson = localStorage.getItem("booking_for_person");
                     if (savedPerson) {
                         setSelectedPerson(savedPerson);
@@ -96,7 +94,7 @@ export default function DoctorBookingPage() {
         // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
         localStorage.setItem("booking_for_person", value);
     };
-    // 2. XỬ LÝ KHI MỞ SHEET CHỌN BÁC SĨ
+    // Mở sheet chọn bác sĩ
     // Khi bấm vào 1 bác sĩ trong list, ta gọi API lấy lịch ngay
     const handleViewDoctor = async (doctor: Model.Doctor) => {
         setViewingDoctor(doctor);
@@ -121,7 +119,7 @@ export default function DoctorBookingPage() {
         }
     };
 
-    // 3. XỬ LÝ LOGIC NGÀY GIỜ TỪ API
+    // Xử lí ngày giờ trong API
     // Lấy danh sách ngày duy nhất
     const uniqueDates = useMemo(() => {
         const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
@@ -416,7 +414,7 @@ export default function DoctorBookingPage() {
                             <h4 className="font-semibold mb-2 text-gray-700">Chọn ngày khám</h4>
                             <div className="flex gap-2 overflow-x-auto mb-6 pb-2">
                                 {uniqueDates.length > 0 ? uniqueDates.map((dateStr) => (
-                                    <button
+                                    <Button
                                         key={dateStr}
                                         onClick={() => {
                                             setSelectedDate(dateStr);
@@ -429,7 +427,7 @@ export default function DoctorBookingPage() {
                                             }`}
                                     >
                                         {formatDateLabel(dateStr)}
-                                    </button>
+                                    </Button>
                                 )) : (
                                     <p className="text-sm text-gray-400 italic">Bác sĩ chưa có lịch trống.</p>
                                 )}

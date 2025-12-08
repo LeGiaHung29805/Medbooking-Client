@@ -12,7 +12,7 @@ const apiClient = axios.create({
   },
 });
 
-// === THÊM DEBUG INTERCEPTORS ===
+//THÊM DEBUG INTERCEPTORS
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("api_token");
@@ -25,7 +25,7 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response Success:', {
+    console.log('API Response Success:', {
       status: response.status,
       url: response.config.url,
       data: response.data
@@ -33,7 +33,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('❌ API Response Error:', {
+    console.error('API Response Error:', {
       status: error.response?.status,
       url: error.config?.url,
       message: error.message,
@@ -43,7 +43,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// 2. Hàm lấy Token từ LocalStorage
+//Hàm lấy Token từ LocalStorage
 const getAuthHeaders = () => {
   if (typeof window !== "undefined") {
     // Kiểm tra môi trường Browser
@@ -57,9 +57,7 @@ const getAuthHeaders = () => {
   return {};
 };
 
-// ==========================================
-// === 1. NHÓM XÁC THỰC (AUTH) ===
-// ==========================================
+//1. NHÓM XÁC THỰC (AUTH) 
 
 export const register = async (
   data: FormData
@@ -98,10 +96,8 @@ export const logout = async (): Promise<Model.MessageResponse> => {
   return response.data;
 };
 
-// ==========================================
-// === 2. NHÓM CÔNG KHAI (PUBLIC) ===
-// ==========================================
-
+//2. NHÓM CÔNG KHAI (PUBLIC)
+//Gọi chuyên khoa
 export const getSpecialties = async (
   search?: string
 ): Promise<Model.Specialty[]> => {
@@ -109,11 +105,12 @@ export const getSpecialties = async (
   const response = await apiClient.get("/specialties", { params });
   return response.data;
 };
-
+//Xem chi tiết bác sĩ
 export const getDoctorDetails = async (id: number): Promise<Model.Doctor> => {
   const response = await apiClient.get(`/doctors/${id}`);
   return response.data;
 };
+//Gọi bác sĩ
 export const getDoctors = async (
   search?: string,
   specialtyId?: number
@@ -145,15 +142,13 @@ export const getSpecialtyAvailability = async (
   return response.data;
 };
 
-// ==========================================
-// === 3. NHÓM BỆNH NHÂN (PATIENT) ===
-// ==========================================
-
+//3. NHÓM BỆNH NHÂN (PATIENT)
+//Lấy profile chính mình
 export const getMe = async (): Promise<Model.User> => {
   const response = await apiClient.get("/user", { headers: getAuthHeaders() });
   return response.data;
 };
-
+//Upload ảnh đại diện (Xử lí ảnh chưa tối ưu có thể bỏ)
 export const uploadAvatar = async (file: File): Promise<Model.User> => {
   const formData = new FormData();
   formData.append("avatar", file);
@@ -162,7 +157,7 @@ export const uploadAvatar = async (file: File): Promise<Model.User> => {
   });
   return response.data.user;
 };
-
+//Lấy lịch hẹn của bản thân
 export const getMyAppointments = async (): Promise<Model.Appointment[]> => {
   const response = await apiClient.get("/my-appointments", {
     headers: getAuthHeaders(),
@@ -176,6 +171,7 @@ export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
   });
   return response.data;
 };
+//Đặt lịch hẹn
 export const bookAppointment = async (
 slotId: number, symptoms: string, file?: File, ServiceID?: number): Promise<Model.MessageResponse> => {
   const formData = new FormData();
@@ -189,7 +185,7 @@ slotId: number, symptoms: string, file?: File, ServiceID?: number): Promise<Mode
   return response.data;
 };
 
-
+//Hủy lịch hẹn
 export const cancelAppointment = async (
   id: number
 ): Promise<Model.MessageResponse> => {
@@ -201,28 +197,26 @@ export const cancelAppointment = async (
   return response.data;
 };
 
-// ==========================================
-// === 4. NHÓM BÁC SĨ (DOCTOR) ===
-// ==========================================
-
+//4. NHÓM BÁC SĨ (DOCTOR)
+//Lấy thống kê của bác sĩ
 export const doctorGetDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/doctor/dashboard-stats-test");
   return response.data;
 };
-
+//Lấy lịch của bác sĩ đang đăng nhập
 export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
   const response = await apiClient.get("/doctor/my-schedule", {
     headers: getAuthHeaders(),
   });
   return response.data;
 };
-
+//Lấy danh sách bệnh nhân đang đợi vào khám
 export const doctorGetQueue = async (): Promise<Model.Appointment[]> => {
   const response = await apiClient.get("/doctor/queue-test");
   return response.data;
 };
 
-
+//Tạo lịch hẹn của chính mình
 export const doctorCreateSlot = async (
   start: string,
   end: string
@@ -235,13 +229,13 @@ export const doctorCreateSlot = async (
   });
   return response.data;
 };
-
+//Xóa lịch hẹn của chính mình 
 export const doctorDeleteSlot = async (id: number): Promise<void> => {
   await apiClient.delete(`/doctor/availability/${id}`, {
     headers: getAuthHeaders(),
   });
 };
-
+//Tạo bệnh án cho bệnh nhân
 export const doctorCreateMedicalRecord = async (
   formData: FormData
 ): Promise<Model.MessageResponse> => {
@@ -250,7 +244,7 @@ export const doctorCreateMedicalRecord = async (
   });
   return response.data;
 };
-
+//Bác sĩ gửi kết quả 
 export const doctorUploadResult = async (
   recordId: number,
   file: File,
@@ -299,17 +293,16 @@ export const getAppointmentDetail = async (id: number): Promise<Model.Appointmen
   
   return response.data;
 };
-// ==========================================
-// === 5. NHÓM STAFF & ADMIN ===
-// ==========================================
 
+//5. NHÓM STAFF & ADMIN
+//Lấy thống kê của nhân viên y tế
 export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/staff/dashboard-stats", {
     headers: getAuthHeaders(),
   });
   return response.data;
 };
-
+//Xác nhận lịch hẹn confirm
 export const confirmAppointment = async (
   id: number
 ): Promise<Model.MessageResponse> => {
@@ -320,7 +313,7 @@ export const confirmAppointment = async (
   );
   return response.data;
 };
-
+//Xác nhận bệnh nhân đã tới check-in
 export const checkInAppointment = async (
   id: number
 ): Promise<Model.MessageResponse> => {
@@ -331,14 +324,14 @@ export const checkInAppointment = async (
   );
   return response.data;
 };
-
+//Xem tất cả lịch hẹn 
 export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
   const response = await apiClient.get("/staff/all-appointments", {
     headers: getAuthHeaders(),
   });
   return response.data;
 };
-
+//Admin tạo bác sĩ
 export const adminCreateDoctor = async (
   formData: FormData
 ): Promise<Model.MessageResponse> => {
@@ -359,7 +352,7 @@ export const adminUpdateDoctor = async (
   });
   return response.data;
 };
-
+//Admin chỉnh sửa ảnh của Bác sĩ
 export const adminUploadDoctorImage = async (
   id: number,
   file: File
@@ -375,14 +368,13 @@ export const adminUploadDoctorImage = async (
   );
   return response.data;
 };
+//Admin xóa bác sĩ
 export const adminDeleteDoctor = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/doctors/${id}`, {
     headers: getAuthHeaders(),
   });
 };
-// ==========================================
-// === 6. CÁC API BỔ SUNG (CHO ADMIN & TRA CỨU) ===
-// ==========================================
+//6. CÁC API BỔ SUNG (CHO ADMIN & TRA CỨU)
 
 // --- Quản lý Tài khoản (Admin) ---
 export const adminGetUsers = async (
@@ -396,10 +388,10 @@ export const adminGetUsers = async (
   });
   return response.data;
 };
-
+//Admin cập nhật người dùng có thể sử dụng vào bác sĩ
 export const adminUpdateUser = async (
   id: number,
-  formData: FormData // <--- Thay đổi từ Object sang FormData
+  formData: FormData
 ): Promise<Model.MessageResponse> => {
   // Thêm method spoofing để Laravel hiểu đây là PUT khi dùng FormData
   formData.append("_method", "PUT");
@@ -413,7 +405,8 @@ export const adminUpdateUser = async (
   return response.data;
 };
 
-// --- Quản lý Chuyên khoa (Admin) ---
+//Quản lý Chuyên khoa (Admin)
+//Admin tạo chuyên khoa
 export const adminCreateSpecialty = async (
   formData: FormData
 ): Promise<Model.MessageResponse> => {
@@ -422,7 +415,7 @@ export const adminCreateSpecialty = async (
   });
   return response.data;
 };
-
+//Admin cập nhật chuyên khoa
 export const adminUpdateSpecialty = async (
   id: number,
   formData: FormData
@@ -433,14 +426,15 @@ export const adminUpdateSpecialty = async (
   });
   return response.data;
 };
-
+//Admin xóa chuyên khoa
 export const adminDeleteSpecialty = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/specialties/${id}`, {
     headers: getAuthHeaders(),
   });
 };
 
-// --- Quản lý Dịch vụ (Admin) ---
+//Quản lý Dịch vụ (Admin)
+//Admin tạo dịch vụ
 export const adminCreateService = async (
   formData: FormData
 ): Promise<Model.MessageResponse> => {
@@ -449,19 +443,20 @@ export const adminCreateService = async (
   });
   return response.data;
 };
-
+//Admin xóa dịch vụ
 export const adminDeleteService = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/services/${id}`, {
     headers: getAuthHeaders(),
   });
 };
 
-// --- Tra cứu & Lịch sử (Bác sĩ / Admin) ---
+//Tra cứu & Lịch sử (Bác sĩ / Admin)
+//Xem bệnh án của chính bác sĩ đó tạo ra
 export const getDoctorMyMedicalRecords = async (): Promise<Model.MedicalRecord[]> => {
   const response = await apiClient.get("/doctor/my-medical-records-test");
   return response.data;
 };
-
+//Xem lịch sử khám của bệnh nhân
 export const getPatientHistory = async (
   patientId: number
 ): Promise<Model.MedicalRecord[]> => {
@@ -470,19 +465,21 @@ export const getPatientHistory = async (
   });
   return response.data;
 };
-
+//Lấy các feedbacks của người dùng về hệ thống và bác sĩ nhưng chưa tối ưu
 export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
   const response = await apiClient.get("/staff/feedbacks", {
     headers: getAuthHeaders(),
   }); // Admin/Staff dùng chung
   return response.data;
 };
+//Admin lấy feedback API này cải tiến để lấy được cả feedback cho hệ thống
 export const adminGetFeedbacks = async (): Promise<Model.Feedback[]> => {
   const response = await apiClient.get("/admin/feedbacks", {
     headers: getAuthHeaders(),
   });
   return response.data;
 };
+//Admin lấy tất cả bệnh án
 export const getAllMedicalRecords = async (
   patientId?: number
 ): Promise<Model.MedicalRecord[]> => {
@@ -493,7 +490,7 @@ export const getAllMedicalRecords = async (
   });
   return response.data;
 };
-
+//Xem chi tiết bệnh án
 export const getMedicalRecordDetail = async (
   id: number
 ): Promise<Model.MedicalRecord> => {
@@ -502,12 +499,13 @@ export const getMedicalRecordDetail = async (
   });
   return response.data;
 };
-
+//Admin xóa bệnh án
 export const adminDeleteMedicalRecord = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/medical-records/${id}`, {
     headers: getAuthHeaders(),
   });
 };
+//Lấy tất cả dịch vụ
 export const getAllServices = async (
   search?: string
 ): Promise<Model.Service[]> => {
@@ -515,6 +513,7 @@ export const getAllServices = async (
   const response = await apiClient.get("/services", { params }); // Hoặc /admin/services tùy route backend
   return response.data;
 };
+//Admin cập nhật dịch vụ
 export const adminUpdateService = async (
   id: number,
   formData: FormData
@@ -525,14 +524,14 @@ export const adminUpdateService = async (
   });
   return response.data;
 };
-// --- Bổ sung API ---
+//Bổ sung API
 
 // Bệnh nhân tự sửa hồ sơ
 export const updateProfile = async (
   data: Model.UpdateProfileRequest
 ): Promise<Model.MessageResponse> => {
   // Dùng method PUT (hoặc POST + _method:PUT nếu muốn gửi form-data đồng bộ)
-  // Ở đây ta dùng JSON cho đơn giản vì không có file
+  // Ở đây dùng JSON cho đơn giản vì không có file
   const response = await apiClient.put("/user/profile", data, {
     headers: getAuthHeaders(),
   });
@@ -545,7 +544,7 @@ export const submitFeedback = async (data: {
   Rating: number;
   Comment: string;
 }): Promise<Model.MessageResponse> => {
-  // TRƯỜNG HỢP 1: Đánh giá Bác sĩ (Gắn với lịch hẹn cụ thể)
+  //Đánh giá Bác sĩ (Gắn với lịch hẹn cụ thể)
   if (data.TargetType === "Doctor" && data.AppointmentID) {
     const response = await apiClient.post(
       `/appointments/${data.AppointmentID}/feedback`,
@@ -558,7 +557,7 @@ export const submitFeedback = async (data: {
     return response.data;
   }
 
-  // TRƯỜNG HỢP 2: Đánh giá Hệ thống (Không gắn lịch hẹn)
+  //Đánh giá Hệ thống (Không gắn lịch hẹn)
   else if (data.TargetType === "System") {
     const response = await apiClient.post(
       "/system-feedback",
@@ -575,11 +574,7 @@ export const submitFeedback = async (data: {
     "Dữ liệu đánh giá không hợp lệ (Thiếu ID lịch hẹn hoặc sai loại)."
   );
 };
-// ==========================================
-// === 8. QUẢN LÝ NGƯỜI DÙNG (ADMIN) ===
-// ==========================================
-
-// Lấy danh sách người dùng (Có tìm kiếm)
+//QUẢN LÝ NGƯỜI DÙNG (ADMIN)
 
 // Lấy chi tiết 1 người dùng
 export const adminGetUserDetail = async (id: number): Promise<Model.User> => {
@@ -589,7 +584,7 @@ export const adminGetUserDetail = async (id: number): Promise<Model.User> => {
   return response.data;
 };
 
-// Tạo Bệnh nhân mới (Dùng cho trang quản lý User nếu muốn tạo nhanh)
+// Tạo Bệnh nhân mới (Dùng cho trang quản lý User)
 // (Lưu ý: Để tạo Bác sĩ, hãy dùng adminCreateDoctor ở phần trên)
 export const adminCreatePatient = async (
   formData: FormData
@@ -604,7 +599,7 @@ export const adminCreatePatient = async (
 
 // Xóa người dùng (Dùng API xóa bệnh nhân - Vì UserManagementController chưa có hàm destroy)
 // Nếu xóa Bác sĩ, nên dùng adminDeleteDoctor.
-// Ở đây ta tạm dùng endpoint của patients cho các user thông thường.
+// tạm dùng endpoint của patients cho các user thông thường.
 export const adminDeleteUser = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/patients/${id}`, {
     headers: getAuthHeaders(),
@@ -618,7 +613,7 @@ export const adminCreateUser = async (
   });
   return response.data;
 };
-// [UPDATE] Hủy lịch hẹn Staff/Admin (Dùng Route của Staff)
+//Hủy lịch hẹn Staff/Admin (Dùng Route của Staff)
 export const adminCancelAppointment = async (
   id: number,
   reason: string
@@ -635,14 +630,9 @@ export const adminCancelAppointment = async (
 // Lấy lịch làm việc của 1 bác sĩ (Public hoặc Staff đều dùng được)
 // Đã có hàm getDoctorAvailability ở trên, có thể dùng lại.
 
-// ==========================================
-// === 7. QUẢN LÝ LỊCH LÀM VIỆC (ADMIN/STAFF) ===
-// ==========================================
+// QUẢN LÝ LỊCH LÀM VIỆC (ADMIN/STAFF)
 
-// Lấy lịch làm việc của 1 bác sĩ (Đã có - giữ nguyên)
-// export const getDoctorAvailability ...
-
-// [MỚI] Admin/Staff tạo slot cho một bác sĩ cụ thể
+//Admin/Staff tạo slot cho một bác sĩ cụ thể
 export const adminCreateSlot = async (
   doctorId: number,
   start: string,
@@ -660,7 +650,7 @@ export const adminCreateSlot = async (
   return response.data.slot || response.data; // Trả về object slot vừa tạo
 };
 
-// [MỚI] Admin/Staff xóa slot
+//Admin/Staff xóa slot
 export const adminDeleteSlot = async (slotId: number): Promise<void> => {
   // Gọi vào route của Staff
   await apiClient.delete(`/staff/availability/${slotId}`, {
@@ -668,9 +658,8 @@ export const adminDeleteSlot = async (slotId: number): Promise<void> => {
   });
 };
 
-// ... các hàm khác
 
-// [MỚI] Cập nhật thông tin Bệnh nhân (JSON - Method PUT chuẩn)
+// Cập nhật thông tin Bệnh nhân (JSON - Method PUT chuẩn)
 // Dùng hàm này thay cho adminUpdateUser khi sửa thông tin bệnh nhân cụ thể
 export const adminUpdatePatient = async (
   id: number,
@@ -683,13 +672,10 @@ export const adminUpdatePatient = async (
   return response.data;
 };
 
-// ==========================================
-// === 10. QUẢN LÝ THÔNG BÁO (ADMIN) ===
-// ==========================================
+//QUẢN LÝ THÔNG BÁO (ADMIN)
 
 // Lấy lịch sử thông báo
 export const getNotificationLogs = async (): Promise<Model.Notification[]> => {
-  // Giả định Backend có route GET /api/admin/notifications
   const response = await apiClient.get("/admin/notifications", {
     headers: getAuthHeaders(),
   });
@@ -703,26 +689,22 @@ export const sendNotification = async (data: {
   TargetGroup: string; // 'all', 'patients', 'doctors'
   Channel: string; // 'in_app', 'email'
 }): Promise<Model.MessageResponse> => {
-  // Giả định Backend có route POST /api/admin/notifications/send
+
   const response = await apiClient.post("/admin/notifications/send", data, {
     headers: getAuthHeaders(),
   });
   return response.data;
 };
-// [MỚI] Lấy danh sách lịch hẹn chờ xác nhận (Pending)
+//Lấy danh sách lịch hẹn chờ xác nhận (Pending)
 export const getPendingAppointments = async (): Promise<
   Model.Appointment[]
 > => {
-  // Giả sử backend có hỗ trợ filter status, hoặc dùng API lấy tất cả rồi filter ở frontend (nếu backend chưa hỗ trợ filter)
-  // Cách tốt nhất là backend có endpoint riêng hoặc param filter
-  // Ở đây dùng cách filter ở frontend từ API getAllAppointments nếu backend chưa có endpoint riêng
-  // Hoặc gọi endpoint /staff/pending-appointments nếu có.
 
-  // Cách 1: Gọi API lấy tất cả rồi lọc (Tạm thời dùng cách này nếu chưa rõ backend)
+  //Gọi API lấy tất cả rồi lọc
   const allAppointments = await getAllAppointments();
   return allAppointments.filter((app) => app.Status === "Pending");
 };
-// [MỚI] Staff tạo lịch hẹn thay mặt bệnh nhân
+//Staff tạo lịch hẹn thay mặt bệnh nhân
 export const staffCreateAppointment = async (
   formData: FormData
 ): Promise<Model.MessageResponse> => {
@@ -751,14 +733,14 @@ export const staffUpdateSlot = async (
   );
   return response.data;
 };
-// [MỚI] Staff xóa slot rảnh
+//Staff xóa slot rảnh
 export const staffDeleteSlot = async (id: number): Promise<void> => {
   await apiClient.delete(`/staff/availability/${id}`, {
     headers: getAuthHeaders(),
   });
 };
 
-//9. Quản lí gia đình
+//Quản lí gia đình
 export const getFamilyMembers = async (): Promise<Model.FamilyMember[]> => {
   const response = await apiClient.get("user/family-members", {
     headers: getAuthHeaders(),
