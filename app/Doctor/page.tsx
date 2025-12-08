@@ -5,7 +5,7 @@ import DashboardTab from "./components/DashboardTab";
 import PatientDetailModal from "./components/PatientDetailModal";
 import MedicalExamForm from "./components/MedicalExamForm";
 import LoadingState from "./components/LoadingState";
-import ErrorState from "./components/ErrorState";
+// import ErrorState from "./components/ErrorState";
 
 import {
   doctorGetDashboard,
@@ -13,11 +13,11 @@ import {
   getDoctorMyMedicalRecords,
 } from "@/lib/ApiClient";
 
-import type { 
-  PatientDetail, 
-  MedicalRecord, 
-  Appointment, 
-  Patient, 
+import type {
+  PatientDetail,
+  MedicalRecord,
+  Appointment,
+  Patient,
   Prescription,
   VitalSigns
 } from "@/lib/model";
@@ -59,173 +59,173 @@ export default function DoctorDashboardPage() {
 
   // ==================== MOCK DATA ====================
   const mockAppointments: Appointment[] = [
-    {
-      id: 1,
-      patientName: "Trần Thị Lan",
-      patientAge: 34,
-      patientPhone: "0901234567",
-      symptoms: "Ho, sốt 3 ngày, đau họng, mệt mỏi",
-      appointmentTime: new Date().toISOString(),
-      status: "checked_in",
-      checkInTime: "08:50",
-    },
-    {
-      id: 2,
-      patientName: "Lê Văn Minh",
-      patientAge: 45,
-      patientPhone: "0912345678",
-      symptoms: "Đau bụng trên, đầy hơi, buồn nôn",
-      appointmentTime: new Date(Date.now() + 30 * 60000).toISOString(),
-      status: "waiting",
-      checkInTime: "",
-    },
-    {
-      id: 3,
-      patientName: "Phạm Văn Hùng",
-      patientAge: 52,
-      patientPhone: "0934567890",
-      symptoms: "Tiểu đường, huyết áp cao, chóng mặt",
-      appointmentTime: new Date(Date.now() - 60 * 60000).toISOString(),
-      status: "in_progress",
-      checkInTime: "08:20",
-    },
-    {
-      id: 4,
-      patientName: "Nguyễn Thị Hoa",
-      patientAge: 28,
-      patientPhone: "0945678901",
-      symptoms: "Đau đầu, mất ngủ, căng thẳng",
-      appointmentTime: new Date(Date.now() - 120 * 60000).toISOString(),
-      status: "completed",
-      checkInTime: "09:45",
-    },
-    {
-      id: 5,
-      patientName: "Đỗ Văn Tài",
-      patientAge: 62,
-      patientPhone: "0956789012",
-      symptoms: "Khó thở, đau ngực, tim đập nhanh",
-      appointmentTime: new Date(Date.now() + 90 * 60000).toISOString(),
-      status: "checked_in",
-      checkInTime: "09:30",
-    },
-    {
-      id: 6,
-      patientName: "Hoàng Thị Mai",
-      patientAge: 38,
-      patientPhone: "0967890123",
-      symptoms: "Đau lưng, tê chân, khó vận động",
-      appointmentTime: new Date(Date.now() + 120 * 60000).toISOString(),
-      status: "waiting",
-      checkInTime: "",
-    },
+    // {
+    //   id: 1,
+    //   patientName: "Trần Thị Lan",
+    //   patientAge: 34,
+    //   patientPhone: "0901234567",
+    //   symptoms: "Ho, sốt 3 ngày, đau họng, mệt mỏi",
+    //   appointmentTime: new Date().toISOString(),
+    //   status: "checked_in",
+    //   checkInTime: "08:50",
+    // },
+    // {
+    //   id: 2,
+    //   patientName: "Lê Văn Minh",
+    //   patientAge: 45,
+    //   patientPhone: "0912345678",
+    //   symptoms: "Đau bụng trên, đầy hơi, buồn nôn",
+    //   appointmentTime: new Date(Date.now() + 30 * 60000).toISOString(),
+    //   status: "waiting",
+    //   checkInTime: "",
+    // },
+    // {
+    //   id: 3,
+    //   patientName: "Phạm Văn Hùng",
+    //   patientAge: 52,
+    //   patientPhone: "0934567890",
+    //   symptoms: "Tiểu đường, huyết áp cao, chóng mặt",
+    //   appointmentTime: new Date(Date.now() - 60 * 60000).toISOString(),
+    //   status: "in_progress",
+    //   checkInTime: "08:20",
+    // },
+    // {
+    //   id: 4,
+    //   patientName: "Nguyễn Thị Hoa",
+    //   patientAge: 28,
+    //   patientPhone: "0945678901",
+    //   symptoms: "Đau đầu, mất ngủ, căng thẳng",
+    //   appointmentTime: new Date(Date.now() - 120 * 60000).toISOString(),
+    //   status: "completed",
+    //   checkInTime: "09:45",
+    // },
+    // {
+    //   id: 5,
+    //   patientName: "Đỗ Văn Tài",
+    //   patientAge: 62,
+    //   patientPhone: "0956789012",
+    //   symptoms: "Khó thở, đau ngực, tim đập nhanh",
+    //   appointmentTime: new Date(Date.now() + 90 * 60000).toISOString(),
+    //   status: "checked_in",
+    //   checkInTime: "09:30",
+    // },
+    // {
+    //   id: 6,
+    //   patientName: "Hoàng Thị Mai",
+    //   patientAge: 38,
+    //   patientPhone: "0967890123",
+    //   symptoms: "Đau lưng, tê chân, khó vận động",
+    //   appointmentTime: new Date(Date.now() + 120 * 60000).toISOString(),
+    //   status: "waiting",
+    //   checkInTime: "",
+    // },
   ];
 
   const mockWaitingPatients: Patient[] = [
-    {
-      id: 1,
-      name: "Trần Thị Lan",
-      age: 34,
-      gender: 'female',
-      phone: "0901234567",
-      symptoms: "Ho, sốt 3 ngày, đau họng, mệt mỏi",
-      appointmentTime: "09:00",
-      status: "checked_in",
-      checkInTime: "08:50",
-      priority: 'high',
-      allergies: ["Penicillin", "Aspirin"],
-      medicalHistory: ["Tiểu đường type 2", "Cao huyết áp"],
-    },
-    {
-      id: 2,
-      name: "Lê Văn Tùng",
-      age: 45,
-      gender: 'male',
-      phone: "0912345678",
-      symptoms: "Đau đầu, chóng mặt, buồn nôn, mờ mắt",
-      appointmentTime: "09:30",
-      status: "waiting",
-      checkInTime: "09:15",
-      priority: 'medium',
-      allergies: ["Paracetamol"],
-      medicalHistory: ["Cao huyết áp", "Rối loạn mỡ máu"],
-    },
-    {
-      id: 3,
-      name: "Phạm Thị Mai",
-      age: 28,
-      gender: 'female',
-      phone: "0923456789",
-      symptoms: "Đau bụng dữ dội, sốt nhẹ, buồn nôn, tiêu chảy",
-      appointmentTime: "10:00",
-      status: "waiting",
-      checkInTime: "09:45",
-      priority: 'emergency',
-      allergies: ["Aspirin", "Ibuprofen"],
-      medicalHistory: ["Viêm dạ dày mãn tính"],
-    },
-    {
-      id: 5,
-      name: "Đỗ Văn Tài",
-      age: 62,
-      gender: 'male',
-      phone: "0956789012",
-      symptoms: "Khó thở, đau ngực, tim đập nhanh, vã mồ hôi",
-      appointmentTime: "10:30",
-      status: "checked_in",
-      checkInTime: "09:30",
-      priority: 'emergency',
-      allergies: ["Sulfa", "Penicillin"],
-      medicalHistory: ["Bệnh tim mạch", "Tiểu đường", "Cao huyết áp"],
-    },
+    // {
+    //   id: 1,
+    //   name: "Trần Thị Lan",
+    //   age: 34,
+    //   gender: 'female',
+    //   phone: "0901234567",
+    //   symptoms: "Ho, sốt 3 ngày, đau họng, mệt mỏi",
+    //   appointmentTime: "09:00",
+    //   status: "checked_in",
+    //   checkInTime: "08:50",
+    //   priority: 'high',
+    //   allergies: ["Penicillin", "Aspirin"],
+    //   medicalHistory: ["Tiểu đường type 2", "Cao huyết áp"],
+    // },
+    // {
+    //   id: 2,
+    //   name: "Lê Văn Tùng",
+    //   age: 45,
+    //   gender: 'male',
+    //   phone: "0912345678",
+    //   symptoms: "Đau đầu, chóng mặt, buồn nôn, mờ mắt",
+    //   appointmentTime: "09:30",
+    //   status: "waiting",
+    //   checkInTime: "09:15",
+    //   priority: 'medium',
+    //   allergies: ["Paracetamol"],
+    //   medicalHistory: ["Cao huyết áp", "Rối loạn mỡ máu"],
+    // },
+    // {
+    //   id: 3,
+    //   name: "Phạm Thị Mai",
+    //   age: 28,
+    //   gender: 'female',
+    //   phone: "0923456789",
+    //   symptoms: "Đau bụng dữ dội, sốt nhẹ, buồn nôn, tiêu chảy",
+    //   appointmentTime: "10:00",
+    //   status: "waiting",
+    //   checkInTime: "09:45",
+    //   priority: 'emergency',
+    //   allergies: ["Aspirin", "Ibuprofen"],
+    //   medicalHistory: ["Viêm dạ dày mãn tính"],
+    // },
+    // {
+    //   id: 5,
+    //   name: "Đỗ Văn Tài",
+    //   age: 62,
+    //   gender: 'male',
+    //   phone: "0956789012",
+    //   symptoms: "Khó thở, đau ngực, tim đập nhanh, vã mồ hôi",
+    //   appointmentTime: "10:30",
+    //   status: "checked_in",
+    //   checkInTime: "09:30",
+    //   priority: 'emergency',
+    //   allergies: ["Sulfa", "Penicillin"],
+    //   medicalHistory: ["Bệnh tim mạch", "Tiểu đường", "Cao huyết áp"],
+    // },
   ];
 
   const mockMedicalRecords: MedicalRecord[] = [
-    {
-      id: 1,
-      patientName: "Trần Thị Lan",
-      age: 34,
-      diagnosis: "Viêm họng cấp do virus",
-      treatment: "Kháng sinh 5 ngày, nghỉ ngơi, uống nhiều nước, hạ sốt khi cần",
-      prescriptions: [
-        { medicine: "Amoxicillin", dosage: "500mg", frequency: "3 lần/ngày trong 5 ngày" },
-        { medicine: "Paracetamol", dosage: "500mg", frequency: "Khi sốt >38.5°C, tối đa 4 viên/ngày" },
-        { medicine: "Vitamin C", dosage: "1000mg", frequency: "1 lần/ngày trong 7 ngày" },
-      ],
-      tests: ["Xét nghiệm máu CBC", "Ngoáy họng soi tươi", "CRP", "X-quang phổi"],
-      date: "2025-04-02",
-      status: "completed",
-    },
-    {
-      id: 2,
-      patientName: "Lê Văn Tùng",
-      age: 45,
-      diagnosis: "Tăng huyết áp độ 2, Rối loạn mỡ máu",
-      treatment: "Điều chỉnh lối sống, thuốc hạ áp, theo dõi định kỳ, ăn kiêng ít muối, ít dầu mỡ",
-      prescriptions: [
-        { medicine: "Losartan", dosage: "50mg", frequency: "1 lần/ngày vào buổi sáng" },
-        { medicine: "Amlodipine", dosage: "5mg", frequency: "1 lần/ngày" },
-        { medicine: "Atorvastatin", dosage: "20mg", frequency: "1 lần/ngày trước khi ngủ" },
-        { medicine: "Aspirin", dosage: "81mg", frequency: "1 lần/ngày" },
-      ],
-      tests: ["Đo huyết áp 24h", "Xét nghiệm máu (lipid, đường huyết)", "Điện tâm đồ", "Siêu âm tim", "Siêu âm doppler động mạch cảnh"],
-      date: "2025-03-28",
-      status: "completed",
-    },
-    {
-      id: 3,
-      patientName: "Nguyễn Thị Hoa",
-      age: 28,
-      diagnosis: "Rối loạn lo âu, Mất ngủ",
-      treatment: "Tư vấn tâm lý, thư giãn, tập thể dục đều đặn, ngủ đủ giấc",
-      prescriptions: [
-        { medicine: "Alprazolam", dosage: "0.25mg", frequency: "1/2 viên trước khi ngủ khi cần" },
-        { medicine: "Melatonin", dosage: "3mg", frequency: "1 viên trước khi ngủ 30 phút" },
-      ],
-      tests: ["Đánh giá tâm lý", "Xét nghiệm máu (TSH, công thức máu)", "Đo đa ký giấc ngủ"],
-      date: "2025-04-01",
-      status: "completed",
-    },
+    // {
+    //   id: 1,
+    //   patientName: "Trần Thị Lan",
+    //   age: 34,
+    //   diagnosis: "Viêm họng cấp do virus",
+    //   treatment: "Kháng sinh 5 ngày, nghỉ ngơi, uống nhiều nước, hạ sốt khi cần",
+    //   prescriptions: [
+    //     { medicine: "Amoxicillin", dosage: "500mg", frequency: "3 lần/ngày trong 5 ngày" },
+    //     { medicine: "Paracetamol", dosage: "500mg", frequency: "Khi sốt >38.5°C, tối đa 4 viên/ngày" },
+    //     { medicine: "Vitamin C", dosage: "1000mg", frequency: "1 lần/ngày trong 7 ngày" },
+    //   ],
+    //   tests: ["Xét nghiệm máu CBC", "Ngoáy họng soi tươi", "CRP", "X-quang phổi"],
+    //   date: "2025-04-02",
+    //   status: "completed",
+    // },
+    // {
+    //   id: 2,
+    //   patientName: "Lê Văn Tùng",
+    //   age: 45,
+    //   diagnosis: "Tăng huyết áp độ 2, Rối loạn mỡ máu",
+    //   treatment: "Điều chỉnh lối sống, thuốc hạ áp, theo dõi định kỳ, ăn kiêng ít muối, ít dầu mỡ",
+    //   prescriptions: [
+    //     { medicine: "Losartan", dosage: "50mg", frequency: "1 lần/ngày vào buổi sáng" },
+    //     { medicine: "Amlodipine", dosage: "5mg", frequency: "1 lần/ngày" },
+    //     { medicine: "Atorvastatin", dosage: "20mg", frequency: "1 lần/ngày trước khi ngủ" },
+    //     { medicine: "Aspirin", dosage: "81mg", frequency: "1 lần/ngày" },
+    //   ],
+    //   tests: ["Đo huyết áp 24h", "Xét nghiệm máu (lipid, đường huyết)", "Điện tâm đồ", "Siêu âm tim", "Siêu âm doppler động mạch cảnh"],
+    //   date: "2025-03-28",
+    //   status: "completed",
+    // },
+    // {
+    //   id: 3,
+    //   patientName: "Nguyễn Thị Hoa",
+    //   age: 28,
+    //   diagnosis: "Rối loạn lo âu, Mất ngủ",
+    //   treatment: "Tư vấn tâm lý, thư giãn, tập thể dục đều đặn, ngủ đủ giấc",
+    //   prescriptions: [
+    //     { medicine: "Alprazolam", dosage: "0.25mg", frequency: "1/2 viên trước khi ngủ khi cần" },
+    //     { medicine: "Melatonin", dosage: "3mg", frequency: "1 viên trước khi ngủ 30 phút" },
+    //   ],
+    //   tests: ["Đánh giá tâm lý", "Xét nghiệm máu (TSH, công thức máu)", "Đo đa ký giấc ngủ"],
+    //   date: "2025-04-01",
+    //   status: "completed",
+    // },
   ];
 
   // ==================== HELPER FUNCTIONS ====================
@@ -307,18 +307,18 @@ export default function DoctorDashboardPage() {
               id: item.id || 0,
               name: item.name || item.patientName || "Không có tên",
               age: item.age || 0,
-              gender: (item.gender === 'male' || item.gender === 'female' || item.gender === 'other') 
-                ? item.gender 
+              gender: (item.gender === 'male' || item.gender === 'female' || item.gender === 'other')
+                ? item.gender
                 : 'other',
               phone: item.phone || "",
               symptoms: item.symptoms || item.InitialSymptoms || "Không có triệu chứng",
               appointmentTime: item.appointmentTime || item.time || "",
-              status: item.status === 'checked_in' ? 'checked_in' : 
-                     item.status === 'in_progress' ? 'in_progress' :
-                     item.status === 'completed' ? 'completed' : 'waiting',
+              status: item.status === 'checked_in' ? 'checked_in' :
+                item.status === 'in_progress' ? 'in_progress' :
+                  item.status === 'completed' ? 'completed' : 'waiting',
               checkInTime: item.checkInTime || "",
-              priority: (item.priority === 'low' || item.priority === 'medium' || 
-                        item.priority === 'high' || item.priority === 'emergency')
+              priority: (item.priority === 'low' || item.priority === 'medium' ||
+                item.priority === 'high' || item.priority === 'emergency')
                 ? item.priority
                 : 'medium',
               allergies: Array.isArray(item.allergies) ? item.allergies : [],
@@ -326,7 +326,7 @@ export default function DoctorDashboardPage() {
             }));
           }
         }
-        
+
         setWaitingPatients(patientsFromAPI.length > 0 ? patientsFromAPI : mockWaitingPatients);
 
         // Xử lý Medical Records
@@ -341,12 +341,12 @@ export default function DoctorDashboardPage() {
               age: item.age || 0,
               diagnosis: item.diagnosis || "Chưa có chẩn đoán",
               treatment: item.treatment || "Chưa có phác đồ điều trị",
-              prescriptions: Array.isArray(item.prescriptions) 
+              prescriptions: Array.isArray(item.prescriptions)
                 ? item.prescriptions.map((p: any) => ({
-                    medicine: p.medicine || p.drugName || "",
-                    dosage: p.dosage || p.dose || "",
-                    frequency: p.frequency || p.timesPerDay || "",
-                  }))
+                  medicine: p.medicine || p.drugName || "",
+                  dosage: p.dosage || p.dose || "",
+                  frequency: p.frequency || p.timesPerDay || "",
+                }))
                 : [],
               tests: Array.isArray(item.tests) ? item.tests : [],
               date: item.date || item.created_at || new Date().toISOString().split('T')[0],
@@ -354,7 +354,7 @@ export default function DoctorDashboardPage() {
             }));
           }
         }
-        
+
         setMedicalRecords(recordsFromAPI.length > 0 ? recordsFromAPI : mockMedicalRecords);
 
         // Set appointments
@@ -364,7 +364,7 @@ export default function DoctorDashboardPage() {
 
       } catch (err) {
         console.error("❌ Lỗi khi tải dữ liệu:", err);
-        
+
         // Fallback to mock data
         setDashboardStats({
           totalAppointments: mockAppointments.length,
@@ -374,7 +374,7 @@ export default function DoctorDashboardPage() {
         setAppointments(mockAppointments);
         setWaitingPatients(mockWaitingPatients);
         setMedicalRecords(mockMedicalRecords);
-        
+
         setError(true);
       } finally {
         setLoading(false);
@@ -417,18 +417,18 @@ export default function DoctorDashboardPage() {
 
   const handleCompleteExam = (formData: any) => {
     console.log("📝 Dữ liệu khám hoàn tất:", formData);
-    
+
     // Hiển thị thông báo thành công
     alert("✅ Khám bệnh thành công!\nBệnh án đã được lưu vào hệ thống.");
-    
+
     // Cập nhật danh sách bệnh nhân
     const updatedPatients = waitingPatients.filter(p => p.id !== currentExamPatient?.id);
     setWaitingPatients(updatedPatients);
-    
+
     // Đóng modal
     setShowExamForm(false);
     setCurrentExamPatient(null);
-    
+
     // Refresh data
     setTimeout(() => {
       window.location.reload();
@@ -438,7 +438,7 @@ export default function DoctorDashboardPage() {
   const handleRefreshData = () => {
     setLoading(true);
     setLoadingMessage("Đang làm mới dữ liệu...");
-    
+
     setTimeout(() => {
       window.location.reload();
     }, 1000);
@@ -453,7 +453,7 @@ export default function DoctorDashboardPage() {
       waitingPatients: waitingPatients.length,
       medicalRecords: medicalRecords.length,
     };
-    
+
     const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -463,7 +463,7 @@ export default function DoctorDashboardPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     alert("📥 Dữ liệu đã được xuất thành công!");
   };
 
@@ -473,8 +473,8 @@ export default function DoctorDashboardPage() {
   }
 
   if (error) {
-    return <ErrorState 
-      message="Không thể tải dữ liệu từ server" 
+    return <ErrorState
+      message="Không thể tải dữ liệu từ server"
       onRetry={handleRefreshData}
       onUseDemo={() => {
         setDashboardStats({
@@ -500,15 +500,15 @@ export default function DoctorDashboardPage() {
             Bảng điều khiển Bác sĩ
           </h1>
           <p className="text-gray-600 mt-1">
-            {new Date().toLocaleDateString('vi-VN', { 
-              weekday: 'long', 
-              day: 'numeric', 
-              month: 'long', 
-              year: 'numeric' 
+            {new Date().toLocaleDateString('vi-VN', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
             })}
           </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleRefreshData}
@@ -519,7 +519,7 @@ export default function DoctorDashboardPage() {
             </svg>
             Làm mới
           </button>
-          
+
           <button
             onClick={handleExportData}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
@@ -546,7 +546,7 @@ export default function DoctorDashboardPage() {
       />
 
       {/* ==================== MODALS ==================== */}
-      
+
       {/* Patient Detail Modal */}
       {showPatientModal && selectedPatient && (
         <PatientDetailModal

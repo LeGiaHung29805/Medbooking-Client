@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import SettingsTab from "../components/SettingsTab";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
-import { 
-  User, 
-  Shield, 
-  Bell, 
-  Globe, 
+import {
+  User,
+  Shield,
+  Bell,
+  Globe,
   Database,
   HelpCircle,
   Mail,
@@ -25,7 +25,7 @@ import {
   Smartphone,
   Monitor,
   Moon,
-  Sun, 
+  Sun,
   FileText
 } from "lucide-react";
 
@@ -117,35 +117,35 @@ export default function SettingsPage() {
 
   // ==================== MOCK DATA LOADING ====================
 
-useEffect(() => {
-  const savedDoctorInfo = localStorage.getItem('doctorInfo');
-  if (savedDoctorInfo) {
-    setDoctorInfo(JSON.parse(savedDoctorInfo));
-  }
-}, []);
+  useEffect(() => {
+    const savedDoctorInfo = localStorage.getItem('doctorInfo');
+    if (savedDoctorInfo) {
+      setDoctorInfo(JSON.parse(savedDoctorInfo));
+    }
+  }, []);
 
   const handleSaveChanges = async () => {
-  try {
-    setSaveStatus("saving");
-    
-    // 1. Lưu localStorage
-    localStorage.setItem('doctorInfo', JSON.stringify(doctorInfo));
-    
-    // 2. Gửi event
-    window.dispatchEvent(new CustomEvent('doctorInfoUpdated', { 
-      detail: doctorInfo 
-    }));
-    
-    // 3. Đợi 1 chút rồi redirect về dashboard
-    setTimeout(() => {
-      alert("✅ Đã lưu thành công! Chuyển về Dashboard...");
-      router.push('/Doctor'); // Redirect về dashboard
-    }, 1000);
-    
-  } catch (err) {
-    setSaveStatus("error");
-  }
-};
+    try {
+      setSaveStatus("saving");
+
+      // 1. Lưu localStorage
+      localStorage.setItem('doctorInfo', JSON.stringify(doctorInfo));
+
+      // 2. Gửi event
+      window.dispatchEvent(new CustomEvent('doctorInfoUpdated', {
+        detail: doctorInfo
+      }));
+
+      // 3. Đợi 1 chút rồi redirect về dashboard
+      setTimeout(() => {
+        alert("✅ Đã lưu thành công! Chuyển về Dashboard...");
+        router.push('/Doctor'); // Redirect về dashboard
+      }, 1000);
+
+    } catch (err) {
+      setSaveStatus("error");
+    }
+  };
   // ==================== EVENT HANDLERS ====================
   const handleInputChange = (section: string, field: string, value: any) => {
     switch (section) {
@@ -181,20 +181,20 @@ useEffect(() => {
       alert("Mật khẩu mới không khớp!");
       return;
     }
-    
+
     if (securitySettings.newPassword.length < 8) {
       alert("Mật khẩu phải có ít nhất 8 ký tự!");
       return;
     }
-    
+
     try {
       setSaveStatus("saving");
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       alert("✅ Đổi mật khẩu thành công!");
-      
+
       // Reset password fields
       setSecuritySettings(prev => ({
         ...prev,
@@ -202,10 +202,10 @@ useEffect(() => {
         newPassword: "",
         confirmPassword: ""
       }));
-      
+
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-      
+
     } catch (err) {
       console.error("❌ Lỗi khi đổi mật khẩu:", err);
       alert("❌ Đổi mật khẩu thất bại. Vui lòng thử lại.");
@@ -245,7 +245,7 @@ useEffect(() => {
         consultationFee: "300,000 VND",
         languages: ["Tiếng Việt", "Tiếng Anh"]
       });
-      
+
       setPreferences({
         theme: "light",
         language: "vi",
@@ -262,7 +262,7 @@ useEffect(() => {
         consultationTemplate: "Mẫu khám chuẩn",
         prescriptionTemplate: "Mẫu đơn thuốc chuẩn"
       });
-      
+
       alert("✅ Đã khôi phục cài đặt mặc định");
     }
   };
@@ -274,7 +274,7 @@ useEffect(() => {
       preferences: preferences,
       notificationSettings: notificationSettings
     };
-    
+
     const blob = new Blob([JSON.stringify(settingsData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -284,7 +284,7 @@ useEffect(() => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     alert("📥 Đã xuất cài đặt thành công!");
   };
 
@@ -303,8 +303,8 @@ useEffect(() => {
 
   if (error) {
     return (
-      <ErrorState 
-        message="Không thể tải cài đặt" 
+      <ErrorState
+        message="Không thể tải cài đặt"
         onRetry={handleRefreshData}
       />
     );
@@ -328,7 +328,7 @@ useEffect(() => {
               Quản lý thông tin cá nhân, bảo mật và tùy chỉnh hệ thống
             </p>
           </div>
-          
+
           {/* Save status and actions */}
           <div className="flex flex-wrap items-center gap-3">
             {saveStatus === "saving" && (
@@ -337,19 +337,19 @@ useEffect(() => {
                 Đang lưu...
               </div>
             )}
-            
+
             {saveStatus === "saved" && (
               <div className="px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm flex items-center gap-2">
                 ✓ Đã lưu
               </div>
             )}
-            
+
             {saveStatus === "error" && (
               <div className="px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-sm">
                 ❌ Lỗi khi lưu
               </div>
             )}
-            
+
             <button
               onClick={handleExportSettings}
               className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -357,7 +357,7 @@ useEffect(() => {
               <Database className="w-4 h-4" />
               Xuất cài đặt
             </button>
-            
+
             <button
               onClick={handleSaveChanges}
               disabled={saveStatus === "saving"}
@@ -368,58 +368,54 @@ useEffect(() => {
             </button>
           </div>
         </div>
-        
+
         {/* Navigation tabs */}
         <div className="mt-6 flex flex-wrap gap-2 border-b border-gray-200">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
-              activeTab === "profile"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "profile"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
           >
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Hồ sơ cá nhân
             </div>
           </button>
-          
+
           <button
             onClick={() => setActiveTab("security")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
-              activeTab === "security"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "security"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
           >
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Bảo mật
             </div>
           </button>
-          
+
           <button
             onClick={() => setActiveTab("notifications")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
-              activeTab === "notifications"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "notifications"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
           >
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
               Thông báo
             </div>
           </button>
-          
+
           <button
             onClick={() => setActiveTab("preferences")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
-              activeTab === "preferences"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "preferences"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
           >
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
@@ -438,7 +434,7 @@ useEffect(() => {
               <User className="w-5 h-5 text-indigo-600" />
               Thông tin cơ bản
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -451,7 +447,7 @@ useEffect(() => {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Chuyên khoa
@@ -463,7 +459,7 @@ useEffect(() => {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
@@ -478,7 +474,7 @@ useEffect(() => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Số điện thoại
@@ -493,7 +489,7 @@ useEffect(() => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Khoa
@@ -505,7 +501,7 @@ useEffect(() => {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Số chứng chỉ hành nghề
@@ -526,7 +522,7 @@ useEffect(() => {
               <Briefcase className="w-5 h-5 text-indigo-600" />
               Thông tin chuyên môn
             </h3>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -542,7 +538,7 @@ useEffect(() => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Học vấn
@@ -557,7 +553,7 @@ useEffect(() => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Giới thiệu bản thân
@@ -570,7 +566,7 @@ useEffect(() => {
                   placeholder="Giới thiệu về chuyên môn, kinh nghiệm..."
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -587,7 +583,7 @@ useEffect(() => {
                     placeholder="07:30 - 11:30"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Giờ làm việc (Chiều)
@@ -613,7 +609,7 @@ useEffect(() => {
               <Award className="w-5 h-5 text-indigo-600" />
               Thông tin bổ sung
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -629,7 +625,7 @@ useEffect(() => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phí tư vấn
@@ -642,7 +638,7 @@ useEffect(() => {
                   placeholder="300,000 VND"
                 />
               </div>
-              
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Ngôn ngữ
@@ -691,7 +687,7 @@ useEffect(() => {
               <Key className="w-5 h-5 text-indigo-600" />
               Đổi mật khẩu
             </h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -705,7 +701,7 @@ useEffect(() => {
                   placeholder="Nhập mật khẩu hiện tại"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Mật khẩu mới
@@ -721,7 +717,7 @@ useEffect(() => {
                   Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Xác nhận mật khẩu mới
@@ -734,7 +730,7 @@ useEffect(() => {
                   placeholder="Nhập lại mật khẩu mới"
                 />
               </div>
-              
+
               <button
                 onClick={handlePasswordChange}
                 className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -750,7 +746,7 @@ useEffect(() => {
               <Shield className="w-5 h-5 text-indigo-600" />
               Cài đặt bảo mật
             </h3>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -759,18 +755,16 @@ useEffect(() => {
                 </div>
                 <button
                   onClick={() => handleInputChange("security", "twoFactorAuth", !securitySettings.twoFactorAuth)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                    securitySettings.twoFactorAuth ? 'bg-indigo-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${securitySettings.twoFactorAuth ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                      securitySettings.twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${securitySettings.twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium text-gray-900">Cảnh báo đăng nhập</div>
@@ -778,18 +772,16 @@ useEffect(() => {
                 </div>
                 <button
                   onClick={() => handleInputChange("security", "loginAlerts", !securitySettings.loginAlerts)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                    securitySettings.loginAlerts ? 'bg-indigo-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${securitySettings.loginAlerts ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                      securitySettings.loginAlerts ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${securitySettings.loginAlerts ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Thời gian tự động đăng xuất
@@ -815,7 +807,7 @@ useEffect(() => {
               <Smartphone className="w-5 h-5 text-indigo-600" />
               Quản lý thiết bị
             </h3>
-            
+
             <div className="space-y-4">
               {securitySettings.deviceManagement.map(device => (
                 <div key={device.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -842,7 +834,7 @@ useEffect(() => {
                   </button>
                 </div>
               ))}
-              
+
               <div className="text-sm text-gray-600">
                 Hiện có {securitySettings.deviceManagement.length} thiết bị đang hoạt động
               </div>
@@ -860,7 +852,7 @@ useEffect(() => {
               <Mail className="w-5 h-5 text-indigo-600" />
               Thông báo qua Email
             </h3>
-            
+
             <div className="space-y-4">
               {Object.entries(notificationSettings.emailNotifications).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
@@ -882,14 +874,12 @@ useEffect(() => {
                   </div>
                   <button
                     onClick={() => handleInputChange("notifications", `emailNotifications.${key}`, !value)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                      value ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${value ? 'bg-indigo-600' : 'bg-gray-300'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                        value ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${value ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -903,7 +893,7 @@ useEffect(() => {
               <Bell className="w-5 h-5 text-indigo-600" />
               Thông báo đẩy
             </h3>
-            
+
             <div className="space-y-4">
               {Object.entries(notificationSettings.pushNotifications).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
@@ -923,14 +913,12 @@ useEffect(() => {
                   </div>
                   <button
                     onClick={() => handleInputChange("notifications", `pushNotifications.${key}`, !value)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                      value ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${value ? 'bg-indigo-600' : 'bg-gray-300'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                        value ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${value ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -944,7 +932,7 @@ useEffect(() => {
               <Moon className="w-5 h-5 text-indigo-600" />
               Giờ yên tĩnh
             </h3>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -953,18 +941,16 @@ useEffect(() => {
                 </div>
                 <button
                   onClick={() => handleInputChange("notifications", "quietHours.enabled", !notificationSettings.quietHours.enabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                    notificationSettings.quietHours.enabled ? 'bg-indigo-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${notificationSettings.quietHours.enabled ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                      notificationSettings.quietHours.enabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${notificationSettings.quietHours.enabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
-              
+
               {notificationSettings.quietHours.enabled && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -1005,7 +991,7 @@ useEffect(() => {
               <Monitor className="w-5 h-5 text-indigo-600" />
               Hiển thị & Giao diện
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1014,33 +1000,30 @@ useEffect(() => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleInputChange("preferences", "theme", "light")}
-                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${
-                      preferences.theme === "light" 
-                        ? "border-indigo-600 bg-indigo-50" 
-                        : "border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${preferences.theme === "light"
+                      ? "border-indigo-600 bg-indigo-50"
+                      : "border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     <Sun className="w-6 h-6" />
                     <span>Sáng</span>
                   </button>
                   <button
                     onClick={() => handleInputChange("preferences", "theme", "dark")}
-                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${
-                      preferences.theme === "dark" 
-                        ? "border-indigo-600 bg-indigo-50" 
-                        : "border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${preferences.theme === "dark"
+                      ? "border-indigo-600 bg-indigo-50"
+                      : "border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     <Moon className="w-6 h-6" />
                     <span>Tối</span>
                   </button>
                   <button
                     onClick={() => handleInputChange("preferences", "theme", "auto")}
-                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${
-                      preferences.theme === "auto" 
-                        ? "border-indigo-600 bg-indigo-50" 
-                        : "border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${preferences.theme === "auto"
+                      ? "border-indigo-600 bg-indigo-50"
+                      : "border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1049,7 +1032,7 @@ useEffect(() => {
                   </button>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Ngôn ngữ
@@ -1063,7 +1046,7 @@ useEffect(() => {
                   <option value="en">English</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Định dạng ngày
@@ -1078,7 +1061,7 @@ useEffect(() => {
                   <option value="yyyy-MM-dd">yyyy-MM-dd</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Định dạng giờ
@@ -1092,7 +1075,7 @@ useEffect(() => {
                   <option value="12h">12 giờ</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Múi giờ
@@ -1109,7 +1092,7 @@ useEffect(() => {
                   <option value="Asia/Tokyo">(GMT+9) Tokyo</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Số bản ghi/trang
@@ -1136,7 +1119,7 @@ useEffect(() => {
               </svg>
               Hành vi & Hiệu suất
             </h3>
-            
+
             <div className="space-y-4">
               {[
                 { key: "autoSave", label: "Tự động lưu", description: "Tự động lưu thay đổi" },
@@ -1151,14 +1134,12 @@ useEffect(() => {
                   </div>
                   <button
                     onClick={() => handleInputChange("preferences", item.key, !preferences[item.key as keyof typeof preferences])}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                      preferences[item.key as keyof typeof preferences] ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${preferences[item.key as keyof typeof preferences] ? 'bg-indigo-600' : 'bg-gray-300'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                        preferences[item.key as keyof typeof preferences] ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${preferences[item.key as keyof typeof preferences] ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -1172,7 +1153,7 @@ useEffect(() => {
               <FileText className="w-5 h-5 text-indigo-600" />
               Mẫu mặc định
             </h3>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1188,7 +1169,7 @@ useEffect(() => {
                   <option value="Mẫu khám chi tiết">Mẫu khám chi tiết</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Mẫu đơn thuốc
@@ -1203,7 +1184,7 @@ useEffect(() => {
                   <option value="Mẫu đơn thuốc chi tiết">Mẫu đơn thuốc chi tiết</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Trang mặc định
@@ -1227,12 +1208,12 @@ useEffect(() => {
               <RefreshCw className="w-5 h-5 text-indigo-600" />
               Khôi phục & Đặt lại
             </h3>
-            
+
             <div className="space-y-4">
               <p className="text-gray-600">
                 Khôi phục tất cả cài đặt về giá trị mặc định ban đầu.
               </p>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={handleResetToDefaults}
@@ -1240,7 +1221,7 @@ useEffect(() => {
                 >
                   Khôi phục mặc định
                 </button>
-                
+
                 <button
                   onClick={handleExportSettings}
                   className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -1248,7 +1229,7 @@ useEffect(() => {
                   Sao lưu cài đặt
                 </button>
               </div>
-              
+
               <p className="text-sm text-gray-500">
                 Lưu ý: Thao tác khôi phục mặc định không thể hoàn tác.
               </p>
@@ -1262,7 +1243,7 @@ useEffect(() => {
         <div className="text-sm text-gray-500">
           ID: {doctorInfo.id} • Cập nhật lần cuối: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
         </div>
-        
+
         <div className="flex gap-3">
           <button
             onClick={handleRefreshData}
@@ -1271,7 +1252,7 @@ useEffect(() => {
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
-          
+
           <button
             onClick={handleSaveChanges}
             disabled={saveStatus === "saving"}

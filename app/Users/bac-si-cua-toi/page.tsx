@@ -118,9 +118,8 @@ export default function MyDoctorsPage() {
                                     </div>
                                 </div>
 
-                                {/* Footer: Nút hành động */}
+                                {/*Nút hành động */}
                                 <div className="p-4 bg-gray-50 flex gap-3">
-                                    {/* Nút này có thể dẫn sang trang chi tiết bác sĩ hoặc đặt lịch với bác sĩ này */}
                                     <Link href={`/dat-lich/bac-si?doctor_id=${doc.DoctorID}`} className="w-full">
                                         <Button className="w-full bg-white border border-green-600 text-green-700 hover:bg-green-50 font-semibold shadow-sm">
                                             <CalendarPlus className="w-4 h-4 mr-2" />

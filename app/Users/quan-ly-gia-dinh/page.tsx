@@ -101,6 +101,7 @@ export default function QuanLyGiaDinh() {
       // Cập nhật UI ngay lập tức (Optimistic UI)
       setMembers(members.filter((m) => m.UserID !== id));
     } catch (error) {
+      console.log(error)
       alert("Xóa thất bại.");
     }
   };

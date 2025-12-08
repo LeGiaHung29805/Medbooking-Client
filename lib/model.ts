@@ -323,3 +323,12 @@ export interface AdminUpdatePatientRequest {
   Address?: string | null;
   Status?: string;             // Admin có quyền sửa trạng thái (VD: "HoatDong", "Khoa")
 }
+export interface UpdateProfileRequest{
+  FullName: string;
+  PhoneNumber: string;
+  Email: string;
+  DateOfBirth?: string;
+  Gender?: string;
+  Address?: string;
+  avatar?: File | null;
+}

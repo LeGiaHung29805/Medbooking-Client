@@ -268,7 +268,28 @@ export const doctorUploadResult = async (
   );
   return response.data;
 };
+//Cập nhật trạng thái Lịch hẹn (Bắt đầu khám / Hoàn tất / Hủy)
+export const updateAppointmentStatus = async (
+  appointmentId: number, 
+  status: 'InProgress' | 'Completed' | 'Cancelled'
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.put(
+    `/doctor/appointments/${appointmentId}/status`, 
+    { Status: status }, 
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
 
+//Xem danh sách Slot rảnh của chính bác sĩ(Để quản lý)
+export const getMySlots = async (date?: string): Promise<Model.AvailabilitySlot[]> => {
+  const url = date ? `/doctor/my-slots?date=${date}` : '/doctor/my-slots';
+  
+  const response = await apiClient.get<Model.AvailabilitySlot[]>(url, {
+    headers: getAuthHeaders()
+  });
+  return response.data;
+};
 // ==========================================
 // === 5. NHÓM STAFF & ADMIN ===
 // ==========================================
@@ -499,7 +520,7 @@ export const adminUpdateService = async (
 
 // Bệnh nhân tự sửa hồ sơ
 export const updateProfile = async (
-  data: any
+  data: Model.UpdateProfileRequest
 ): Promise<Model.MessageResponse> => {
   // Dùng method PUT (hoặc POST + _method:PUT nếu muốn gửi form-data đồng bộ)
   // Ở đây ta dùng JSON cho đơn giản vì không có file
