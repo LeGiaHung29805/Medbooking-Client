@@ -279,12 +279,13 @@ export default function PatientManagement() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${p.Gender === "Nam"
-                            ? "bg-blue-100 text-blue-800"
-                            : p.Gender === "Nữ"
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            p.Gender === "Nam"
+                              ? "bg-blue-100 text-blue-800"
+                              : p.Gender === "Nữ"
                               ? "bg-pink-100 text-pink-800"
                               : "bg-gray-100 text-gray-800"
-                            }`}
+                          }`}
                         >
                           {p.Gender}
                         </span>
