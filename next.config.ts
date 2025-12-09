@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    ppr: false, // TẮT PPR → FIX LỖI HYDRATION
+  },
+
   images: {
     remotePatterns: [
       {
@@ -18,9 +21,9 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "http",
-        hostname: "127.0.0.1", // Backend Laravel
+        hostname: "127.0.0.1",
         port: "8000",
-        pathname: '/storage/**',
+        pathname: "/storage/**",
       },
       {
         protocol: "https",
