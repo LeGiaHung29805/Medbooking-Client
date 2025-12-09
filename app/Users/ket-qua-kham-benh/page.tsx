@@ -211,7 +211,7 @@ export default function KetQuaKhamBenh() {
                   </div>
                 </div>
 
-                {/* File đính kèm (Exam Results) */}
+                {/* File đính kèm */}
                 {selectedRecord.exam_results &&
                   selectedRecord.exam_results.length > 0 && (
                     <div>

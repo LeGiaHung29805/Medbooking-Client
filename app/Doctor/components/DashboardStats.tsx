@@ -1,5 +1,5 @@
 import { Users, CheckCircle2, Clock, User } from "lucide-react"
-import Stat from "./stat"
+import Stat from "./Stat"  
 
 interface DashboardStatsProps {
   stats: {

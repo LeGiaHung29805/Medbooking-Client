@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
-import Image from "next/image";
 import {
     Pagination,
     PaginationContent,
     PaginationItem,
-    PaginationLink,
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -23,14 +21,14 @@ import DataThumbnail from "@/components/thumnail/DataThumbnail";
 export default function DoctorBookingPage() {
     const router = useRouter();
 
-    // --- STATE DỮ LIỆU ---
+    //state dữ liệu
     const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
     const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
-    const [currentUser, setCurrentUser] = useState<Model.User | null>(null); // <--- 1. THÊM STATE USER
+    const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
-
-    // --- STATE FORM ---
-    const [selectedPerson, setSelectedPerson] = useState(""); // Để rỗng ban đầu
+    const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
+    //state form
+    const [selectedPerson, setSelectedPerson] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState<Model.Doctor | null>(null);
 
     // State cho lịch
@@ -51,24 +49,32 @@ export default function DoctorBookingPage() {
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // 1. LOAD DỮ LIỆU (SỬA ĐỔI)
+    //LOAD DỮ LIỆU
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [docsData, specsData, userData] = await Promise.all([
+                const [docsData, specsData, userData, familyData] = await Promise.all([
                     Api.getDoctors(),
                     Api.getSpecialties(),
-                    Api.getMe().catch(() => null)
+                    Api.getMe().catch(() => null),
+                    Api.getFamilyMembers().catch(() => [])
                 ]);
 
                 setDoctors(docsData);
                 setSpecialties(specsData);
-
+                setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
-                    // Tự động chọn tên người dùng làm mặc định
-                    setSelectedPerson(userData.FullName);
+
+                    //logic ghi nhớ
+                    const savedPerson = localStorage.getItem("booking_for_person");
+                    if (savedPerson) {
+                        setSelectedPerson(savedPerson);
+                        // localStorage.removeItem("booking_for_person"); // Bỏ comment nếu muốn chỉ nhớ 1 lần
+                    } else {
+                        setSelectedPerson(userData.FullName); // Mặc định chọn chính mình
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi tải dữ liệu:", error);
@@ -78,8 +84,17 @@ export default function DoctorBookingPage() {
         };
         fetchData();
     }, []);
-
-    // 2. XỬ LÝ KHI MỞ SHEET CHỌN BÁC SĨ
+    const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        if (value === "ADD_NEW_MEMBER") {
+            router.push("/Users/quan-li-gia-dinh");
+            return;
+        }
+        setSelectedPerson(value);
+        // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
+        localStorage.setItem("booking_for_person", value);
+    };
+    // Mở sheet chọn bác sĩ
     // Khi bấm vào 1 bác sĩ trong list, ta gọi API lấy lịch ngay
     const handleViewDoctor = async (doctor: Model.Doctor) => {
         setViewingDoctor(doctor);
@@ -104,7 +119,7 @@ export default function DoctorBookingPage() {
         }
     };
 
-    // 3. XỬ LÝ LOGIC NGÀY GIỜ TỪ API
+    // Xử lí ngày giờ trong API
     // Lấy danh sách ngày duy nhất
     const uniqueDates = useMemo(() => {
         const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
@@ -182,13 +197,26 @@ export default function DoctorBookingPage() {
                         <label className="block font-semibold mb-2">Người tới khám</label>
                         <select
                             value={selectedPerson}
-                            onChange={(e) => setSelectedPerson(e.target.value)}
+                            onChange={handlePersonChange}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
                             {currentUser ? (
-                                <option value={currentUser.FullName}>
-                                    {currentUser.FullName}
-                                </option>
+                                <>
+                                    <option value={currentUser.FullName}>{currentUser.FullName}</option>
+
+                                    {/* Render danh sách người thân */}
+                                    {familyMembers.length > 0 && (
+                                        <optgroup label="Người thân">
+                                            {familyMembers.map((mem) => (
+                                                <option key={mem.UserID} value={mem.FullName}>
+                                                    {mem.FullName} ({mem.RelationType || mem.pivot?.RelationType})
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+
+                                    <option value="ADD_NEW_MEMBER" className="text-blue-600 font-bold">+ Thêm người thân mới...</option>
+                                </>
                             ) : (
                                 <option value="">Đang tải thông tin...</option>
                             )}
@@ -386,7 +414,7 @@ export default function DoctorBookingPage() {
                             <h4 className="font-semibold mb-2 text-gray-700">Chọn ngày khám</h4>
                             <div className="flex gap-2 overflow-x-auto mb-6 pb-2">
                                 {uniqueDates.length > 0 ? uniqueDates.map((dateStr) => (
-                                    <button
+                                    <Button
                                         key={dateStr}
                                         onClick={() => {
                                             setSelectedDate(dateStr);
@@ -399,7 +427,7 @@ export default function DoctorBookingPage() {
                                             }`}
                                     >
                                         {formatDateLabel(dateStr)}
-                                    </button>
+                                    </Button>
                                 )) : (
                                     <p className="text-sm text-gray-400 italic">Bác sĩ chưa có lịch trống.</p>
                                 )}

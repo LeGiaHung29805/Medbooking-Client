@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import LayoutBook from "@/components/layoutBook";
-import { login } from "@/lib/ApiClient";
 import { AxiosError } from "axios";
+import LayoutBook from "@/components/layoutBook";
+import * as Api from "@/lib/ApiClient";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -11,57 +12,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
-  const handleMockLogin = () => {
-    console.log("🔄 Using mock login for development");
-
-    // Mock data cho các role
-    const mockUsers = {
-      bacsia: {
-        user: {
-          id: 1,
-          name: "Nguyễn Hoàng A",
-          Role: "bacsi",
-          specialty: "Nội khoa",
-        },
-        redirect: "/doctor",
-      },
-      staff: {
-        user: {
-          id: 2,
-          name: "Nhân Viên Quản Lý",
-          Role: "nhanvien",
-        },
-        redirect: "/Staff",
-      },
-      admin: {
-        user: {
-          id: 3,
-          name: "Quản Trị Viên",
-          Role: "quantrivien",
-        },
-        redirect: "/admin",
-      },
-    };
-
-    const userKey = username.toLowerCase();
-    const mockUser = mockUsers[userKey as keyof typeof mockUsers];
-
-    if (mockUser && password === "password") {
-      // Lưu vào localStorage giống API thật
-      localStorage.setItem("user", JSON.stringify(mockUser.user));
-      localStorage.setItem("api_token", "mock-token-development");
-      localStorage.setItem("user_role", mockUser.user.Role);
-
-      console.log(
-        `Mock login successful - redirecting to ${mockUser.redirect}`
-      );
-      router.push(mockUser.redirect);
-      return true;
-    }
-
-    return false;
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,88 +22,54 @@ export default function LoginPage() {
       return;
     }
 
-    // Thử mock login trước khi gọi API
-    if (handleMockLogin()) {
-      return; // Mock login thành công thì dừng lại
-    }
-
     setIsLoading(true);
 
-    // Gọi API thật nếu mock login không thành công
     try {
+      //Chuẩn bị FormData để gửi (Vì API yêu cầu multipart/form-data)
       const formData = new FormData();
       formData.append("Username", username);
       formData.append("password", password);
 
-      console.log("🚀 Calling REAL login API...");
-      const response = await login(formData);
+      const response = await Api.login(formData);
 
-      console.log("🔧 Login response:", response);
+      if (response.token) {
+        // Đảm bảo lưu thông tin user để dùng ở các trang khác
+        localStorage.setItem("user", JSON.stringify(response.user));
 
-      // Xử lý response - sử dụng type assertion
-      const responseData = response as any;
-      let token, user, role;
+        //Điều hướng dựa trên Role
+        const role = response.user.Role;
 
-      if (responseData.token) {
-        token = responseData.token;
-        user = responseData.user;
-        role = responseData.user?.Role || responseData.user?.role;
-      } else if (responseData.data?.token) {
-        token = responseData.data.token;
-        user = responseData.data.user;
-        role = responseData.data.user?.Role || responseData.data.user?.role;
-      }
+        alert(`Đăng nhập thành công! Xin chào ${response.user.FullName}`);
 
-      if (token) {
-        // Lưu token từ API response
-        localStorage.setItem("api_token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        if (role) {
-          localStorage.setItem("user_role", role.toLowerCase());
-        }
-
-        console.log("✅ Real API login successful, role:", role);
-
-        const normalizedRole = role ? role.toLowerCase() : "benhnhan";
-
-        switch (normalizedRole) {
-          case "quantrivien":
+        switch (role) {
+          case "QuanTriVien":
             router.push("/admin");
             break;
-          case "bacsi":
-            router.push("/doctor");
+          case "BacSi":
+            router.push("/Doctor"); // Hoặc trang dành cho bác sĩ
             break;
-          case "nhanvien":
-            router.push("/Staff");
+          case "NhanVien":
+            router.push("/staff");
             break;
-          case "benhnhan":
-          default:
-            router.push("/dat-lich");
+          default: // BenhNhan
+            router.push("/dat-lich"); // Về trang chủ hoặc trang đặt lịch
             break;
         }
       } else {
-        throw new Error("Token không tồn tại trong response");
+        setError("Không nhận được token xác thực.");
       }
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      console.error("Login failed:", error);
+      console.error("Login failed:", err);
 
-      // Dùng mock accounts khi API fail
-      if (
-        error.code === "ERR_NETWORK" ||
-        error.code === "ERR_CONNECTION_REFUSED"
-      ) {
-        setError(
-          "Backend đang bảo trì. Dùng tài khoản demo:\n Bác sĩ: bacsia / password\n Staff: staff / password\n Admin: admin / password"
-        );
-      } else if (error.response && error.response.data) {
-        const errorData = error.response.data as any;
-        setError(errorData.message || errorData.error || "Đăng nhập thất bại");
-      } else {
-        setError(
-          "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu."
-        );
-      }
+      //Ép kiểu lỗi về dạng AxiosError có chứa { message: string }
+      const error = err as AxiosError<{ message: string }>;
+
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -162,39 +78,42 @@ export default function LoginPage() {
   return (
     <LayoutBook>
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
+        <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md border border-gray-100">
           <h1 className="text-2xl font-bold text-green-700 text-center mb-6">
             Đăng Nhập
           </h1>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm whitespace-pre-line">
-              {error}
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
+              ⚠️ {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Tên đăng nhập
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                placeholder="Tên đăng nhập"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+                placeholder="Nhập tên đăng nhập"
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Mật khẩu</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">
+                Mật khẩu
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+                placeholder="••••••••"
                 disabled={isLoading}
               />
             </div>
@@ -202,10 +121,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full text-white py-2 rounded-md transition flex justify-center items-center ${
+              className={`w-full text-white py-2.5 rounded-lg font-bold transition flex justify-center items-center ${
                 isLoading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-700 hover:bg-green-800"
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 shadow-md"
               }`}
             >
               {isLoading ? (
@@ -238,9 +157,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-sm text-center mt-4">
+          <p className="text-sm text-center mt-6 text-gray-600">
             Chưa có tài khoản?{" "}
-            <a href="/register" className="text-green-700 hover:underline">
+            <a
+              href="/dang-ky"
+              className="text-green-600 font-bold hover:underline"
+            >
               Đăng ký ngay
             </a>
           </p>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import LayoutUsers from "@/components/layoutUsers";
-import * as Api from "@/lib/ApiClient"; // Import API
+import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 
 export default function ProfilePage() {

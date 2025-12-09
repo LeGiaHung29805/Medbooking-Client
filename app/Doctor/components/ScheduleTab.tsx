@@ -1,5 +1,5 @@
 import { Users, Clock, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
-import type { Appointment, Patient, ScheduleDay } from "./types"
+import type { Appointment, Patient, ScheduleDay } from  "@/lib/model"
 
 interface ScheduleTabProps {
   currentWeek: Date

@@ -1,9 +1,7 @@
-// app/Doctor/TodayAppointments.tsx – HOÀN CHỈNH, KHÔNG CÒN LỖI ĐỎ
 "use client";
 
 import { Search, Filter, ChevronLeft, ChevronRight, Calendar, User, Clock } from "lucide-react";
-import type { Appointment, Patient, PatientDetail, MedicalRecord } from "./types";
-
+import type { Appointment, Patient, PatientDetail, MedicalRecord } from  "@/lib/model"
 interface TodayAppointmentsProps {
   appointments: Appointment[];
   waitingPatients: Patient[];
@@ -14,14 +12,15 @@ interface TodayAppointmentsProps {
   itemsPerPage: number;
   totalPages: number;
   paginatedAppointments: Appointment[];
-  getStatusInfo: (status: string) => any;
+  getStatusInfo: (status: string) => any; 
   getPriorityColor: (priority: string) => string;
   getPriorityText: (priority: string) => string;
   setSearchTerm: (term: string) => void;
   setStatusFilter: (filter: string) => void;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-  handleViewAppointmentDetail: (id: number) => void;
+  setCurrentPage: (page: number | ((prev: number) => number)) => void;
+  onViewPatientDetail?: (patient: Patient) => void;
   handleStartExam: (patient: PatientDetail) => void;
+  handleViewAppointmentDetail?: (id: number) => void;
 }
 
 export default function TodayAppointments({
@@ -121,7 +120,11 @@ export default function TodayAppointments({
               <div
                 key={appt.id}
                 className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => handleViewAppointmentDetail(appt.id)}
+                onClick={() => {
+  if (handleViewAppointmentDetail) {
+    handleViewAppointmentDetail(appt.id);
+  }
+}}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
