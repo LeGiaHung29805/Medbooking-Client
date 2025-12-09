@@ -8,7 +8,6 @@ import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
-
 interface ServiceFormProps {
   service: Model.Service | null;
   specialties: Model.Specialty[];
@@ -50,8 +49,8 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       ...prev,
       [name]:
         name === "EstimatedDuration" ||
-          name === "Price" ||
-          name === "SpecialtyID"
+        name === "Price" ||
+        name === "SpecialtyID"
           ? Number(value)
           : value,
     }));
@@ -80,7 +79,7 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
         data.append("Description", formData.Description);
 
       if (selectedFile) {
-        data.append("image", selectedFile); // Key là 'image'
+        data.append("imageURL", selectedFile); // Key là 'image'
       }
 
       if (isEdit && service) {
@@ -262,7 +261,6 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
   );
 };
 
-
 export default function ServiceManagementPage() {
   const [services, setServices] = useState<Model.Service[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
@@ -379,8 +377,7 @@ export default function ServiceManagementPage() {
               setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
             }}
           />
-          <span className="absolute left-4 top-3.5 text-gray-400 text-lg">
-          </span>
+          <span className="absolute left-4 top-3.5 text-gray-400 text-lg"></span>
         </div>
       </div>
 

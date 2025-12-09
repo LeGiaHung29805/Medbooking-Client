@@ -82,7 +82,7 @@ export default function LoginPage() {
     // Gọi API thật nếu mock login không thành công
     try {
       const formData = new FormData();
-      formData.append("username", username); // SỬA: "username" thay vì "Username"
+      formData.append("Username", username);
       formData.append("password", password);
 
       console.log("🚀 Calling REAL login API...");

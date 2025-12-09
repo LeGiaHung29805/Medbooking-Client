@@ -266,7 +266,9 @@ const UserFormModal: React.FC<UserFormProps> = ({
                   className="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 outline-none bg-white cursor-pointer"
                   disabled={isEdit && user.Role === "QuanTriVien"}
                 >
-                  {ROLES.map((role) => (
+                  {ROLES.filter((role) =>
+                    isEdit ? true : role !== "BacSi"
+                  ).map((role) => (
                     <option key={role} value={role}>
                       {ROLE_LABELS[role]}
                     </option>
@@ -320,7 +322,9 @@ const UserFormModal: React.FC<UserFormProps> = ({
                 <div className="flex items-center space-x-3 p-2 border border-dashed rounded-lg bg-gray-50">
                   <div className="w-12 h-12 rounded-full overflow-hidden border bg-white flex-shrink-0 relative">
                     <Image
-                      src={previewUrl || "https://placehold.co/100x100?text=User"}
+                      src={
+                        previewUrl || "https://placehold.co/100x100?text=User"
+                      }
                       alt="Avatar"
                       fill
                       sizes="48px"
@@ -435,14 +439,37 @@ export default function UserManagementPage() {
   };
 
   const handleDelete = async (userId: number) => {
-    if (confirm("Bạn có chắc chắn muốn XÓA VĨNH VIỄN tài khoản này?")) {
+    // 1. Tìm thông tin người dùng trong danh sách hiện tại
+    const userToDelete = users.find((u) => u.UserID === userId);
+    if (!userToDelete) return;
+
+    if (
+      confirm(
+        `Bạn có chắc chắn muốn KHÓA tài khoản "${userToDelete.FullName}" không?`
+      )
+    ) {
       try {
-        await Api.adminDeleteUser(userId);
-        setUsers((prev) => prev.filter((u) => u.UserID !== userId));
-        alert("Đã xóa thành công.");
+        // 2. Chuẩn bị FormData để gọi API Update (UserManagementController)
+        const data = new FormData();
+        data.append("Status", "Khoa"); // Chuyển trạng thái sang Khóa
+
+        // 3. QUAN TRỌNG: Phải gửi kèm các trường bắt buộc khác để Backend không báo lỗi 422
+        data.append("FullName", userToDelete.FullName);
+        data.append("Username", userToDelete.Username);
+        data.append("PhoneNumber", userToDelete.PhoneNumber);
+        data.append("Role", userToDelete.Role);
+
+        // 4. Gọi API Update
+        await Api.adminUpdateUser(userId, data);
+
+        // 5. Cập nhật giao diện
+        setUsers((prev) =>
+          prev.map((u) => (u.UserID === userId ? { ...u, Status: "Khoa" } : u))
+        );
+        alert("🔒 Đã khóa tài khoản thành công.");
       } catch (error) {
-        console.log(error);
-        alert("Xóa thất bại.");
+        console.error(error);
+        alert("❌ Thao tác thất bại.");
       }
     }
   };
@@ -502,9 +529,7 @@ export default function UserManagementPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <span className="absolute left-4 top-3.5 text-gray-400 text-lg">
-
-          </span>
+          <span className="absolute left-4 top-3.5 text-gray-400 text-lg"></span>
         </div>
 
         <div className="w-full md:w-64 relative">
@@ -520,8 +545,7 @@ export default function UserManagementPage() {
               </option>
             ))}
           </select>
-          <span className="absolute right-4 top-3.5 text-gray-400 pointer-events-none">
-          </span>
+          <span className="absolute right-4 top-3.5 text-gray-400 pointer-events-none"></span>
         </div>
       </div>
 
@@ -585,14 +609,15 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold
-                        ${u.Role === "QuanTriVien"
+                        ${
+                          u.Role === "QuanTriVien"
                             ? "bg-purple-100 text-purple-800"
                             : u.Role === "BacSi"
-                              ? "bg-blue-100 text-blue-800"
-                              : u.Role === "NhanVien"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                          }
+                            ? "bg-blue-100 text-blue-800"
+                            : u.Role === "NhanVien"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }
                       `}
                       >
                         {ROLE_LABELS[u.Role] || u.Role}
@@ -601,10 +626,11 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80
-                        ${u.Status === "HoatDong"
+                        ${
+                          u.Status === "HoatDong"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                          }
+                        }
                       `}
                         onClick={() => handleToggleStatus(u)}
                         title="Bấm để đổi trạng thái"

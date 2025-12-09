@@ -4,12 +4,11 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 
-
 // Interface cho form tạo mới
 interface NewSlotForm {
   doctor_id: number;
-  date: string; 
-  start_time: string; 
+  date: string;
+  start_time: string;
   end_time: string;
 }
 
@@ -33,7 +32,7 @@ export default function ScheduleManagementPage() {
     end_time: "08:30",
   });
 
-  //LOAD DANH SÁCH BÁC SĨ
+  // --- 1. LOAD DANH SÁCH BÁC SĨ ---
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -46,7 +45,7 @@ export default function ScheduleManagementPage() {
     fetchDoctors();
   }, []);
 
-  //LOAD LỊCH LÀM VIỆC
+  // --- 2. LOAD LỊCH LÀM VIỆC ---
   const loadSlots = useCallback(async () => {
     if (selectedDoctorId === "all") {
       setSlots([]);
@@ -70,15 +69,17 @@ export default function ScheduleManagementPage() {
     loadSlots();
   }, [loadSlots]);
 
-  //FILTER LOGIC
+  // --- 3. FILTER LOGIC (Lọc client-side theo ngày) ---
+  // (Vì API trả về tất cả slot tương lai, ta cần lọc lại theo ngày được chọn)
   const filteredSlots = useMemo(() => {
     return slots.filter((slot) => {
+      // slot.StartTime format: "2025-11-20 08:00:00"
       const slotDate = slot.StartTime.split(" ")[0];
       return slotDate === selectedDate;
     });
   }, [slots, selectedDate]);
 
-  //HANDLERS
+  // --- HANDLERS ---
 
   const handleDeleteSlot = async (slotId: number, status: string) => {
     if (status === "Booked") {
@@ -87,10 +88,15 @@ export default function ScheduleManagementPage() {
     }
     if (confirm("Bạn có chắc muốn xóa khung giờ này?")) {
       try {
+        // Gọi API xóa slot (Admin dùng chung hàm của Staff hoặc tạo riêng adminDeleteSlot)
+        // Ở đây ta dùng adminDeleteSlot (đã thêm vào ApiClient)
         await Api.adminDeleteSlot(slotId);
+
+        // Update UI ngay lập tức
         setSlots((prev) => prev.filter((s) => s.SlotID !== slotId));
         alert("Đã xóa thành công.");
       } catch (error) {
+        console.error(error);
         alert("Xóa thất bại.");
       }
     }
@@ -102,23 +108,30 @@ export default function ScheduleManagementPage() {
       return;
     }
     try {
-      const startDateTime = `${newSlot.date} ${newSlot.start_time}`;
-      const endDateTime = `${newSlot.date} ${newSlot.end_time}`;
+      // Format ngày giờ chuẩn gửi lên Backend: "YYYY-MM-DD HH:mm:ss"
+      // (Backend cần thêm :00 giây nếu input time chỉ có HH:mm)
+      const startDateTime = `${newSlot.date} ${newSlot.start_time}:00`;
+      const endDateTime = `${newSlot.date} ${newSlot.end_time}:00`;
 
       await Api.adminCreateSlot(newSlot.doctor_id, startDateTime, endDateTime);
 
       alert("Đã thêm lịch làm việc mới!");
       setIsModalOpen(false);
 
+      // Reload nếu đang xem đúng bác sĩ đó
       if (selectedDoctorId === newSlot.doctor_id.toString()) {
         loadSlots();
       } else {
+        // Chuyển view sang bác sĩ vừa tạo để thấy kết quả
         setSelectedDoctorId(newSlot.doctor_id.toString());
         setSelectedDate(newSlot.date);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Thêm lịch thất bại. Có thể bị trùng giờ.");
+      const msg =
+        error.response?.data?.message ||
+        "Thêm lịch thất bại. Có thể bị trùng giờ.";
+      alert("❌ " + msg);
     }
   };
 
@@ -197,6 +210,7 @@ export default function ScheduleManagementPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredSlots.map((slot) => {
                 const doc = getDoctorInfo(slot.DoctorID);
+                // Format giờ từ "2025-11-20 08:00:00" -> "08:00"
                 const startTime = slot.StartTime.split(" ")[1]?.slice(0, 5);
                 const endTime = slot.EndTime.split(" ")[1]?.slice(0, 5);
 
@@ -206,19 +220,10 @@ export default function ScheduleManagementPage() {
                     className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <img
-                        src={
-                          doc?.imageURL ||
-                          doc?.user?.avatar_url ||
-                          "https://placehold.co/100x100?text=Dr"
-                        }
-                        alt="Avatar"
-                        className="w-10 h-10 rounded-full bg-gray-100 object-cover border"
-                        onError={(e) =>
-                          (e.currentTarget.src =
-                            "https://placehold.co/100x100?text=Dr")
-                        }
-                      />
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        {/* Có thể thay bằng ảnh thật nếu có */}
+                        {doc?.user?.FullName?.charAt(0) || "D"}
+                      </div>
                       <div>
                         <p className="font-bold text-gray-800 text-sm">
                           {doc?.user?.FullName}
