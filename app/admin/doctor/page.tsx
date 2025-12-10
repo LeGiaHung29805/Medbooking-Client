@@ -188,6 +188,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                 required
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
+                <option value={0}>-- Chọn chuyên khoa --</option>
                 {specialties.map((s) => (
                   <option key={s.SpecialtyID} value={s.SpecialtyID}>
                     {s.SpecialtyName}
@@ -441,7 +442,7 @@ export default function DoctorManagementPage() {
         setDoctors((prev) => prev.filter((d) => d.DoctorID !== id));
         alert("Đã xóa thành công.");
       } catch (error) {
-        console.log(error)
+        console.log(error);
         alert("Xóa thất bại.");
       }
     }
@@ -500,9 +501,7 @@ export default function DoctorManagementPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-
-              </span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
             </div>
 
             <div className="relative">
@@ -518,9 +517,7 @@ export default function DoctorManagementPage() {
                   </option>
                 ))}
               </select>
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-
-              </span>
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></span>
             </div>
           </div>
 
@@ -577,7 +574,10 @@ export default function DoctorManagementPage() {
                     ?.SpecialtyName || "---";
 
                 return (
-                  <tr key={doctor.DoctorID} className="hover:bg-gray-50 transition">
+                  <tr
+                    key={doctor.DoctorID}
+                    className="hover:bg-gray-50 transition"
+                  >
                     <td className="py-3 px-4 text-sm text-gray-700">
                       {/* SỬ DỤNG COMPONENT DataThumbnail CHUNG */}
                       <DataThumbnail
@@ -607,10 +607,11 @@ export default function DoctorManagementPage() {
                     </td>
                     <td className="py-3 px-4 text-sm">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${status === "HoatDong"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
-                          }`}
+                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                          status === "HoatDong"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}
                       >
                         {status === "HoatDong" ? "Active" : "Inactive"}
                       </span>
@@ -634,10 +635,7 @@ export default function DoctorManagementPage() {
               })}
               {currentDoctors.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="py-8 text-center text-gray-500"
-                  >
+                  <td colSpan={7} className="py-8 text-center text-gray-500">
                     {loading
                       ? "Đang tải dữ liệu..."
                       : "Không tìm thấy bác sĩ nào khớp với tiêu chí tìm kiếm/lọc."}

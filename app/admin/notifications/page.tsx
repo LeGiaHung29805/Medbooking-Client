@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 
-
 interface NotificationLog {
   id: number | string;
   recipient: string;
@@ -38,7 +37,6 @@ export default function NotificationManagerPage() {
       if (Array.isArray(arrayData)) {
         const mappedLogs: NotificationLog[] = arrayData.map(
           (item: any, index: number) => ({
-
             id: item.id || `temp-${index}-${Date.now()}`,
             recipient: item.recipient_name || item.target_group || "N/A",
             type: item.type || "System",
@@ -112,19 +110,21 @@ export default function NotificationManagerPage() {
           <div className="flex gap-6 mt-6 border-b border-gray-200">
             <button
               onClick={() => setActiveTab("broadcast")}
-              className={`pb-3 text-sm font-bold transition border-b-2 ${activeTab === "broadcast"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+              className={`pb-3 text-sm font-bold transition border-b-2 ${
+                activeTab === "broadcast"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               Soạn Thông Báo
             </button>
             <button
               onClick={() => setActiveTab("logs")}
-              className={`pb-3 text-sm font-bold transition border-b-2 ${activeTab === "logs"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+              className={`pb-3 text-sm font-bold transition border-b-2 ${
+                activeTab === "logs"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               Nhật Ký Gửi
             </button>
@@ -180,9 +180,7 @@ export default function NotificationManagerPage() {
                           })
                         }
                       >
-                        <option value="in_app">
-                          Thông báo trên App/Web
-                        </option>
+                        <option value="in_app">Thông báo trên App/Web</option>
                         <option value="email">Gửi qua Email</option>
                       </select>
                     </div>
