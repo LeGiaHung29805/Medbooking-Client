@@ -59,7 +59,37 @@ const UserFormModal: React.FC<UserFormProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>(
     user?.avatar_url ? getFullImageUrl(user.avatar_url) : ""
   );
+  useEffect(() => {
+    if (user) {
+      // Nếu đang sửa (Edit Mode) -> Fill dữ liệu của user đó vào
+      setFormData({
+        FullName: user.FullName || "",
+        Email: user.Email || "",
+        Username: user.Username || "",
+        PhoneNumber: user.PhoneNumber || "",
+        Role: user.Role || "BenhNhan",
+        Status: user.Status || "HoatDong",
+        Password: "",
+        SpecialtyID: 0,
+      });
 
+      // Cập nhật ảnh preview
+      setPreviewUrl(user.avatar_url ? getFullImageUrl(user.avatar_url) : "");
+    } else {
+      setFormData({
+        FullName: "",
+        Email: "",
+        Username: "",
+        PhoneNumber: "",
+        Role: "BenhNhan",
+        Status: "HoatDong",
+        Password: "",
+        SpecialtyID: 0,
+      });
+      setPreviewUrl("");
+      setSelectedFile(null);
+    }
+  }, [user]);
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {

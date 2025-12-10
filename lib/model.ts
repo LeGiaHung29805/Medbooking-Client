@@ -110,7 +110,25 @@ export interface Feedback {
   created_at: string;
   patient?: User;
 }
+export interface AdminFeedback {
+    FeedbackID: number;
+    Rating: number;
+    Comment: string;
+    CreatedAt: string;
+    
+    ReviewerName: string;
+    ReviewerAvatar?: string;
 
+    TargetName: string;
+    Type: 'Doctor' | 'System';
+}
+export interface TopFeedback {
+    FeedbackID: number;
+    Rating: number;     // 1 đến 5
+    Comment: string;
+    FullName: string;   // Tên bệnh nhân
+    avatar_url?: string;
+}
 // 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE)
 
 export interface LoginResponse {

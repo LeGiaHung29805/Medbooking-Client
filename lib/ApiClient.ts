@@ -97,6 +97,14 @@ export const logout = async (): Promise<Model.MessageResponse> => {
 };
 
 //2. NHÓM CÔNG KHAI (PUBLIC)
+//Lấy tất cả dịch vụ
+export const getAllServices = async (
+  search?: string
+): Promise<Model.Service[]> => {
+  const params = search ? { search } : {};
+  const response = await apiClient.get("/services", { params }); // Hoặc /admin/services tùy route backend
+  return response.data;
+};
 //Gọi chuyên khoa
 export const getSpecialties = async (
   search?: string
@@ -142,6 +150,11 @@ export const getSpecialtyAvailability = async (
   return response.data;
 };
 
+//Lấy danh sách 3 đánh giá tiêu biểu theo 5 sao mới nhất
+export const getTopFeedbacks = async (): Promise<Model.TopFeedback[]> => {
+  const response = await apiClient.get<Model.TopFeedback[]>("/top-feedbacks");
+  return response.data;
+};
 //3. NHÓM BỆNH NHÂN (PATIENT)
 //Lấy profile chính mình
 export const getMe = async (): Promise<Model.User> => {
@@ -473,7 +486,7 @@ export const getFeedbacks = async (): Promise<Model.Feedback[]> => {
   return response.data;
 };
 //Admin lấy feedback API này cải tiến để lấy được cả feedback cho hệ thống
-export const adminGetFeedbacks = async (): Promise<Model.Feedback[]> => {
+export const adminGetFeedbacks = async (): Promise<Model.AdminFeedback[]> => {
   const response = await apiClient.get("/admin/feedbacks", {
     headers: getAuthHeaders(),
   });
@@ -505,14 +518,7 @@ export const adminDeleteMedicalRecord = async (id: number): Promise<void> => {
     headers: getAuthHeaders(),
   });
 };
-//Lấy tất cả dịch vụ
-export const getAllServices = async (
-  search?: string
-): Promise<Model.Service[]> => {
-  const params = search ? { search } : {};
-  const response = await apiClient.get("/services", { params }); // Hoặc /admin/services tùy route backend
-  return response.data;
-};
+
 //Admin cập nhật dịch vụ
 export const adminUpdateService = async (
   id: number,
@@ -766,6 +772,7 @@ export const removeFamilyMember = async (relativeUserId: number): Promise<Model.
     });
     return response.data;
 };
+//tìm user 
 export const searchUserPublic = async (query: string): Promise<Model.User[]> => {
     const response = await apiClient.get(`/users/search-public?query=${query}`, {
         headers: getAuthHeaders(),
