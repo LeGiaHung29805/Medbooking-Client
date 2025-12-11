@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Layout from "@/components/layout";
 import { RefreshCw } from "lucide-react";
 
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+// Dữ liệu trả về từ Laravel
+interface DoctorFromApi {
+  DoctorID: number;
+  FullName: string;
+  Degree: string;
+  Description: string | null;
+  Specialty: string;
+}
+
+// Dữ liệu dùng cho UI
 interface Doctor {
   id: number;
   name: string;
@@ -14,20 +26,34 @@ interface Doctor {
   hospital: string;
   location: string;
   image: string;
-  schedule: { [key: string]: string[] };
+  schedule: { [key: string]: string[] }; // "Thứ Hai 2025-12-10": ["09:00",...]
   price: number;
+}
+
+interface AvailabilityDay {
+  date: string;
+  dayOfWeek: string;
+  slots: {
+    SlotID: number;
+    StartTime: string;
+  }[];
 }
 
 export default function DoctorsBookingPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchTrigger, setSearchTrigger] = useState(""); // ✅ state để trigger tìm kiếm
+  const [searchTrigger, setSearchTrigger] = useState("");
   const [showCategory, setShowCategory] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState("");
   const [showPrice, setShowPrice] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Ngày và giờ đã chọn cho từng bác sĩ
+  // dữ liệu từ backend
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Ngày & giờ đã chọn
   const [selectedDates, setSelectedDates] = useState<{ [key: number]: string }>(
     {}
   );
@@ -38,272 +64,17 @@ export default function DoctorsBookingPage() {
     [key: number]: boolean;
   }>({});
 
-  // Địa chỉ mở rộng riêng cho từng bác sĩ
   const [openAddress, setOpenAddress] = useState<{ [key: number]: boolean }>(
     {}
   );
-
-  // Accordion bảo hiểm riêng cho từng bác sĩ
   const [openInsurance, setOpenInsurance] = useState<{
     [key: number]: boolean;
   }>({});
 
-  // Fake dữ liệu bác sĩ
-  const doctors: Doctor[] = [
-    {
-      id: 1,
-      name: "Nguyễn Hoàng A",
-      position: "Thạc sĩ, Bác sĩ chuyên khoa II",
-      experience: "20 năm kinh nghiệm Sản Phụ khoa",
-      department: "Sản Phụ khoa",
-      hospital: "Bệnh viện Đa khoa Hồng Ngọc",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor1.jpg",
-      schedule: {
-        "Thứ 2": ["06:00 - 06:30", "07:00 - 07:30"],
-        "Thứ 3": ["08:00 - 08:30", "09:00 - 09:30"],
-      },
-      price: 300000,
-    },
-    {
-      id: 2,
-      name: "Trần Thu B",
-      position: "Bác sĩ CKI",
-      experience: "15 năm kinh nghiệm Nội khoa",
-      department: "Nội khoa",
-      hospital: "Bệnh viện Bạch Mai",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor2.jpg",
-      schedule: {
-        "Thứ 4": ["10:00 - 10:30", "11:00 - 11:30"],
-        "Thứ 5": ["14:00 - 14:30"],
-      },
-      price: 500000,
-    },
-    {
-      id: 3,
-      name: "Lê  C",
-      position: "PGS. TS, Bác sĩ",
-      experience: "25 năm kinh nghiệm Ngoại khoa",
-      department: "Ngoại khoa",
-      hospital: "Bệnh viện Việt Đức",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor1.jpg",
-      schedule: {
-        "Thứ 2": ["13:30 - 14:00"],
-        "Thứ 6": ["15:00 - 15:30", "16:00 - 16:30"],
-      },
-      price: 400000,
-    },
-    {
-      id: 4,
-      name: "Phạm Thị D",
-      position: "Thạc sĩ, Bác sĩ chuyên khoa I",
-      experience: "15 năm kinh nghiệm Tai Mũi Họng",
-      department: "Tai Mũi Họng",
-      hospital: "Bệnh viện Tai Mũi Họng Trung ương",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor4.jpg",
-      schedule: {
-        "Thứ 2": ["13:30 - 14:00", "14:30 - 15:00"],
-        "Thứ 6": ["08:00 - 08:30", "09:00 - 09:30"],
-      },
-      price: 250000,
-    },
-    {
-      id: 5,
-      name: "Hoàng Văn E",
-      position: "Bác sĩ chuyên khoa I",
-      experience: "10 năm kinh nghiệm Răng Hàm Mặt",
-      department: "Răng Hàm Mặt",
-      hospital: "Phòng khám Răng Hàm Mặt Sài Gòn",
-      location: "Hồ Chí Minh",
-      image: "/image/doctors/doctor5.jpg",
-      schedule: {
-        "Thứ 3": ["08:00 - 08:30", "09:00 - 09:45"],
-        "Thứ 5": ["16:00 - 16:30"],
-        "Thứ 7": ["10:00 - 11:00"],
-      },
-      price: 400000,
-    },
-    {
-      id: 6,
-      name: "Ngô Thị F",
-      position: "Bác sĩ nội trú",
-      experience: "6 năm kinh nghiệm Nhi khoa",
-      department: "Nhi",
-      hospital: "Bệnh viện Nhi Đồng 1",
-      location: "Hồ Chí Minh",
-      image: "/image/doctors/doctor6.jpg",
-      schedule: {
-        "Thứ 2": ["08:00 - 08:30", "08:45 - 09:15"],
-        "Thứ 4": ["09:30 - 10:00", "10:15 - 10:45"],
-        "Thứ 6": ["15:00 - 15:45"],
-      },
-      price: 200000,
-    },
+  const [loadingDoctorId, setLoadingDoctorId] = useState<number | null>(null);
 
-    {
-      id: 7,
-      name: "Vũ Văn G",
-      position: "Thạc sĩ, Bác sĩ chuyên khoa II",
-      experience: "18 năm kinh nghiệm Da liễu",
-      department: "Da liễu",
-      hospital: "Bệnh viện Da Liễu Trung ương",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor7.jpg",
-      schedule: {
-        "Thứ 3": ["13:00 - 13:30", "14:00 - 14:30"],
-        "Thứ 5": ["17:00 - 17:30"],
-        "Thứ 7": ["09:00 - 09:30", "09:45 - 10:15"],
-      },
-      price: 300000,
-    },
-    {
-      id: 8,
-      name: "Bùi Thị H",
-      position: "Bác sĩ chuyên khoa II",
-      experience: "22 năm kinh nghiệm Cơ Xương Khớp",
-      department: "Cơ Xương Khớp",
-      hospital: "Bệnh viện Bạch Mai",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor8.jpg",
-      schedule: {
-        "Thứ 2": ["07:00 - 07:30", "07:45 - 08:15"],
-        "Thứ 4": ["15:00 - 15:30", "16:00 - 16:30"],
-        "Chủ nhật": ["08:30 - 09:15"],
-      },
-      price: 320000,
-    },
-    {
-      id: 9,
-      name: "Đặng Văn I",
-      position: "Bác sĩ chuyên khoa I",
-      experience: "11 năm kinh nghiệm Tiết niệu",
-      department: "Tiết niệu",
-      hospital: "Bệnh viện Việt Đức",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor9.jpg",
-      schedule: {
-        "Thứ 3": ["07:30 - 08:00", "11:00 - 11:30"],
-        "Thứ 6": ["13:00 - 13:45"],
-        "Thứ 7": ["14:00 - 14:30"],
-      },
-      price: 350000,
-    },
-    {
-      id: 10,
-      name: "Phan Thị K",
-      position: "Bác sĩ chuyên khoa II",
-      experience: "16 năm kinh nghiệm Mắt",
-      department: "Mắt",
-      hospital: "Bệnh viện Mắt Trung ương",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor10.jpg",
-      schedule: {
-        "Thứ 2": ["10:00 - 10:30", "10:45 - 11:15"],
-        "Thứ 5": ["08:00 - 08:30", "09:00 - 09:30"],
-        "Chủ nhật": ["10:00 - 11:00"],
-      },
-      price: 370000,
-    },
-    {
-      id: 11,
-      name: "Trương Văn L",
-      position: "Thạc sĩ",
-      experience: "14 năm kinh nghiệm Truyền nhiễm",
-      department: "Truyền nhiễm",
-      hospital: "Bệnh viện Bệnh Nhiệt Đới",
-      location: "Hồ Chí Minh",
-      image: "/image/doctors/doctor11.jpg",
-      schedule: {
-        "Thứ 3": ["09:00 - 09:30", "09:45 - 10:15"],
-        "Thứ 4": ["14:00 - 14:30"],
-        "Thứ 6": ["08:00 - 08:30"],
-      },
-      price: 280000,
-    },
-    {
-      id: 12,
-      name: "Nguyễn Thị M",
-      position: "Bác sĩ chuyên khoa I",
-      experience: "9 năm kinh nghiệm Thần kinh",
-      department: "Thần kinh",
-      hospital: "Bệnh viện Chợ Rẫy",
-      location: "Hồ Chí Minh",
-      image: "/image/doctors/doctor12.jpg",
-      schedule: {
-        "Thứ 2": ["15:00 - 15:30", "16:00 - 16:30"],
-        "Thứ 5": ["10:00 - 10:30"],
-        "Thứ 7": ["08:30 - 09:00"],
-      },
-      price: 300000,
-    },
-    {
-      id: 13,
-      name: "Lý Văn N",
-      position: "TS.BS, Bác sĩ chuyên khoa II",
-      experience: "28 năm kinh nghiệm Ung bướu",
-      department: "Ung bướu",
-      hospital: "Bệnh viện K",
-      location: "Hà Nội",
-      image: "/image/doctors/doctor13.jpg",
-      schedule: {
-        "Thứ 3": ["07:00 - 07:30", "07:45 - 08:15"],
-        "Thứ 6": ["09:00 - 09:45", "10:00 - 10:30"],
-        "Chủ nhật": ["14:00 - 14:45"],
-      },
-      price: 550000,
-    },
-    {
-      id: 14,
-      name: "Phùng Thị O",
-      position: "Bác sĩ chuyên khoa I",
-      experience: "13 năm kinh nghiệm Ngoại Tổng quát",
-      department: "Ngoại Tổng quát",
-      hospital: "Bệnh viện Đa khoa tỉnh Bắc Ninh",
-      location: "Bắc Ninh",
-      image: "/image/doctors/doctor14.jpg",
-      schedule: {
-        "Thứ 2": ["08:00 - 08:45"],
-        "Thứ 4": ["13:00 - 13:30", "13:45 - 14:15"],
-        "Thứ 6": ["17:00 - 17:30"],
-      },
-      price: 260000,
-    },
-    {
-      id: 15,
-      name: "Đỗ Văn P",
-      position: "Bác sĩ Gây mê hồi sức",
-      experience: "12 năm kinh nghiệm Gây mê",
-      department: "Gây mê hồi sức",
-      hospital: "Bệnh viện Trung ương Huế",
-      location: "Huế",
-      image: "/image/doctors/doctor15.jpg",
-      schedule: {
-        "Thứ 3": ["06:00 - 07:00"],
-        "Thứ 5": ["12:00 - 12:30"],
-        "Thứ 7": ["07:30 - 08:00"],
-      },
-      price: 330000,
-    },
-    {
-      id: 16,
-      name: "Hà Thị Q",
-      position: "Bác sĩ Chẩn đoán hình ảnh",
-      experience: "8 năm kinh nghiệm Chẩn đoán hình ảnh",
-      department: "Chẩn đoán hình ảnh",
-      hospital: "Bệnh viện Đa khoa Đà Nẵng",
-      location: "Đà Nẵng",
-      image: "/image/doctors/doctor16.jpg",
-      schedule: {
-        "Thứ 2": ["08:00 - 09:00"],
-        "Thứ 4": ["10:00 - 11:00"],
-        "Thứ 6": ["14:00 - 15:00"],
-      },
-      price: 240000,
-    },
-  ];
+  // NEW: doctor đang xem chi tiết
+  const [viewDoctor, setViewDoctor] = useState<Doctor | null>(null);
 
   const categories = [
     "Tất cả danh mục",
@@ -322,7 +93,72 @@ export default function DoctorsBookingPage() {
     { label: "Trên 500k", value: "500000+" },
   ];
 
-  // Toggle danh mục
+  // ===== 1. Load danh sách bác sĩ từ backend =====
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(`${API_BASE_URL}/doctors`);
+        if (!res.ok) throw new Error("Không gọi được API /doctors");
+
+        const data: DoctorFromApi[] = await res.json();
+
+        const mapped: Doctor[] = data.map((d, index) => ({
+          id: d.DoctorID,
+          name: d.FullName,
+          position: d.Degree,
+          experience: d.Description ?? "",
+          department: d.Specialty ?? "",
+          hospital: "Bệnh viện MedBooking",
+          location: "Hà Nội",
+          image: `/image/doctors/doctor${((index % 16) || 0) + 1}.jpg`,
+          schedule: {},
+          price: 300000,
+        }));
+
+        setDoctors(mapped);
+      } catch (e: any) {
+        console.error(e);
+        setError(e.message || "Có lỗi khi tải danh sách bác sĩ");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDoctors();
+  }, []);
+
+  // ===== 2. Load lịch khám của 1 bác sĩ =====
+  async function loadAvailability(doctorId: number) {
+    try {
+      setLoadingDoctorId(doctorId);
+
+      const res = await fetch(
+        `${API_BASE_URL}/doctors/${doctorId}/availability`
+      );
+      if (!res.ok) throw new Error("Không gọi được API availability");
+
+      const days: AvailabilityDay[] = await res.json();
+
+      const schedule: { [key: string]: string[] } = {};
+      days.forEach((day) => {
+        const label = `${day.dayOfWeek} ${day.date}`;
+        schedule[label] = day.slots.map((s) => s.StartTime);
+      });
+
+      setDoctors((prev) =>
+        prev.map((doc) => (doc.id === doctorId ? { ...doc, schedule } : doc))
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingDoctorId(null);
+    }
+  }
+
+  // ===== 3. Filter & Pagination =====
   const toggleCategory = (cat: string) => {
     if (cat === "Tất cả danh mục") {
       setSelectedCategories([]);
@@ -336,7 +172,6 @@ export default function DoctorsBookingPage() {
     setCurrentPage(1);
   };
 
-  // Lọc
   const filtered = doctors.filter((d) => {
     const matchName = d.name
       .toLowerCase()
@@ -354,21 +189,20 @@ export default function DoctorsBookingPage() {
     return matchName && matchDept && matchPrice;
   });
 
-  // Pagination
   const doctorsPerPage = 5;
-  const totalPages = Math.ceil(filtered.length / doctorsPerPage);
+  const totalPages = Math.ceil(filtered.length / doctorsPerPage) || 1;
   const startIndex = (currentPage - 1) * doctorsPerPage;
   const paginatedDoctors = filtered.slice(
     startIndex,
     startIndex + doctorsPerPage
   );
 
+  // ===== 4. JSX =====
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Thanh tìm kiếm */}
         <div className="bg-green-600 p-4 rounded-md shadow">
-          {/* Ô tìm kiếm */}
           <div className="mb-2 flex gap-2">
             <input
               type="text"
@@ -387,7 +221,6 @@ export default function DoctorsBookingPage() {
               Tìm kiếm
             </button>
 
-            {/* Nút reset filter */}
             <button
               className="p-2 bg-green-500 text-white rounded-md hover:bg-green-700 flex items-center justify-center"
               onClick={() => {
@@ -502,196 +335,249 @@ export default function DoctorsBookingPage() {
           </div>
         </div>
 
+        {/* Thông báo */}
+        {loading && (
+          <p className="mt-4 text-center text-gray-500">Đang tải bác sĩ...</p>
+        )}
+        {error && (
+          <p className="mt-4 text-center text-red-500">Lỗi: {error}</p>
+        )}
+
         {/* Danh sách bác sĩ */}
-        {paginatedDoctors.map((doc) => (
-          <div
-            key={doc.id}
-            className="mt-2 bg-white rounded-md shadow p-4 grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            {/* Bên trái */}
-            <div className="flex items-start gap-4 border-r pr-4">
-              <Image
-                src={doc.image}
-                alt={doc.name}
-                width={80}
-                height={80}
-                className="rounded-full object-cover"
-              />
-              <div>
-                <h2 className="text-lg font-semibold text-blue-600">
-                  {doc.position} {doc.name}
-                </h2>
-                <p className="text-sm text-gray-600">{doc.experience}</p>
-                <p className="text-sm text-gray-500 mt-2">📍 {doc.location}</p>
-                <a className="text-sm text-blue-500 cursor-pointer">Xem thêm</a>
-              </div>
-            </div>
+        {!loading &&
+          !error &&
+          paginatedDoctors.map((doc) => {
+            const selectedDay = selectedDates[doc.id];
+            const times = selectedDay ? doc.schedule[selectedDay] || [] : [];
 
-            {/* Bên phải */}
-            <div className="col-span-2 pl-4">
-              <div className="space-y-4">
-                {/* Lịch khám */}
-                <div className="border-b pb-4">
-                  <h3 className="font-medium mb-2">Lịch khám</h3>
-
-                  {/* Chọn ngày */}
-                  <div className="relative mb-3 w-1/2">
+            return (
+              <div
+                key={doc.id}
+                className="mt-2 bg-white rounded-md shadow p-4 grid grid-cols-1 md:grid-cols-3 gap-6"
+              >
+                {/* Trái */}
+                <div className="flex items-start gap-4 border-r pr-4">
+                  <Image
+                    src={doc.image}
+                    alt={doc.name}
+                    width={80}
+                    height={80}
+                    className="rounded-full object-cover"
+                  />
+                  <div>
+                    <h2 className="text-lg font-semibold text-blue-600">
+                      {doc.position} {doc.name}
+                    </h2>
+                    <p className="text-sm text-gray-600">{doc.experience}</p>
+                    <p className="text-sm text-gray-500 mt-2">📍 {doc.location}</p>
+                    {/* NÚT XEM THÊM – GIỜ ĐÃ CÓ onClick */}
                     <button
-                      className="w-full px-3 py-2 border rounded-md bg-white text-left"
-                      onClick={() =>
-                        setOpenDateDropdown((prev) => ({
-                          ...prev,
-                          [doc.id]: !prev[doc.id],
-                        }))
-                      }
+                      type="button"
+                      onClick={() => setViewDoctor(doc)}
+                      className="text-sm text-blue-500 cursor-pointer mt-1"
                     >
-                      {selectedDates[doc.id] || "Chọn ngày khám"}
+                      Xem thêm
                     </button>
-
-                    {openDateDropdown[doc.id] && (
-                      <div className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg p-3 z-10">
-                        {Object.keys(doc.schedule).map((day) => (
-                          <button
-                            key={day}
-                            onClick={() => {
-                              setSelectedDates((prev) => ({
-                                ...prev,
-                                [doc.id]: day,
-                              }));
-                              setOpenDateDropdown((prev) => ({
-                                ...prev,
-                                [doc.id]: false,
-                              }));
-                            }}
-                            className="block w-full px-3 py-2 text-left rounded hover:bg-green-100"
-                          >
-                            {day}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
-
-                  {/* Giờ khám */}
-                  {selectedDates[doc.id] ? (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {doc.schedule[selectedDates[doc.id]].map((time, i) => (
-                        <button
-                          key={i}
-                          onClick={() =>
-                            setSelectedTimes((prev) => ({
-                              ...prev,
-                              [doc.id]: time,
-                            }))
-                          }
-                          className={`border px-2 py-1 rounded ${
-                            selectedTimes[doc.id] === time
-                              ? "bg-green-500 text-white"
-                              : "hover:bg-green-100"
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">
-                      Hãy chọn ngày để xem giờ khám
-                    </p>
-                  )}
                 </div>
 
-                {/* Địa chỉ khám */}
-                <div className="border-b pb-4">
-                  <p>
-                    <strong>Địa chỉ khám:</strong> {doc.hospital}
-                  </p>
-                  <button
-                    onClick={() =>
-                      setOpenAddress((prev) => ({
-                        ...prev,
-                        [doc.id]: !prev[doc.id],
-                      }))
-                    }
-                    className="text-blue-500 text-sm mt-1"
-                  >
-                    {openAddress[doc.id] ? "Ẩn chi tiết" : "Xem chi tiết"}
-                  </button>
+                {/* Phải */}
+                <div className="col-span-2 pl-4">
+                  <div className="space-y-4">
+                    {/* Lịch khám */}
+                    <div className="border-b pb-4">
+                      <h3 className="font-medium mb-2">Lịch khám</h3>
 
-                  {openAddress[doc.id] && (
-                    <div className="mt-2 text-sm text-gray-600">
+                      {/* Chọn ngày */}
+                      <div className="relative mb-3 w-1/2">
+                        <button
+                          className="w-full px-3 py-2 border rounded-md bg-white text-left"
+                          onClick={() => {
+                            setOpenDateDropdown((prev) => ({
+                              ...prev,
+                              [doc.id]: !prev[doc.id],
+                            }));
+
+                            if (
+                              !doc.schedule ||
+                              Object.keys(doc.schedule).length === 0
+                            ) {
+                              loadAvailability(doc.id);
+                            }
+                          }}
+                        >
+                          {selectedDates[doc.id] || "Chọn ngày khám"}
+                        </button>
+
+                        {openDateDropdown[doc.id] && (
+                          <div className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg p-3 z-10">
+                            {loadingDoctorId === doc.id && (
+                              <p className="text-sm text-gray-500 px-3">
+                                Đang tải lịch khám...
+                              </p>
+                            )}
+
+                            {Object.keys(doc.schedule).map((day) => (
+                              <button
+                                key={day}
+                                onClick={() => {
+                                  setSelectedDates((prev) => ({
+                                    ...prev,
+                                    [doc.id]: day,
+                                  }));
+                                  setOpenDateDropdown((prev) => ({
+                                    ...prev,
+                                    [doc.id]: false,
+                                  }));
+                                }}
+                                className="block w-full px-3 py-2 text-left rounded hover:bg-green-100"
+                              >
+                                {day}
+                              </button>
+                            ))}
+
+                            {!loadingDoctorId &&
+                              Object.keys(doc.schedule).length === 0 && (
+                                <p className="text-sm text-gray-500 px-3">
+                                  Không có lịch khả dụng.
+                                </p>
+                              )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Giờ khám */}
+                      {selectedDay ? (
+                        times.length > 0 ? (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {times.map((time, i) => (
+                              <button
+                                key={i}
+                                onClick={() =>
+                                  setSelectedTimes((prev) => ({
+                                    ...prev,
+                                    [doc.id]: time,
+                                  }))
+                                }
+                                className={`border px-2 py-1 rounded ${
+                                  selectedTimes[doc.id] === time
+                                    ? "bg-green-500 text-white"
+                                    : "hover:bg-green-100"
+                                }`}
+                              >
+                                {time}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">
+                            Không có khung giờ trống cho ngày này.
+                          </p>
+                        )
+                      ) : (
+                        <p className="text-gray-500">
+                          Hãy chọn ngày để xem giờ khám
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Địa chỉ khám */}
+                    <div className="border-b pb-4">
                       <p>
-                        Số 8 đường Châu Văn Liêm, Phú Đô, Nam Từ Liêm, Hà Nội
+                        <strong>Địa chỉ khám:</strong> {doc.hospital}
+                      </p>
+                      <button
+                        onClick={() =>
+                          setOpenAddress((prev) => ({
+                            ...prev,
+                            [doc.id]: !prev[doc.id],
+                          }))
+                        }
+                        className="text-blue-500 text-sm mt-1"
+                      >
+                        {openAddress[doc.id] ? "Ẩn chi tiết" : "Xem chi tiết"}
+                      </button>
+
+                      {openAddress[doc.id] && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p>
+                            Số 8 đường Châu Văn Liêm, Phú Đô, Nam Từ Liêm, Hà
+                            Nội
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Giá khám */}
+                    <div className="border-b pb-4">
+                      <p>
+                        <strong>Giá khám:</strong>{" "}
+                        {doc.price.toLocaleString("vi-VN")}đ
                       </p>
                     </div>
-                  )}
-                </div>
 
-                {/* Giá khám */}
-                <div className="border-b pb-4">
-                  <p>
-                    <strong>Giá khám:</strong>{" "}
-                    {doc.price.toLocaleString("vi-VN")}đ
-                  </p>
-                </div>
+                    {/* Bảo hiểm */}
+                    <div className="border-b pb-4">
+                      <button
+                        className="text-blue-600 font-medium"
+                        onClick={() =>
+                          setOpenInsurance((prev) => ({
+                            ...prev,
+                            [doc.id]: !prev[doc.id],
+                          }))
+                        }
+                      >
+                        Loại bảo hiểm áp dụng{" "}
+                        {openInsurance[doc.id] ? "▲" : "▼"}
+                      </button>
 
-                {/* Bảo hiểm */}
-                <div className="border-b pb-4">
-                  <button
-                    className="text-blue-600 font-medium"
-                    onClick={() =>
-                      setOpenInsurance((prev) => ({
-                        ...prev,
-                        [doc.id]: !prev[doc.id],
-                      }))
-                    }
-                  >
-                    Loại bảo hiểm áp dụng {openInsurance[doc.id] ? "▲" : "▼"}
-                  </button>
-
-                  {openInsurance[doc.id] && (
-                    <div className="mt-3 space-y-3 text-sm">
-                      <div className="border p-2 rounded">
-                        <strong>Bảo hiểm y tế nhà nước</strong>
-                        <p>
-                          Người bệnh cần mang theo CCCD và VssID để nhân viên hỗ
-                          trợ về danh mục áp dụng BHYT
-                        </p>
-                      </div>
-                      <div className="border p-2 rounded">
-                        <strong>Bảo hiểm bảo lãnh</strong>
-                        <p>
-                          Đối với các bảo hiểm không bảo lãnh trực tiếp: Bệnh
-                          viện hỗ trợ xuất hóa đơn tài chính (hóa đơn đỏ).
-                        </p>
-                        <a className="text-blue-500 cursor-pointer">
-                          Xem danh sách
-                        </a>
-                      </div>
+                      {openInsurance[doc.id] && (
+                        <div className="mt-3 space-y-3 text-sm">
+                          <div className="border p-2 rounded">
+                            <strong>Bảo hiểm y tế nhà nước</strong>
+                            <p>
+                              Người bệnh cần mang theo CCCD và VssID để nhân
+                              viên hỗ trợ về danh mục áp dụng BHYT
+                            </p>
+                          </div>
+                          <div className="border p-2 rounded">
+                            <strong>Bảo hiểm bảo lãnh</strong>
+                            <p>
+                              Đối với các bảo hiểm không bảo lãnh trực tiếp:
+                              Bệnh viện hỗ trợ xuất hóa đơn tài chính (hóa đơn
+                              đỏ).
+                            </p>
+                            <span className="text-blue-500 cursor-pointer">
+                              Xem danh sách
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            );
+          })}
 
         {/* Pagination */}
-        <div className="flex justify-center mt-6 space-x-2">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
+        {!loading && !error && (
+          <div className="flex justify-center mt-6 space-x-2">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Nút đặt lịch cố định */}
         <div className="fixed bottom-0 left-0 right-0 bg-green-600 text-center py-1 font-semibold">
@@ -700,6 +586,66 @@ export default function DoctorsBookingPage() {
           </button>
         </div>
       </div>
+
+      {/* MODAL XEM THÊM BÁC SĨ */}
+      {viewDoctor && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden">
+            <div className="flex items-center gap-4 p-6 border-b">
+              <Image
+                src={viewDoctor.image}
+                alt={viewDoctor.name}
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
+              />
+              <div>
+                <h2 className="text-xl font-semibold text-blue-600">
+                  {viewDoctor.position} {viewDoctor.name}
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Chuyên khoa: {viewDoctor.department || "Đang cập nhật"}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Bệnh viện: {viewDoctor.hospital}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="font-semibold mb-1">Giới thiệu</h3>
+                <p className="text-sm text-gray-700">
+                  {viewDoctor.experience || "Chưa có mô tả chi tiết."}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-1">Địa chỉ khám</h3>
+                <p className="text-sm text-gray-700">
+                  {viewDoctor.hospital} - {viewDoctor.location}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-1">Giá khám</h3>
+                <p className="text-sm text-gray-700">
+                  {viewDoctor.price.toLocaleString("vi-VN")}đ
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border-t flex justify-end">
+              <button
+                onClick={() => setViewDoctor(null)}
+                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-medium"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
