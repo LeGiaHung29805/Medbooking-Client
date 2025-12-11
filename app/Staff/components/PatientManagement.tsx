@@ -149,12 +149,12 @@ export default function PatientManagement() {
         throw new Error(errorData.message || "Lỗi thêm mới");
       }
 
-      alert("✅ Thêm bệnh nhân thành công!");
+      alert("Thêm bệnh nhân thành công!");
       setShowAddModal(false);
       fetchPatients(); // Tải lại danh sách
     } catch (error: any) {
       // Hiển thị thông báo lỗi cụ thể
-      alert(`❌ Lỗi: \n${error.message}`);
+      alert(`Lỗi: \n${error.message}`);
       console.error(error);
     }
   };
@@ -169,9 +169,10 @@ export default function PatientManagement() {
     if (!selectedPatient) return;
 
     const formData = new FormData(event.currentTarget);
-
+    const usernameToSend = selectedPatient.Username;
     // Tạo payload JSON
     const payload = {
+      Username: usernameToSend,
       FullName: formData.get("FullName"),
       Email: formData.get("Email"),
       PhoneNumber: formData.get("PhoneNumber"),

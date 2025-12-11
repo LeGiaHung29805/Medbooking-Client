@@ -1,20 +1,26 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-export const BACKEND_URL = "http://127.0.0.1:8000";
+// lib/utils.ts
+
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
-export const getFullImageUrl = (path: string | null | undefined) => {
-  if (!path) return "https://placehold.co/40x40/E0E0E0/000?text=Empty";
+
+export const getFullImageUrl = (url: string | null | undefined) => {
+  if (!url) return "";
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
+  const backendUrl = "http://127.0.0.1:8000";
   
-  if (path.startsWith("http") || path.startsWith("blob:")) {
-    return path;
+  let cleanPath = url.startsWith("/") ? url.slice(1) : url;
+
+  if (!cleanPath.startsWith("storage/")) {
+     cleanPath = `storage/${cleanPath}`;
   }
 
-  let cleanPath = path.startsWith("/") ? path.substring(1) : path;
-
-  if (cleanPath.startsWith("uploads/")) {
-      cleanPath = `storage/${cleanPath}`;
-  }
-  return `${BACKEND_URL}/${cleanPath}`;
+  return `${backendUrl}/${cleanPath}`;
 };

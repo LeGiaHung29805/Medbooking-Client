@@ -49,8 +49,8 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       ...prev,
       [name]:
         name === "EstimatedDuration" ||
-        name === "Price" ||
-        name === "SpecialtyID"
+          name === "Price" ||
+          name === "SpecialtyID"
           ? Number(value)
           : value,
     }));
@@ -174,6 +174,7 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
                     onError={() =>
                       setPreviewUrl("https://placehold.co/100x100?text=Err")
                     }
+                    unoptimized={true}
                   />
                 </div>
                 <input
@@ -279,7 +280,7 @@ export default function ServiceManagementPage() {
     setLoading(true);
     try {
       const [servicesData, specialtiesData] = await Promise.all([
-        Api.getAllServices(),
+        Api.adminGetAllServices(searchQuery),
         Api.getSpecialties(),
       ]);
       setServices(servicesData);
@@ -426,6 +427,7 @@ export default function ServiceManagementPage() {
                         alt={service.ServiceName}
                         fallbackType="service"
                         className="w-10 h-10 rounded-lg"
+
                       />
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-800">

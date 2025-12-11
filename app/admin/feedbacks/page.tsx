@@ -107,7 +107,6 @@ export default function FeedbacksPage() {
             </div>
           ) : filteredFeedbacks.length === 0 ? (
             <div className="text-center py-12 text-gray-500 flex flex-col items-center">
-              <span className="text-4xl mb-2">📭</span>
               <p>Không có đánh giá nào phù hợp.</p>
             </div>
           ) : (

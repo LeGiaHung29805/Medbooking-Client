@@ -42,7 +42,10 @@ export default function DataThumbnail({
             setImgSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(alt)}&background=random`);
         }
     }, [src, alt, fallbackType]);
-
+    // console.log("Ảnh đang tải:", {
+    //     inputDB: src,
+    //     outputFull: imgSrc
+    // });
     return (
         <div className={`relative border overflow-hidden bg-gray-100 flex-shrink-0 ${className}`}>
             <Image
@@ -52,7 +55,7 @@ export default function DataThumbnail({
                 sizes="(max-width: 768px) 100vw, 50px"
                 className="object-cover"
                 onError={() => setImgSrc(PLACEHOLDERS[fallbackType])}
-                unoptimized={false}
+                unoptimized={true}
             />
         </div>
     );

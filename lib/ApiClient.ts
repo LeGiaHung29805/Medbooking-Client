@@ -447,6 +447,15 @@ export const adminDeleteSpecialty = async (id: number): Promise<void> => {
 };
 
 //Quản lý Dịch vụ (Admin)
+export const adminGetAllServices = async (search?: string): Promise<Model.Service[]> => {
+  const params = search ? { search } : {};
+  
+  const response = await apiClient.get<Model.Service[]>("/admin/services", {
+    headers: getAuthHeaders(),//kiểm tra token
+    params,
+  });
+  return response.data;
+};
 //Admin tạo dịch vụ
 export const adminCreateService = async (
   formData: FormData

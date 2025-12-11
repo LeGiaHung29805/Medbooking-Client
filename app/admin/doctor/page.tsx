@@ -27,16 +27,16 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
   // --- Map dữ liệu API vào Form ---
   const [formData, setFormData] = useState({
-    FullName: doctor?.user?.FullName || "",
-    Email: doctor?.user?.Email || "",
-    Username: doctor?.user?.Username || "",
+    FullName: "",
+    Email: "",
+    Username: "",
     Password: "",
-    PhoneNumber: doctor?.user?.PhoneNumber || "",
-    SpecialtyID: doctor?.SpecialtyID || specialties[0]?.SpecialtyID || 0,
-    Degree: doctor?.Degree || "",
-    YearsOfExperience: doctor?.YearsOfExperience || 1,
-    ProfileDescription: doctor?.ProfileDescription || "",
-    Status: doctor?.user?.Status || "HoatDong",
+    PhoneNumber: "",
+    SpecialtyID: specialties[0]?.SpecialtyID || 0,
+    Degree: "",
+    YearsOfExperience: 1,
+    ProfileDescription: "",
+    Status: "HoatDong",
   });
 
   // State xử lý file ảnh
@@ -47,7 +47,41 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>(
     initialImage ? getFullImageUrl(initialImage) : ""
   );
+  useEffect(() => {
+    if (doctor) {
+      setFormData({
+        FullName: doctor.user?.FullName || "",
+        Email: doctor.user?.Email || "",
+        Username: doctor.user?.Username || "",
+        Password: "",
+        PhoneNumber: doctor.user?.PhoneNumber || "",
+        SpecialtyID: doctor.SpecialtyID || specialties[0]?.SpecialtyID || 0,
+        Degree: doctor.Degree || "",
+        YearsOfExperience: doctor.YearsOfExperience || 1,
+        ProfileDescription: doctor.ProfileDescription || "",
+        Status: doctor.user?.Status || "HoatDong",
+      });
 
+      // Cập nhật ảnh preview theo bác sĩ đang chọn
+      const img = doctor.imageURL || doctor.user?.avatar_url;
+      setPreviewUrl(img ? getFullImageUrl(img) : "");
+    } else {
+      setFormData({
+        FullName: "",
+        Email: "",
+        Username: "",
+        Password: "",
+        PhoneNumber: "",
+        SpecialtyID: specialties[0]?.SpecialtyID || 0,
+        Degree: "",
+        YearsOfExperience: 1,
+        ProfileDescription: "",
+        Status: "HoatDong",
+      });
+      setPreviewUrl("");
+      setSelectedFile(null);
+    }
+  }, [doctor, specialties]);
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -107,13 +141,13 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
       if (formData.ProfileDescription)
         data.append("ProfileDescription", formData.ProfileDescription);
 
-      if (formData.Password && (isResettingPassword || !isEdit)) {
+      if (formData.Password) {
         data.append("password", formData.Password);
       }
 
       //Gửi file vào key 'image'
       if (selectedFile) {
-        data.append("image", selectedFile);
+        data.append("imageURL", selectedFile);
       }
 
       if (isEdit && doctor) {
@@ -315,6 +349,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                     onError={() =>
                       setPreviewUrl("https://placehold.co/100x100?text=Err")
                     }
+                    unoptimized={true}
                   />
                 </div>
                 <div className="flex flex-col w-full">
@@ -607,11 +642,10 @@ export default function DoctorManagementPage() {
                     </td>
                     <td className="py-3 px-4 text-sm">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
-                          status === "HoatDong"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-orange-100 text-orange-700"
-                        }`}
+                        className={`px-2 py-1 text-xs font-semibold rounded ${status === "HoatDong"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-orange-100 text-orange-700"
+                          }`}
                       >
                         {status === "HoatDong" ? "Active" : "Inactive"}
                       </span>
