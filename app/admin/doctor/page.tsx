@@ -438,6 +438,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
 //MAIN COMPONENT
 export default function DoctorManagementPage() {
+
   const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
   const [loading, setLoading] = useState(true);

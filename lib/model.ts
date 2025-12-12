@@ -211,14 +211,6 @@ export interface ScheduleDay {
 }
 
 // Thêm các interface mới
-export interface Doctor {
-  id: number
-  FullName: string
-  specialty: Specialty
-  email?: string
-  phone?: string
-  avatar?: string
-}
 
 export interface Specialty {
   id: number

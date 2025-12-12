@@ -82,7 +82,6 @@ export default function LayoutUser({ children }: LayoutUserProps) {
 
     return (
         <div className="flex flex-col min-h-screen">
-            {/* Header nhận diện được trạng thái đăng nhập nhờ localStorage */}
             <Header />
 
             <div className="flex flex-1 container mx-auto py-6 gap-6">

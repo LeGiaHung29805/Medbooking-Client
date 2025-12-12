@@ -149,7 +149,7 @@ export default function Header() {
                   type="button"
                   className="flex items-center space-x-1 hover:underline focus:outline-none"
                 >
-                  {/* Phần chữ: click sẽ đi tới /Users/profile cho đồng bộ */}
+                  {/*click sẽ đi tới /Users/profile cho đồng bộ */}
                   <span
                     onClick={(e) => {
                       e.stopPropagation(); // Ngăn DropdownMenuTrigger bắt sự kiện
