@@ -61,19 +61,6 @@ export interface ExamResult {
   created_at: string;
 }
 
-export interface MedicalRecord {
-  RecordID: number;
-  AppointmentID: number;
-  PatientID: number;
-  DoctorID: number;
-  Diagnosis: string;
-  Notes: string | null;
-  created_at: string;
-  exam_results?: ExamResult[]; // Danh sách file đính kèm
-  doctor?: Doctor; // Bác sĩ khám
-  patient?: User; // Bệnh nhân
-}
-
 export interface Appointment {
   AppointmentID: number;
   PatientID: number;
@@ -146,15 +133,23 @@ export interface FamilyMember extends User{
 // Type cho Doctor
 
 export interface MedicalRecord {
-  id: number
-  patientName: string
-  age: number
-  diagnosis: string
-  treatment: string
-  prescriptions: Prescription[]
-  tests: string[]
-  date: string
-  status: "completed" | "pending"
+  RecordID: number;
+  AppointmentID: number;
+  PatientID: number;
+  DoctorID: number;
+  Diagnosis: string;
+  Notes: string | null;
+  created_at: string;
+  exam_results?: ExamResult[];
+  doctor?: Doctor;
+  patient?: User;
+  // Thêm các field mới
+  patientName?: string;
+  age?: number;
+  treatment?: string;
+  prescriptions?: Prescription[];
+  tests?: string[];
+  status?: "completed" | "pending";
 }
 
 export interface VitalSigns {
@@ -315,3 +310,35 @@ export interface PatientDetail extends Patient {
 }
 
 
+// CẦN THÊM CÁC INTERFACE:
+export interface ScheduleSlot {
+  id: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  appointmentId?: number;
+}
+
+export interface AppointmentDetail {
+  id: number;
+  patientId: number;
+  patientName: string;
+  patientAge: number;
+  patientPhone: string;
+  symptoms: string;
+  appointmentTime: string;
+  status: string;
+  priority: string;
+  medicalHistory: string[];
+  allergies: string[];
+  previousRecords: MedicalRecord[];
+}
+
+export interface ExamResult {
+  id: number;
+  recordId: number;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+}

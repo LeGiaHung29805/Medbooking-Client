@@ -2,14 +2,15 @@ import axios from "axios";
 import * as Model from "./model";
 
 // 1. Cấu hình URL Backend
-const API_BASE_URL = "http://127.0.0.1:8000/api";
-
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: "http://127.0.0.1:8000/api",
+  withCredentials: true, 
   headers: {
-    Accept: "application/json",
+    "Accept": "application/json",
+    "Content-Type": "application/json",
   },
 });
+
 
 // === THÊM DEBUG INTERCEPTORS ===
 apiClient.interceptors.request.use(
@@ -723,9 +724,109 @@ export const staffUpdateSlot = async (
   );
   return response.data;
 };
+
+export const getAppointmentDetail = async (id: number): Promise<any> => {
+  const response = await apiClient.get(`/appointments/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+// 2. Lấy slot của bác sĩ
+export const getMySlots = async (): Promise<any> => {
+  const response = await apiClient.get("/doctor/my-slots", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+// 3. Cập nhật trạng thái lịch hẹn (dành cho bác sĩ)
+export const updateAppointmentStatus = async (
+  id: number,
+  status: string
+): Promise<any> => {
+  const response = await apiClient.patch(
+    `/doctor/appointments/${id}/status`,
+    { status },
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+// 4. Upload kết quả khám (generic version)
+export const uploadExamResult = async (formData: FormData): Promise<any> => {
+  const response = await apiClient.post("/doctor/upload-exam-result", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// 5. Lấy thông tin bác sĩ hiện tại
+export const getCurrentDoctor = async (): Promise<any> => {
+  const response = await apiClient.get("/doctor/me", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+// 6. Tạo slot mới (improved version với date và time riêng)
+export const createSlot = async (data: {
+  date: string;
+  start_time: string;
+  end_time: string;
+}): Promise<any> => {
+  const formData = new FormData();
+  formData.append("date", data.date);
+  formData.append("start_time", data.start_time);
+  formData.append("end_time", data.end_time);
+  
+  const response = await apiClient.post("/doctor/slots", formData, {
+    headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// 7. Xóa slot
+export const deleteSlot = async (slotId: number): Promise<any> => {
+  const response = await apiClient.delete(`/doctor/slots/${slotId}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 // [MỚI] Staff xóa slot rảnh
 export const staffDeleteSlot = async (id: number): Promise<void> => {
   await apiClient.delete(`/staff/availability/${id}`, {
     headers: getAuthHeaders(),
   });
 };
+
+// Thêm các hàm API khác
+export const doctorStartExam = async (id: number): Promise<any> => {
+  return updateAppointmentStatus(id, 'in_progress');
+};
+
+export const doctorCompleteExam = async (id: number): Promise<any> => {
+  return updateAppointmentStatus(id, 'completed');
+};
+
+export const doctorCheckInAppointment = async (id: number): Promise<any> => {
+  const response = await apiClient.patch(
+    `/doctor/appointments/${id}/check-in`,
+    {},
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export const doctorGeneratePrescriptionPDF = async (recordId: number): Promise<Blob> => {
+  const response = await apiClient.get(
+    `/doctor/medical-records/${recordId}/prescription-pdf`,
+    {
+      headers: getAuthHeaders(),
+      responseType: 'blob'
+    }
+  );
+  return response.data;
+};
+export default apiClient;
+

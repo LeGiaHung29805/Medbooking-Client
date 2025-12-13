@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect } from "react" // THÊM useEffect
 import { AlertTriangle } from "lucide-react"
-import type { PatientDetail } from  "@/lib/model"
+import type { PatientDetail, MedicalRecord } from "@/lib/model"
+import { doctorService } from "../../services/doctorService" // Kiểm tra đường dẫn này
+
 interface PatientDetailModalProps {
   patient: PatientDetail
   onClose: () => void
@@ -17,13 +19,48 @@ const PatientDetailModal = ({
   getPriorityText 
 }: PatientDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<'info' | 'history' | 'allergies'>('info')
+  const [patientHistory, setPatientHistory] = useState<MedicalRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false); // THÊM loading state
+
+  useEffect(() => {
+    const loadPatientHistory = async () => {
+      if (!patient.id) return;
+      
+      setLoadingHistory(true);
+      try {
+        console.log('📚 Loading patient history for patient:', patient.id);
+        const history = await doctorService.getPatientHistory(patient.id);
+        
+        if (history.success && Array.isArray(history.data)) {
+          setPatientHistory(history.data);
+        } else {
+          console.warn('Unexpected history response:', history);
+          setPatientHistory([]);
+        }
+      } catch (error) {
+        console.error("Error loading patient history:", error);
+        setPatientHistory([]);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    
+    if (activeTab === 'history' && patient.id) {
+      loadPatientHistory();
+    }
+  }, [activeTab, patient.id]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold">Thông tin bệnh nhân</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">✕</button>
+          <button 
+            onClick={onClose} 
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+          >
+            ✕
+          </button>
         </div>
 
         {/* CẢNH BÁO NGUY CƠ */}
@@ -57,22 +94,31 @@ const PatientDetailModal = ({
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setActiveTab('info')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'info' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'info' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            } transition-colors`}
           >
             Thông tin
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'history' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'history' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            } transition-colors`}
           >
             Lịch sử khám
           </button>
           <button
             onClick={() => setActiveTab('allergies')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'allergies' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'allergies' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            } transition-colors`}
           >
             Tiền sử & Dị ứng
           </button>
@@ -92,7 +138,8 @@ const PatientDetailModal = ({
               <div>
                 <label className="text-sm text-gray-600">Giới tính</label>
                 <p className="font-semibold">
-                  {patient.gender === 'male' ? 'Nam' : patient.gender === 'female' ? 'Nữ' : 'Khác'}
+                  {patient.gender === 'male' ? 'Nam' : 
+                   patient.gender === 'female' ? 'Nữ' : 'Khác'}
                 </p>
               </div>
               <div>
@@ -112,25 +159,47 @@ const PatientDetailModal = ({
             </div>
             <div>
               <label className="text-sm text-gray-600">Triệu chứng chính</label>
-              <p className="font-semibold">
-  {patient.gender === 'male' ? 'Nam' : 
-   patient.gender === 'female' ? 'Nữ' : 'Khác'}
-</p>
+              <p className="font-semibold">{patient.symptoms}</p>
             </div>
           </div>
         )}
 
         {activeTab === 'history' && (
           <div className="space-y-3">
-            {patient.medicalRecords.map(record => (
-              <div key={record.id} className="border rounded-lg p-3">
-                <div className="flex justify-between">
-                  <span className="font-semibold">{record.date}</span>
-                  <span className="text-sm text-gray-600">{record.diagnosis}</span>
-                </div>
-                <p className="text-sm mt-1">{record.treatment}</p>
+            {loadingHistory ? (
+              <div className="text-center py-8">
+                <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+                <p className="text-sm text-gray-500 mt-2">Đang tải lịch sử khám...</p>
               </div>
-            ))}
+            ) : patientHistory.length > 0 ? (
+              patientHistory.map(record => (
+                <div key={record.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">
+                      {record.date 
+                        ? new Date(record.date).toLocaleDateString('vi-VN') 
+                        : 'Không có ngày'}
+                    </span>
+                    <span className="text-sm text-gray-600">{record.diagnosis}</span>
+                  </div>
+                  <p className="text-sm mt-1">{record.treatment}</p>
+                  {record.prescriptions.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs font-medium text-gray-700">Đơn thuốc:</p>
+                      <ul className="text-xs text-gray-600 mt-1">
+                        {record.prescriptions.map((pres, idx) => (
+                          <li key={idx}>• {pres.medicine} ({pres.dosage})</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Chưa có lịch sử khám</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -170,13 +239,13 @@ const PatientDetailModal = ({
         <div className="flex gap-3 mt-6 pt-4 border-t">
           <button
             onClick={() => onStartExam(patient)}
-            className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium"
+            className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors"
           >
             Bắt đầu khám
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-300 py-3 rounded-lg hover:bg-gray-400 font-medium"
+            className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-medium transition-colors"
           >
             Đóng
           </button>

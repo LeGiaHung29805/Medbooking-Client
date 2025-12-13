@@ -1,33 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import SettingsTab from "../components/SettingsTab";
-import LoadingState from "../components/LoadingState";
-import ErrorState from "../components/ErrorState";
 import { 
-  User, 
-  Shield, 
-  Bell, 
-  Globe, 
-  Database,
-  HelpCircle,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  GraduationCap,
-  Briefcase,
-  Award,
-  Save,
-  RefreshCw,
-  Key,
-  Smartphone,
-  Monitor,
-  Moon,
-  Sun, 
-  FileText
+  User, Shield, Bell, Globe, Database, HelpCircle, Mail, Phone,
+  MapPin, Calendar, GraduationCap, Briefcase, Award, Save,
+  RefreshCw, Key, Smartphone, Monitor, Moon, Sun, FileText
 } from "lucide-react";
+import { doctorService } from "../../services/doctorService";
 
 export default function SettingsPage() {
   // ==================== STATES ====================
@@ -35,6 +14,8 @@ export default function SettingsPage() {
   const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "preferences">("profile");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [specialties, setSpecialties] = useState<{ SpecialtyID: number; SpecialtyName: string }[]>([]);
+const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | null>(null);
 
   // ==================== DOCTOR PROFILE ====================
   const [doctorInfo, setDoctorInfo] = useState({
@@ -49,10 +30,7 @@ export default function SettingsPage() {
     education: "Bác sĩ chuyên khoa I - Đại học Y Hà Nội",
     bio: "Chuyên gia về các bệnh lý nội khoa, có kinh nghiệm trong điều trị các bệnh mãn tính như tiểu đường, cao huyết áp.",
     address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-    workingHours: {
-      morning: "07:30 - 11:30",
-      afternoon: "13:30 - 17:00"
-    },
+    workingHours: { morning: "07:30 - 11:30", afternoon: "13:30 - 17:00" },
     consultationFee: "300,000 VND",
     languages: ["Tiếng Việt", "Tiếng Anh"]
   });
@@ -118,32 +96,63 @@ export default function SettingsPage() {
   // ==================== MOCK DATA LOADING ====================
 
 useEffect(() => {
-  const savedDoctorInfo = localStorage.getItem('doctorInfo');
-  if (savedDoctorInfo) {
-    setDoctorInfo(JSON.parse(savedDoctorInfo));
-  }
-}, []);
+    const loadProfile = async () => {
+      try {
+        const profile = await doctorService.getMyProfile();
+        if (profile) {
+          setDoctorInfo(prev => ({
+            ...prev,
+            name: profile.FullName || prev.name,
+            specialty: profile.specialty?.SpecialtyName || prev.specialty,
+            email: profile.email || prev.email,
+            phone: profile.phone || prev.phone,
+          }));
+        }
+      } catch (err) {
+        console.error("Không tải được profile:", err);
+      }
+    };
+    loadProfile();
+  }, []);
 
+  // ==================== HANDLE SAVE  ====================
   const handleSaveChanges = async () => {
+  setSaveStatus("saving");
   try {
-    setSaveStatus("saving");
-    
-    // 1. Lưu localStorage
-    localStorage.setItem('doctorInfo', JSON.stringify(doctorInfo));
-    
-    // 2. Gửi event
-    window.dispatchEvent(new CustomEvent('doctorInfoUpdated', { 
-      detail: doctorInfo 
-    }));
-    
-    // 3. Đợi 1 chút rồi redirect về dashboard
-    setTimeout(() => {
-      alert("✅ Đã lưu thành công! Chuyển về Dashboard...");
-      router.push('/Doctor'); // Redirect về dashboard
-    }, 1000);
-    
+    // Gọi API update (chỉ gửi field backend chấp nhận)
+    await doctorService.updateProfile({
+      FullName: doctorInfo.name,
+      email: doctorInfo.email,
+      phone: doctorInfo.phone,
+      // Không gửi specialty vì backend không xử lý
+    });
+
+    // === FIX HOÀN HẢO: Tạo cấu trúc cache chính xác như API getMyProfile trả về ===
+    const updatedCache = {
+      FullName: doctorInfo.name,
+      email: doctorInfo.email,
+      phone: doctorInfo.phone,
+      specialty: {
+        SpecialtyName: doctorInfo.specialty  // Tên mới người dùng nhập
+      }
+      // Nếu có thêm field khác như id, Role... thì thêm vào đây cũng được
+    };
+
+    // Cập nhật localStorage với cấu trúc chuẩn
+    localStorage.setItem("doctorInfo", JSON.stringify(updatedCache));
+
+    // Phát event để tất cả component reload ngay
+    window.dispatchEvent(new Event("doctorInfoUpdated"));
+
+    // Optional: Log để check
+    console.log("Cache updated:", updatedCache);
+
+    setSaveStatus("saved");
+    setTimeout(() => setSaveStatus("idle"), 2000);
   } catch (err) {
+    console.error("Lưu thất bại:", err);
     setSaveStatus("error");
+    setTimeout(() => setSaveStatus("idle"), 3000);
   }
 };
   // ==================== EVENT HANDLERS ====================
@@ -1259,29 +1268,35 @@ useEffect(() => {
 
       {/* Footer Actions */}
       <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-        <div className="text-sm text-gray-500">
-          ID: {doctorInfo.id} • Cập nhật lần cuối: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-        </div>
-        
-        <div className="flex gap-3">
-          <button
-            onClick={handleRefreshData}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Làm mới
-          </button>
-          
-          <button
-            onClick={handleSaveChanges}
-            disabled={saveStatus === "saving"}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {saveStatus === "saving" ? "Đang lưu..." : "Lưu tất cả thay đổi"}
-          </button>
-        </div>
-      </div>
+  <div className="text-sm text-gray-500">
+    ID: {doctorInfo.id} • Cập nhật lần cuối: 
+    <span suppressHydrationWarning>
+      {typeof window !== 'undefined' 
+        ? new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+        : '--:--'
+      }
+    </span>
+  </div>
+  
+  <div className="flex gap-3">
+    <button
+      onClick={handleRefreshData}
+      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+    >
+      <RefreshCw className="w-4 h-4" />
+      Làm mới
+    </button>
+    
+    <button
+      onClick={handleSaveChanges}
+      disabled={saveStatus === "saving"}
+      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+    >
+      <Save className="w-4 h-4" />
+      {saveStatus === "saving" ? "Đang lưu..." : "Lưu tất cả thay đổi"}
+    </button>
+  </div>
+</div>
     </div>
   );
 }

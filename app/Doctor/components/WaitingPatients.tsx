@@ -10,7 +10,7 @@ interface WaitingPatientsProps {
   getPriorityColor: (priority: string) => string
   getPriorityText: (priority: string) => string
   handleViewPatientDetail: (id: number) => void
-  handleStartExam: (patient: PatientDetail) => void
+  handleStartExam: (patient: PatientDetail) => void;
 }
 
 export default function WaitingPatients({
@@ -79,27 +79,27 @@ export default function WaitingPatients({
                 </div>
 
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    const patientDetail: PatientDetail = {
-                      id: patient.id,
-                      name: patient.name,
-                      age: patient.age,
-                      gender: patient.gender,
-                      phone: patient.phone,
-                      symptoms: patient.symptoms,
-                      appointmentTime: patient.appointmentTime,
-                      allergies: patient.allergies,
-                      medicalHistory: patient.medicalHistory,
-                      priority: patient.priority,
-                      medicalRecords: medicalRecords.filter(r => r.patientName === patient.name)
-                    }
-                    handleStartExam(patientDetail)
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Bắt đầu khám
-                </button>
+  onClick={(e) => {
+    e.stopPropagation();
+    const patientDetail: PatientDetail = {
+      id: patient.id,
+      name: patient.name,
+      age: patient.age,
+      gender: patient.gender,
+      phone: patient.phone,
+      symptoms: patient.symptoms,
+      appointmentId: patient.appointmentId || patient.id,
+      allergies: patient.allergies,
+      medicalHistory: patient.medicalHistory,
+      priority: patient.priority,
+      medicalRecords: medicalRecords.filter(r => r.patientName === patient.name)
+    };
+    handleStartExam(patientDetail);
+  }}
+  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+>
+  Bắt đầu khám
+</button>
               </div>
             )
           })

@@ -1,7 +1,9 @@
+
 "use client";
 
 import { Search, Filter, ChevronLeft, ChevronRight, Calendar, User, Clock } from "lucide-react";
-import type { Appointment, Patient, PatientDetail, MedicalRecord } from  "@/lib/model"
+import type { Appointment, Patient, PatientDetail, MedicalRecord } from "@/lib/model"
+
 interface TodayAppointmentsProps {
   appointments: Appointment[];
   waitingPatients: Patient[];
@@ -121,10 +123,10 @@ export default function TodayAppointments({
                 key={appt.id}
                 className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
                 onClick={() => {
-  if (handleViewAppointmentDetail) {
-    handleViewAppointmentDetail(appt.id);
-  }
-}}
+                  if (handleViewAppointmentDetail) {
+                    handleViewAppointmentDetail(appt.id);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -133,17 +135,29 @@ export default function TodayAppointments({
                       appt.status === "in_progress" ? "bg-blue-500" :
                       "bg-gray-400"
                     }`}>
-                      {appt.patientName.charAt(0)}
+                      {appt.patientName?.charAt(0) || "?"}
                     </div>
 
                     <div>
-                      <h3 className="font-semibold text-lg">{appt.patientName}</h3>
+                      <h3 className="font-semibold text-lg">
+                        {appt.patientName || "Không có tên"}
+                      </h3>
                       <p className="text-sm text-slate-600">
-                        {appt.patientAge} tuổi • {appt.patientPhone}
+                        {appt.patientAge || 0} tuổi • {appt.patientPhone || "Chưa có SĐT"}
                       </p>
                       <p className="text-sm text-slate-500 mt-1">
-                        Giờ hẹn: {new Date(appt.appointmentTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                        Giờ hẹn: {appt.appointmentTime ? 
+                          (() => {
+      try {
+        const date = new Date(appt.appointmentTime);
+        if (isNaN(date.getTime())) return "Giờ không hợp lệ";
+        return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      } catch {
+        return "Giờ không hợp lệ";
+      }
+    })()
+    : "Chưa có giờ hẹn"}
+</p>
                     </div>
                   </div>
 
@@ -160,7 +174,7 @@ export default function TodayAppointments({
                       )}
                     </div>
 
-                    {appt.status === "checked_in" && (
+                    {(appt.status === "checked_in" || appt.status === "waiting" || appt.status === "confirmed") && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

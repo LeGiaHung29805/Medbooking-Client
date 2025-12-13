@@ -1,5 +1,6 @@
 import { Users, Clock, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import type { Appointment, Patient, ScheduleDay } from  "@/lib/model"
+import { useState } from "react" // THÊM useState nếu cần
 
 interface ScheduleTabProps {
   currentWeek: Date
@@ -10,6 +11,8 @@ interface ScheduleTabProps {
   getStatusInfo: (status: string) => any
   getPriorityColor: (priority: string) => string
   getPriorityText: (priority: string) => string
+  doctorId?: number
+  currentDoctor?: any
 }
 
 const ScheduleTab = ({
@@ -20,8 +23,52 @@ const ScheduleTab = ({
   handleViewAppointmentDetail,
   getStatusInfo,
   getPriorityColor,
-  getPriorityText
+  getPriorityText,
+  doctorId, // THÊM VÀO ĐÂY
+  currentDoctor // THÊM VÀO ĐÂY
 }: ScheduleTabProps) => {
+  // Hàm tính thời gian còn lại
+  const calculateTimeRemaining = (appointmentTime: string): string => {
+    try {
+      const now = new Date()
+      const apptTime = new Date(appointmentTime)
+      
+      // Kiểm tra nếu thời gian không hợp lệ
+      if (isNaN(apptTime.getTime())) return "giờ không hợp lệ"
+      
+      const diffMs = apptTime.getTime() - now.getTime()
+      const diffMins = Math.floor(diffMs / (1000 * 60))
+      
+      if (diffMins < 0) return "quá hẹn"
+      if (diffMins < 60) return `${diffMins} phút`
+      
+      const diffHours = Math.floor(diffMins / 60)
+      return `${diffHours} giờ`
+    } catch (error) {
+      return "lỗi tính giờ"
+    }
+  }
+
+  // Hàm lấy khung giờ làm việc
+  const getTimeSlotsForDay = (date: Date): string[] => {
+    const dayOfWeek = date.getDay()
+    
+    // Khung giờ mặc định
+    const defaultSlots = ["08:00-12:00", "13:30-17:00"]
+    
+    // Nếu là cuối tuần
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return ["08:00-12:00"] // Chỉ làm buổi sáng cuối tuần
+    }
+    
+    // Có thể lấy từ setting của bác sĩ
+    if (currentDoctor?.workingHours) {
+      return currentDoctor.workingHours
+    }
+    
+    return defaultSlots
+  }
+
   const getWeekSchedule = (date: Date): ScheduleDay[] => {
     const startOfWeek = new Date(date)
     startOfWeek.setDate(date.getDate() - date.getDay())
@@ -30,22 +77,49 @@ const ScheduleTab = ({
       const day = new Date(startOfWeek)
       day.setDate(startOfWeek.getDate() + i)
 
+      // Lọc lịch hẹn
       const dayAppointments = appointments.filter(appt => {
-        const apptDate = new Date(appt.appointmentTime).toDateString()
-        return apptDate === day.toDateString()
+        try {
+          const apptDate = new Date(appt.appointmentTime)
+          
+          // Kiểm tra cùng ngày
+          const isSameDay = apptDate.toDateString() === day.toDateString()
+          
+          // Kiểm tra cùng bác sĩ (nếu có doctorId)
+          const isSameDoctor = !doctorId || appt.doctorId === doctorId
+          
+          return isSameDay && isSameDoctor
+        } catch (error) {
+          console.error("Lỗi xử lý lịch hẹn:", appt, error)
+          return false
+        }
       })
 
       return {
         id: i + 1,
         date: day.toISOString().split('T')[0],
         appointments: dayAppointments.length,
-        timeSlots: ["08:00-12:00", "13:30-17:00"],
+        timeSlots: getTimeSlotsForDay(day),
         appointmentsList: dayAppointments
       }
     })
   }
 
   const currentWeekSchedule = getWeekSchedule(currentWeek)
+
+  // Thêm hàm xử lý lỗi thời gian
+  const getSafeAppointmentTime = (appointmentTime: string): string => {
+    try {
+      const date = new Date(appointmentTime)
+      if (isNaN(date.getTime())) return "Giờ không hợp lệ"
+      return date.toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch {
+      return "Giờ không hợp lệ"
+    }
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border p-6">
@@ -54,6 +128,28 @@ const ScheduleTab = ({
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Lịch làm việc của tôi</h2>
           <p className="text-slate-600 mt-1">Quản lý lịch hẹn và thời gian làm việc</p>
+          
+          {/* Thêm thống kê */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+              Tổng: {appointments.length} lịch
+            </div>
+            <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+              Tuần này: {currentWeekSchedule.reduce((sum, day) => sum + day.appointments, 0)}
+            </div>
+            <div className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
+              Hôm nay: {
+                appointments.filter(appt => {
+                  try {
+                    const apptDate = new Date(appt.appointmentTime)
+                    return apptDate.toDateString() === new Date().toDateString()
+                  } catch {
+                    return false
+                  }
+                }).length
+              }
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 mt-4 lg:mt-0">
@@ -118,7 +214,7 @@ const ScheduleTab = ({
               className={`
                 border rounded-xl p-4 min-h-[280px] transition-all duration-200
                 ${isToday
-                  ? 'bg-blue-50 border-blue-300 shadow-md transform scale-105'
+                  ? 'bg-blue-50 border-blue-300 shadow-md'
                   : 'border-slate-200 hover:shadow-md hover:border-slate-300'
                 }
                 ${isWeekend ? 'bg-orange-50 border-orange-200' : ''}
@@ -158,7 +254,10 @@ const ScheduleTab = ({
               {/* Khung giờ làm việc */}
               <div className="space-y-2 mb-4">
                 {day.timeSlots.map((slot, slotIndex) => (
-                  <div key={slotIndex} className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-2 rounded-lg">
+                  <div 
+                    key={`slot-${day.id}-${slotIndex}`} 
+                    className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-2 rounded-lg"
+                  >
                     <Clock className="w-4 h-4 text-blue-500" />
                     <span className="font-medium">{slot}</span>
                   </div>
@@ -169,7 +268,7 @@ const ScheduleTab = ({
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {day.appointmentsList.length > 0 ? (
                   day.appointmentsList.map(appointment => {
-                    const fullPatient = waitingPatients.find(p => p.id === appointment.id)
+                    const fullPatient = waitingPatients.find(p => p.id === appointment.id || p.patientId === appointment.id)
                     const statusInfo = getStatusInfo(appointment.status)
 
                     return (
@@ -182,21 +281,37 @@ const ScheduleTab = ({
                             : 'bg-white border-slate-200 hover:bg-slate-50'
                           }
                           ${appointment.status === 'checked_in' ? 'bg-green-50 border-green-200' : ''}
+                          ${appointment.status === 'cancelled' ? 'bg-red-50 border-red-200 line-through opacity-70' : ''}
                         `}
                         onClick={(e) => {
                           e.stopPropagation()
                           handleViewAppointmentDetail(appointment.id)
                         }}
                       >
-                        <div className="font-semibold text-slate-900 truncate">
+                        <div className="font-semibold text-slate-900 truncate flex items-center gap-1">
                           {appointment.patientName}
+                          {fullPatient?.priority === 'emergency' && ' 🚨'}
+                          {fullPatient?.priority === 'high' && ' ⚠️'}
                         </div>
+                        
                         <div className="text-slate-500 text-xs mt-1">
-                          {new Date(appointment.appointmentTime).toLocaleTimeString('vi-VN', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          {getSafeAppointmentTime(appointment.appointmentTime)}
+                          
+                          {/* Hiển thị thời gian còn lại nếu đang chờ */}
+                          {appointment.status === 'waiting' && (
+                            <span className="ml-2 text-orange-600">
+                              • Còn {calculateTimeRemaining(appointment.appointmentTime)}
+                            </span>
+                          )}
                         </div>
+                        
+                        {/* Hiển thị triệu chứng nếu có */}
+                        {appointment.symptoms && (
+                          <div className="text-xs text-slate-600 mt-1 truncate">
+                            {appointment.symptoms.substring(0, 50)}
+                            {appointment.symptoms.length > 50 ? '...' : ''}
+                          </div>
+                        )}
 
                         <div className="flex flex-wrap gap-1 mt-2">
                           <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${statusInfo.cls}`}>
@@ -207,6 +322,13 @@ const ScheduleTab = ({
                           {fullPatient && fullPatient.priority !== 'low' && (
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${getPriorityColor(fullPatient.priority)}`}>
                               {getPriorityText(fullPatient.priority)}
+                            </span>
+                          )}
+                          
+                          {/* Hiển thị loại dịch vụ nếu có */}
+                          {appointment.serviceType && (
+                            <span className="inline-flex px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
+                              {appointment.serviceType}
                             </span>
                           )}
                         </div>
@@ -243,6 +365,10 @@ const ScheduleTab = ({
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-50 border border-green-200 rounded"></div>
             <span>Đã check-in</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-50 border border-red-200 rounded"></div>
+            <span>Đã hủy</span>
           </div>
         </div>
       </div>

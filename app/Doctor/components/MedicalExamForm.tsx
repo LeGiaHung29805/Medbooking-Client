@@ -1,15 +1,25 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type React from "react"
-import type { PatientDetail, MedicalExamFormData, Prescription, VitalSigns } from  "@/lib/model"
+import type { PatientDetail, MedicalExamFormData, Prescription, VitalSigns } from "@/lib/model"
+import { doctorService } from "../../services/doctorService"
+import { Save, AlertTriangle, Plus, Trash2, FileText, Upload } from "lucide-react"
 
 interface MedicalExamFormProps {
   patient: PatientDetail
   onClose: () => void
   onComplete: (formData: MedicalExamFormData) => void
+  onCancel?: () => void // THÊM PROP NÀY
 }
 
-const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps) => {
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([{ medicine: '', dosage: '', frequency: '' }])
+const MedicalExamForm = ({ 
+  patient, 
+  onClose, 
+  onComplete,
+  onCancel // THÊM VÀO DESTRUCTURING
+}: MedicalExamFormProps) => {
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([
+    { medicine: '', dosage: '', frequency: '' }
+  ])
   const [formData, setFormData] = useState<MedicalExamFormData>({
     diagnosis: '',
     clinicalNotes: '',
@@ -19,29 +29,42 @@ const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps)
     attachments: [],
     vitalSigns: {
       bloodPressure: '',
-      heartRate: 0,
-      temperature: 0,
-      respiratoryRate: 0,
+      heartRate: 80,
+      temperature: 36.5,
+      respiratoryRate: 16,
       spO2: 98,
-      weight: 0,
-      height: 0
+      weight: 60,
+      height: 165
     }
   })
+  
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Đồng bộ prescriptions với formData
+  useEffect(() => {
+    const validPrescriptions = prescriptions.filter(p => 
+      p.medicine.trim() && p.dosage.trim() && p.frequency.trim()
+    )
+    setFormData(prev => ({
+      ...prev,
+      prescriptions: validPrescriptions
+    }))
+  }, [prescriptions])
 
   const updateVitalSign = (field: keyof VitalSigns, value: string | number) => {
-  setFormData(prev => ({
-    ...prev,
-    vitalSigns: {
-      ...prev.vitalSigns,
-      [field]: value
-    }
-  }))
-}
+    setFormData(prev => ({
+      ...prev,
+      vitalSigns: {
+        ...prev.vitalSigns,
+        [field]: value
+      }
+    }))
+  }
 
   const updatePrescription = (index: number, field: keyof Prescription, value: string) => {
-    const updated = prescriptions.map((p, i) =>
-      i === index ? { ...p, [field]: value } : p
-    )
+    const updated = [...prescriptions]
+    updated[index] = { ...updated[index], [field]: value }
     setPrescriptions(updated)
   }
 
@@ -50,7 +73,9 @@ const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps)
   }
 
   const removePrescription = (index: number) => {
-    setPrescriptions(prescriptions.filter((_, i) => i !== index))
+    if (prescriptions.length > 1) {
+      setPrescriptions(prescriptions.filter((_, i) => i !== index))
+    }
   }
 
   const addTest = () => {
@@ -66,11 +91,19 @@ const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps)
     setFormData(prev => ({ ...prev, tests: newTests }))
   }
 
+  const removeTest = (index: number) => {
+    if (formData.tests.length > 1) {
+      const newTests = formData.tests.filter((_, i) => i !== index)
+      setFormData(prev => ({ ...prev, tests: newTests }))
+    }
+  }
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
+      const files = Array.from(e.target.files)
       setFormData(prev => ({
         ...prev,
-        attachments: [...prev.attachments, ...Array.from(e.target.files!)]
+        attachments: [...prev.attachments, ...files]
       }))
     }
   }
@@ -80,111 +113,256 @@ const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps)
     setFormData(prev => ({ ...prev, attachments: newFiles }))
   }
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+    
     if (!formData.diagnosis.trim()) {
-      alert('Vui lòng nhập chẩn đoán')
-      return false
+      newErrors.diagnosis = 'Vui lòng nhập chẩn đoán'
     }
-    return true
+    
+    if (!formData.currentSymptoms.trim()) {
+      newErrors.currentSymptoms = 'Vui lòng nhập triệu chứng hiện tại'
+    }
+    
+    // Validate vital signs
+    if (formData.vitalSigns.bloodPressure && !/^\d+\/\d+$/.test(formData.vitalSigns.bloodPressure)) {
+      newErrors.bloodPressure = 'Huyết áp phải có định dạng 120/80'
+    }
+    
+    if (formData.vitalSigns.heartRate < 40 || formData.vitalSigns.heartRate > 200) {
+      newErrors.heartRate = 'Mạch phải từ 40-200 lần/phút'
+    }
+    
+    if (formData.vitalSigns.temperature < 35 || formData.vitalSigns.temperature > 42) {
+      newErrors.temperature = 'Nhiệt độ phải từ 35-42°C'
+    }
+    
+    if (formData.vitalSigns.spO2 < 70 || formData.vitalSigns.spO2 > 100) {
+      newErrors.spO2 = 'SpO2 phải từ 70-100%'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const handleComplete = () => {
-    if (!validateForm()) return
-
-    const validPrescriptions = prescriptions.filter(p =>
-      p.medicine.trim() !== '' && p.dosage.trim() !== '' && p.frequency.trim() !== ''
-    )
-
-    const formDataWithPrescriptions = {
-      ...formData,
-      prescriptions: validPrescriptions
-    }
-
-    onComplete(formDataWithPrescriptions)
+  const handleComplete = async () => {
+  if (!validateForm()) {
+    alert('Vui lòng kiểm tra lại thông tin nhập');
+    return;
   }
 
+  setLoading(true);
+  
+  try {
+    console.log('🚀 Bắt đầu lưu bệnh án...');
+    
+    // 1. Tạo bệnh án - SỬ DỤNG MOCK
+    const medicalRecordData = {
+      patient_id: patient.id,
+      appointment_id: patient.appointmentId || patient.id,
+      diagnosis: formData.diagnosis.trim(),
+      treatment: formData.clinicalNotes.trim(),
+      prescriptions: prescriptions
+        .filter(p => p.medicine.trim() && p.dosage.trim() && p.frequency.trim())
+        .map(p => ({
+          medicine: p.medicine.trim(),
+          dosage: p.dosage.trim(),
+          frequency: p.frequency.trim()
+        })),
+      tests: formData.tests.filter(t => t.trim()),
+      vital_signs: {
+        blood_pressure: formData.vitalSigns.bloodPressure,
+        heart_rate: formData.vitalSigns.heartRate,
+        temperature: formData.vitalSigns.temperature,
+        respiratory_rate: formData.vitalSigns.respiratoryRate,
+        sp_o2: formData.vitalSigns.spO2,
+        weight: formData.vitalSigns.weight,
+        height: formData.vitalSigns.height
+      },
+      notes: formData.clinicalNotes
+    };
+
+    console.log('📤 [MOCK] Gửi dữ liệu bệnh án:', medicalRecordData);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const result = {
+      success: true,
+      data: {
+        id: Date.now(),
+        ...medicalRecordData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      message: 'Tạo bệnh án thành công'
+    };
+    
+    console.log('✅ Kết quả tạo bệnh án:', result);
+
+    if (result.success) {
+      console.log('🎉 Bệnh án đã được lưu thành công!');
+      
+      // 2. Gọi callback để cập nhật UI
+      onComplete(formData);
+      
+      // 3. Hiển thị thông báo
+      alert(`✅ Đã lưu bệnh án thành công cho ${patient.name}!`);
+      
+      // 4. Đóng form
+      onClose();
+      
+    } else {
+      console.error('❌ Lỗi lưu bệnh án:', result.message);
+      alert(`❌ Lỗi: ${result.message || 'Không thể lưu bệnh án'}`);
+    }
+    
+  } catch (error: any) {
+    console.error('💥 Lỗi nghiêm trọng khi lưu bệnh án:', error);
+    alert(`❌ Có lỗi xảy ra: ${error.message || 'Vui lòng thử lại sau'}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // ĐÂY LÀ PHẦN RETURN JSX - KHÔNG ĐƯỢC THIẾU
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold">Tạo bệnh án - {patient.name}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">✕</button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-4">
+      <div className="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 my-auto max-h-[95vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pt-2 pb-4 border-b">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">
+              Tạo bệnh án - {patient.name}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              ID: {patient.id} • {patient.age} tuổi • {patient.gender === 'male' ? 'Nam' : 'Nữ'}
+            </p>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={loading}
+          >
+            ✕
+          </button>
         </div>
+
+        {/* Warning nếu có dị ứng */}
+        {patient.allergies && patient.allergies.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <span className="font-semibold text-amber-800">CẢNH BÁO DỊ ỨNG</span>
+            </div>
+            <p className="text-sm text-amber-700">
+              Bệnh nhân có dị ứng với: {patient.allergies.join(', ')}
+            </p>
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* Dấu hiệu sinh tồn */}
-          <div className="border rounded-lg p-4">
-            <h4 className="font-semibold mb-3">Dấu hiệu sinh tồn</h4>
+          <div className="border border-gray-200 rounded-lg p-5 bg-gray-50">
+            <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              Dấu hiệu sinh tồn
+            </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label className="text-sm text-gray-600">Huyết áp (mmHg)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Huyết áp (mmHg)*
+                </label>
                 <input
                   type="text"
                   placeholder="120/80"
                   value={formData.vitalSigns.bloodPressure}
                   onChange={(e) => updateVitalSign('bloodPressure', e.target.value)}
-                  className="w-full border rounded p-2 text-sm"
+                  className={`w-full border rounded-lg p-3 text-sm ${errors.bloodPressure ? 'border-red-500' : 'border-gray-300'}`}
                 />
+                {errors.bloodPressure && (
+                  <p className="text-red-500 text-xs mt-1">{errors.bloodPressure}</p>
+                )}
               </div>
               <div>
-                <label className="text-sm text-gray-600">Mạch (lần/phút)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mạch (lần/phút)*
+                </label>
                 <input
                   type="number"
                   placeholder="72"
                   value={formData.vitalSigns.heartRate}
                   onChange={(e) => updateVitalSign('heartRate', parseInt(e.target.value) || 0)}
-                  className="w-full border rounded p-2 text-sm"
+                  className={`w-full border rounded-lg p-3 text-sm ${errors.heartRate ? 'border-red-500' : 'border-gray-300'}`}
                 />
+                {errors.heartRate && (
+                  <p className="text-red-500 text-xs mt-1">{errors.heartRate}</p>
+                )}
               </div>
               <div>
-                <label className="text-sm text-gray-600">Nhiệt độ (°C)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nhiệt độ (°C)*
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   placeholder="36.5"
                   value={formData.vitalSigns.temperature}
                   onChange={(e) => updateVitalSign('temperature', parseFloat(e.target.value) || 0)}
-                  className="w-full border rounded p-2 text-sm"
+                  className={`w-full border rounded-lg p-3 text-sm ${errors.temperature ? 'border-red-500' : 'border-gray-300'}`}
                 />
+                {errors.temperature && (
+                  <p className="text-red-500 text-xs mt-1">{errors.temperature}</p>
+                )}
               </div>
               <div>
-                <label className="text-sm text-gray-600">Nhịp thở (lần/phút)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nhịp thở (lần/phút)
+                </label>
                 <input
                   type="number"
                   placeholder="16"
                   value={formData.vitalSigns.respiratoryRate}
                   onChange={(e) => updateVitalSign('respiratoryRate', parseInt(e.target.value) || 0)}
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-600">SpO2 (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SpO2 (%)*
+                </label>
                 <input
                   type="number"
                   placeholder="98"
                   value={formData.vitalSigns.spO2}
                   onChange={(e) => updateVitalSign('spO2', parseInt(e.target.value) || 0)}
-                  className="w-full border rounded p-2 text-sm"
+                  className={`w-full border rounded-lg p-3 text-sm ${errors.spO2 ? 'border-red-500' : 'border-gray-300'}`}
                 />
+                {errors.spO2 && (
+                  <p className="text-red-500 text-xs mt-1">{errors.spO2}</p>
+                )}
               </div>
               <div>
-                <label className="text-sm text-gray-600">Cân nặng (kg)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cân nặng (kg)
+                </label>
                 <input
                   type="number"
                   placeholder="65"
                   value={formData.vitalSigns.weight}
                   onChange={(e) => updateVitalSign('weight', parseFloat(e.target.value) || 0)}
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Chiều cao (cm)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Chiều cao (cm)
+                </label>
                 <input
                   type="number"
                   placeholder="170"
                   value={formData.vitalSigns.height}
                   onChange={(e) => updateVitalSign('height', parseFloat(e.target.value) || 0)}
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm"
                 />
               </div>
             </div>
@@ -192,140 +370,234 @@ const MedicalExamForm = ({ patient, onClose, onComplete }: MedicalExamFormProps)
 
           {/* Triệu chứng hiện tại */}
           <div>
-            <label className="block text-sm font-medium mb-2">Triệu chứng hiện tại *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Triệu chứng hiện tại *
+            </label>
             <textarea
               value={formData.currentSymptoms}
               onChange={(e) => setFormData(prev => ({ ...prev, currentSymptoms: e.target.value }))}
-              className="w-full border rounded-lg p-3 h-20"
-              placeholder="Mô tả triệu chứng hiện tại của bệnh nhân..."
+              className={`w-full border rounded-lg p-4 h-28 ${errors.currentSymptoms ? 'border-red-500' : 'border-gray-300'}`}
+              placeholder="Mô tả chi tiết triệu chứng hiện tại của bệnh nhân..."
             />
+            {errors.currentSymptoms && (
+              <p className="text-red-500 text-xs mt-1">{errors.currentSymptoms}</p>
+            )}
           </div>
 
           {/* Chẩn đoán */}
           <div>
-            <label className="block text-sm font-medium mb-2">Chẩn đoán *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Chẩn đoán *
+            </label>
             <textarea
               value={formData.diagnosis}
               onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
-              className="w-full border rounded-lg p-3 h-20"
-              placeholder="Nhập chẩn đoán..."
+              className={`w-full border rounded-lg p-4 h-28 ${errors.diagnosis ? 'border-red-500' : 'border-gray-300'}`}
+              placeholder="Nhập chẩn đoán chính xác..."
             />
+            {errors.diagnosis && (
+              <p className="text-red-500 text-xs mt-1">{errors.diagnosis}</p>
+            )}
           </div>
 
           {/* Ghi chú lâm sàng */}
           <div>
-            <label className="block text-sm font-medium mb-2">Ghi chú lâm sàng</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ghi chú lâm sàng / Phác đồ điều trị
+            </label>
             <textarea
               value={formData.clinicalNotes}
               onChange={(e) => setFormData(prev => ({ ...prev, clinicalNotes: e.target.value }))}
-              className="w-full border rounded-lg p-3 h-32"
-              placeholder="Nhập ghi chú lâm sàng..."
+              className="w-full border border-gray-300 rounded-lg p-4 h-32"
+              placeholder="Nhập ghi chú lâm sàng và phác đồ điều trị chi tiết..."
             />
           </div>
 
           {/* Đơn thuốc */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Đơn thuốc</label>
-            {prescriptions.map((prescription, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 mb-2">
-                <input
-                  type="text"
-                  placeholder="Tên thuốc"
-                  value={prescription.medicine}
-                  onChange={(e) => updatePrescription(index, 'medicine', e.target.value)}
-                  className="col-span-5 border rounded p-2 text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Liều lượng"
-                  value={prescription.dosage}
-                  onChange={(e) => updatePrescription(index, 'dosage', e.target.value)}
-                  className="col-span-3 border rounded p-2 text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Cách dùng"
-                  value={prescription.frequency}
-                  onChange={(e) => updatePrescription(index, 'frequency', e.target.value)}
-                  className="col-span-3 border rounded p-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePrescription(index)}
-                  className="col-span-1 text-red-500"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addPrescription}
-              className="text-blue-600 text-sm"
-            >
-              + Thêm thuốc
-            </button>
+          <div className="border border-gray-200 rounded-lg p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-semibold text-gray-900">Đơn thuốc</h4>
+              <button
+                type="button"
+                onClick={addPrescription}
+                className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:text-blue-700"
+              >
+                <Plus className="w-4 h-4" />
+                Thêm thuốc
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {prescriptions.map((prescription, index) => (
+                <div key={index} className="grid grid-cols-12 gap-3 items-center">
+                  <div className="col-span-5">
+                    <input
+                      type="text"
+                      placeholder="Tên thuốc *"
+                      value={prescription.medicine}
+                      onChange={(e) => updatePrescription(index, 'medicine', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <input
+                      type="text"
+                      placeholder="Liều lượng *"
+                      value={prescription.dosage}
+                      onChange={(e) => updatePrescription(index, 'dosage', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <input
+                      type="text"
+                      placeholder="Cách dùng *"
+                      value={prescription.frequency}
+                      onChange={(e) => updatePrescription(index, 'frequency', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-sm"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <button
+                      type="button"
+                      onClick={() => removePrescription(index)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                      disabled={prescriptions.length <= 1}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-3">
+              * Chỉ những thuốc có đầy đủ thông tin mới được lưu
+            </p>
           </div>
 
           {/* Chỉ định */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Chỉ định</label>
-            {formData.tests.map((test, index) => (
-              <input
-                key={index}
-                type="text"
-                value={test}
-                onChange={(e) => updateTest(index, e.target.value)}
-                className="w-full border rounded-lg p-3 mb-2"
-                placeholder="Ví dụ: Chụp X-quang ngực..."
-              />
-            ))}
-            <button
-              onClick={addTest}
-              className="text-blue-600 text-sm"
-            >
-              + Thêm chỉ định
-            </button>
-          </div>
-
-          {/* Tải lên kết quả */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Tải lên kết quả</label>
-            <input
-              type="file"
-              multiple
-              accept=".jpg,.jpeg,.png,.pdf"
-              onChange={handleFileUpload}
-              className="w-full border rounded-lg p-3"
-            />
-            <div className="mt-2 space-y-1">
-              {formData.attachments.map((file, index) => (
-                <div key={index} className="text-sm text-gray-600 flex justify-between">
-                  <span>{file.name}</span>
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="text-red-500"
-                  >
-                    ✕
-                  </button>
+          <div className="border border-gray-200 rounded-lg p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-semibold text-gray-900">Chỉ định cận lâm sàng</h4>
+              <button
+                onClick={addTest}
+                className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:text-blue-700"
+              >
+                <Plus className="w-4 h-4" />
+                Thêm chỉ định
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {formData.tests.map((test, index) => (
+                <div key={index} className="flex gap-3 items-center">
+                  <input
+                    type="text"
+                    value={test}
+                    onChange={(e) => updateTest(index, e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg p-3 text-sm"
+                    placeholder="Ví dụ: Chụp X-quang ngực, Xét nghiệm máu CBC..."
+                  />
+                  {formData.tests.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeTest(index)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Tải lên kết quả */}
+          <div className="border border-gray-200 rounded-lg p-5">
+            <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-blue-600" />
+              Tải lên kết quả xét nghiệm/hình ảnh
+            </h4>
+            
+            <div className="mb-4">
+              <input
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                onChange={handleFileUpload}
+                className="w-full border border-gray-300 rounded-lg p-3"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Chấp nhận: JPG, PNG, PDF, DOC (tối đa 10MB mỗi file)
+              </p>
+            </div>
+            
+            {formData.attachments.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Files đã chọn:</p>
+                {formData.attachments.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-900">{file.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-3 mt-6 pt-4 border-t">
+        {/* PHẦN BUTTONS - ĐÃ SỬA */}
+        <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={handleComplete}
-            className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+            disabled={loading}
+            className="flex-1 bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Hoàn tất khám
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Đang lưu...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Lưu bệnh án
+              </>
+            )}
           </button>
+          
+          {/* Nút Hủy khám - CHỈ HIỆN KHI CÓ PROP onCancel */}
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              disabled={loading}
+              className="px-6 bg-red-600 text-white py-4 rounded-lg hover:bg-red-700 font-medium transition-colors disabled:opacity-50"
+            >
+              Hủy khám
+            </button>
+          )}
+          
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-300 py-3 rounded-lg hover:bg-gray-400"
+            disabled={loading}
+            className={`${onCancel ? 'flex-1' : 'px-6'} bg-gray-300 text-gray-700 py-4 rounded-lg hover:bg-gray-400 font-medium transition-colors disabled:opacity-50`}
           >
-            Hủy
+            Đóng
           </button>
         </div>
       </div>
