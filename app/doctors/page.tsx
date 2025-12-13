@@ -8,10 +8,10 @@ import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import * as Model from "@/lib/model";
 
 interface DoctorUI extends Model.Doctor {
-  schedule?: { [key: string]: string[] }; // Lịch đã nhóm theo ngày
-  price?: number;                         // Giá hiển thị
-  hospital?: string;                      // Tên bệnh viện
-  location?: string;                      // Địa điểm
+  schedule?: { [key: string]: string[] };
+  price?: number;
+  hospital?: string;
+  location?: string;
 }
 export default function DoctorsBookingPage() {
   const [searchTerm, setSearchTerm] = useState("");

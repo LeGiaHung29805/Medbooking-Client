@@ -161,7 +161,31 @@ export interface Notification {
   created_at: string;
   updated_at: string;
 }
-
+export interface SendNotificationRequest {
+  Title: string;
+  Content: string;
+  TargetGroup: "all" | "patients" | "doctors" | "staff";
+  Channel: "in_app" | "email";
+}
+export interface NotificationLog {
+  id: number | string;
+  recipient: string;
+  title: string;
+  content: string;
+  type: "SystemAlert" | "AppointmentReminder" | "Other";
+  sent_at: string;
+  status: string;
+}
+export interface RawApiNotification {
+  NotificationID: number;
+  Title: string | null;
+  Content: string;
+  NotificationType: string; 
+  created_at: string;
+  Status: string;
+  target_group?: string;       
+  user?: { FullName: string };
+}
 // Type cho Doctor
 
 export interface MedicalRecord {

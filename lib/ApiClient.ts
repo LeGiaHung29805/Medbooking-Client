@@ -223,6 +223,16 @@ export const markNotificationAsRead = async (id: number): Promise<void> => {
     headers: getAuthHeaders(),
   });
 };
+
+//xóa thông báo của 
+export const deleteMyNotification = async (
+  id: number | string
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.delete(`/notifications/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data; 
+};
 //4. NHÓM BÁC SĨ (DOCTOR)
 //Lấy thống kê của bác sĩ
 export const doctorGetDashboard = async (): Promise<Model.DashboardStats> => {
@@ -711,14 +721,32 @@ export const getNotificationLogs = async (): Promise<Model.Notification[]> => {
 };
 
 // Gửi thông báo mới
-export const sendNotification = async (data: {
-  Title: string;
-  Content: string;
-  TargetGroup: string; // 'all', 'patients', 'doctors'
-  Channel: string; // 'in_app', 'email'
-}): Promise<Model.MessageResponse> => {
-
+export const sendNotification = async (
+  data: Model.SendNotificationRequest
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/notifications/send", data, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+// Xóa thông báo quản lí
+export const deleteNotification = async (
+  id: number | string
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.delete(`/admin/notifications/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data; 
+};
+//Xóa tất cả
+export const deleteAllNotifications = async (): Promise<Model.MessageResponse> => {
+  const response = await apiClient.delete(`/admin/notifications/delete-all`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+export const triggerReminders = async (): Promise<Model.MessageResponse> => {
+  const response = await apiClient.post(`/admin/notifications/trigger-reminders`, {}, {
     headers: getAuthHeaders(),
   });
   return response.data;

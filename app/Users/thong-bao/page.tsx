@@ -35,12 +35,9 @@ export default function ThongBao() {
   const [selected, setSelected] = useState<NotificationUI | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
-  // 1. Hàm map loại từ Backend sang Frontend
   const mapType = (backendType: string): "LichHen" | "HeThong" => {
-    // Nếu backend là AppointmentReminder -> Là Lịch hẹn
     if (backendType === "AppointmentReminder") return "LichHen";
 
-    // Các trường hợp còn lại (SystemAlert, v.v.) -> Là Hệ thống
     return "HeThong";
   };
 
@@ -95,7 +92,6 @@ export default function ThongBao() {
     return <AlertTriangle className="text-orange-600 w-6 h-6" />;
   };
 
-  // Màu nền theo loại
   const getStyle = (type: NotificationUI["type"]) => {
     if (type === "LichHen") {
       return "bg-blue-50 border-blue-200 hover:bg-blue-100";
@@ -160,12 +156,10 @@ export default function ThongBao() {
                   n.type
                 )} ${n.read ? "opacity-70 grayscale-[0.3]" : "opacity-100 shadow-sm"}`}
               >
-                {/* Icon */}
                 <div className="p-2 bg-white rounded-full shadow-sm shrink-0">
                   {getIcon(n.type)}
                 </div>
 
-                {/* Nội dung */}
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <h3 className={`font-bold text-base ${n.type === 'LichHen' ? 'text-blue-800' : 'text-orange-800'}`}>

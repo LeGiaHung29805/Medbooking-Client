@@ -2,15 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
-// import * as Model from "@/lib/model"; // Không cần import vì dùng type suy luận hoặc any cho đơn giản trong UI
+// import * as Model from "@/lib/model";
 
-// 1. Định nghĩa lại Interface cho UI (Khớp với dữ liệu Backend trả về)
 interface FeedbackUI {
   id: number;
-  patientName: string;   // Tên người gửi
-  patientAvatar?: string; // Ảnh người gửi
-  targetName: string;    // Gửi cho ai (BS A hay Hệ thống)
-  type: 'Doctor' | 'System'; // Loại (Để tô màu badge)
+  patientName: string;  
+  patientAvatar?: string;
+  targetName: string;   
+  type: 'Doctor' | 'System';
   rating: number;
   comment: string;
   date: string;
