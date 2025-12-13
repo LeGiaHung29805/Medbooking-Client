@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { doctorService } from '../services/doctorService';
+import { doctorService } from '@/app/services/doctorService';
 
 export interface Slot {
   id: number;

@@ -8,14 +8,14 @@ interface MedicalExamFormProps {
   patient: PatientDetail
   onClose: () => void
   onComplete: (formData: MedicalExamFormData) => void
-  onCancel?: () => void // THÊM PROP NÀY
+  onCancel?: () => void 
 }
 
 const MedicalExamForm = ({ 
   patient, 
   onClose, 
   onComplete,
-  onCancel // THÊM VÀO DESTRUCTURING
+  onCancel 
 }: MedicalExamFormProps) => {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([
     { medicine: '', dosage: '', frequency: '' }
@@ -156,7 +156,7 @@ const MedicalExamForm = ({
   try {
     console.log('🚀 Bắt đầu lưu bệnh án...');
     
-    // 1. Tạo bệnh án - SỬ DỤNG MOCK
+    // 1. Tạo bệnh án 
     const medicalRecordData = {
       patient_id: patient.id,
       appointment_id: patient.appointmentId || patient.id,
@@ -225,7 +225,7 @@ const MedicalExamForm = ({
   }
 };
 
-  // ĐÂY LÀ PHẦN RETURN JSX - KHÔNG ĐƯỢC THIẾU
+  // ĐÂY LÀ PHẦN RETURN JSX
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-4">
       <div className="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 my-auto max-h-[95vh] overflow-y-auto">
@@ -561,7 +561,7 @@ const MedicalExamForm = ({
           </div>
         </div>
 
-        {/* PHẦN BUTTONS - ĐÃ SỬA */}
+        {/* PHẦN BUTTONS */}
         <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={handleComplete}
@@ -581,7 +581,7 @@ const MedicalExamForm = ({
             )}
           </button>
           
-          {/* Nút Hủy khám - CHỈ HIỆN KHI CÓ PROP onCancel */}
+          {/* Nút Hủy khám */}
           {onCancel && (
             <button
               onClick={onCancel}

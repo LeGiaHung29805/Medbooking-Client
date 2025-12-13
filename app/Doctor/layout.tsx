@@ -6,7 +6,6 @@ import DoctorSidebar from "./components/DoctorSidebar";
 import Header from "./components/Header";
 import { doctorService } from "../services/doctorService";
 
-// Define type cho doctor profile
 interface DoctorProfile {
   FullName: string;
   specialty: { SpecialtyName: string };
@@ -24,10 +23,9 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     specialty: { SpecialtyName: "Bác sĩ" }
   });
 
-  // Hàm tải thông tin bác sĩ - ưu tiên cache, có thể force refresh
+  // Hàm tải thông tin bác sĩ 
   const loadDoctorProfile = async (forceRefresh = false) => {
     try {
-      // Ưu tiên lấy từ localStorage (cache nhanh)
       const cached = localStorage.getItem("doctorInfo");
       if (cached && !forceRefresh) {
         const parsed = JSON.parse(cached);
@@ -43,10 +41,9 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
           email: parsed.email,
           phone: parsed.phone
         });
-        return; // Dùng cache xong thì return, không gọi API
+        return; 
       }
 
-      // Nếu không có cache hoặc force refresh → gọi API thật
       const profileData = await doctorService.getMyProfile();
 
       if (profileData) {
@@ -61,8 +58,6 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
         // Cập nhật state
         setCurrentDoctor(doctorData);
-
-        // Lưu vào cache để lần sau dùng nhanh
         localStorage.setItem("doctorInfo", JSON.stringify(doctorData));
       }
     } catch (error) {
@@ -79,10 +74,10 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     loadDoctorProfile();
   }, []);
 
-  // Lắng nghe sự kiện cập nhật từ Settings hoặc nơi khác
+  // Lắng nghe sự kiện cập nhật thông tin bác sĩ
   useEffect(() => {
   const handleDoctorUpdate = () => {
-    loadDoctorProfile(false); // ← Chỉ reload từ cache mới, KHÔNG gọi API
+    loadDoctorProfile(false); 
   };
 
   window.addEventListener("doctorInfoUpdated", handleDoctorUpdate);
@@ -92,7 +87,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   };
 }, []);
 
-  // Tự động refresh khi có flag (nếu cần)
+  // Tự động refresh khi có flag 
   useEffect(() => {
     const shouldRefresh = localStorage.getItem("profileNeedsRefresh");
     if (shouldRefresh === "true") {

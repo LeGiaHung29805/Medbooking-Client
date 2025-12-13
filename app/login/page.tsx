@@ -30,7 +30,7 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      // FIX CHI TIẾT LỖI 401 + HIỂN THỊ THÔNG BÁO RÕ RÀNG
+      // HIỂN THỊ THÔNG BÁO 
       if (!res.ok) {
         throw new Error(data.message || "Sai email hoặc mật khẩu");
       }
@@ -44,7 +44,7 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("user_role", data.user.Role);
 
-      // FIX REDIRECT CHO STAFF + ADMIN – BAO HẾT MỌI TRƯỜNG HỢP
+      // REDIRECT CHO STAFF + ADMIN 
       const role = data.user.Role.toLowerCase().trim().replace(/\s+/g, ""); // xóa khoảng trắng
 
       if (role === "doctor" || role.includes("doctor")) {

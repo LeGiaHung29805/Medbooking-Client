@@ -5,7 +5,6 @@ import type {
   Appointment 
 } from "@/lib/model";
 
-// THÊM các interfaces cần thiết ở đầu file
 export interface DashboardStats {
   total_appointments: number;
   completed_appointments: number;
@@ -70,7 +69,7 @@ class DoctorService {
 }
 
 
-  // THÊM HÀM NÀY: getQueue
+  // Hàm getQueue
   async getQueue(): Promise<QueueResponse> {
     try {
       const mockPatients: Patient[] = [
@@ -141,7 +140,7 @@ class DoctorService {
 }
 
   // ==================== SCHEDULE ====================
-  // THÊM HÀM NÀY: getSchedule
+  // Hàm getSchedule
   async getSchedule(): Promise<ScheduleResponse> {
   const res = await apiClient.get("/doctor/schedule");
 
@@ -170,7 +169,7 @@ class DoctorService {
 
   async completeExam(id: number): Promise<boolean> {
     console.log('✅ [completeExam] Completing exam for appointment:', id);
-    return true; // Luôn thành công
+    return true; 
   }
 
   async cancelAppointment(id: number): Promise<boolean> {
@@ -181,9 +180,6 @@ class DoctorService {
   async createMedicalRecord(data: any): Promise<any> {
     try {
       console.log('🚀 [createMedicalRecord] Bắt đầu tạo bệnh án:', data);
-      
-      // Mock API call - luôn thành công
-      console.log('📤 [MOCK] POST /api/medical-records', data);
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -237,13 +233,13 @@ class DoctorService {
     } catch (error) {
       console.error('❌ Error uploading exam result:', error);
       return {
-        success: true, // Vẫn thành công để UI tiếp tục
+        success: true,
         message: 'Upload thất bại (mocked success)'
       };
     }
   }
 
-  // THÊM HÀM NÀY: getPatientHistory
+  // Hàm getPatientHistory
   async getPatientHistory(patientId: number): Promise<PatientHistoryResponse> {
   const res = await apiClient.get(`/doctor/patient-history/${patientId}`);
 
@@ -270,7 +266,7 @@ class DoctorService {
     return {
       FullName: d.FullName,
       specialty: { SpecialtyName: specialtyName },
-      specialtyId: specialtyId, // ← Quan trọng: trả về ID cho dropdown
+      specialtyId: specialtyId, 
       email: d.Email,
       phone: d.PhoneNumber
     };
@@ -285,7 +281,7 @@ class DoctorService {
   FullName: string;
   email: string;
   phone?: string;
-  SpecialtyID?: number; // ← Đổi thành ID
+  SpecialtyID?: number; 
 }) {
   try {
     const payload: any = {
@@ -310,7 +306,7 @@ class DoctorService {
 
 
   // ==================== SLOT MANAGEMENT ====================
-  // THÊM HÀM NÀY: getMySlots (nếu cần)
+  // Hàm getMySlots 
   async getMySlots(date?: string): Promise<{success: boolean; data: any[]}> {
     console.log('🗓️ [getMySlots] Fetching slots');
     

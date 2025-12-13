@@ -7,7 +7,7 @@ import MedicalExamForm from "./components/MedicalExamForm";
 import LoadingState from "./components/LoadingState";
 import ErrorState from "./components/ErrorState";
 
-import { RefreshCw } from "lucide-react"; // Đã đổi icon cho nút Làm mới
+import { RefreshCw } from "lucide-react"; 
 import { doctorService } from "../services/doctorService";
 import type { 
   Appointment, 
@@ -33,13 +33,6 @@ export default function DoctorDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [waitingPatients, setWaitingPatients] = useState<Patient[]>([]);
   const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
-  const [currentDoctor, setCurrentDoctor] = useState({
-    id: 1,
-    FullName: "Nguyễn Văn A",
-    specialty: { SpecialtyName: "Nội tổng quát" },
-    email: "doctor.a@hospital.com",
-    phone: "0901234567",
-  });
 
   // Modal states
   const [selectedPatient, setSelectedPatient] = useState<PatientDetail | null>(null);
@@ -66,12 +59,12 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  // ==================== THÊM HÀM LÀM MỚI (đã fix lỗi) ====================
+  // ==================== THÊM HÀM LÀM MỚI ====================
   const handleRefreshData = async () => {
     setLoading(true);
     setLoadingMessage("Đang tải lại dữ liệu...");
     try {
-      await loadDashboardData(); // gọi lại hàm load chính
+      await loadDashboardData(); // gọi hàm load chính
     } catch (err) {
       alert("Không thể làm mới dữ liệu. Vui lòng thử lại!");
     } finally {
@@ -79,7 +72,7 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  // ==================== HÀM LOAD CHÍNH (tách ra để gọi lại được) ====================
+  // ==================== HÀM LOAD CHÍNH  ====================
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -113,10 +106,6 @@ export default function DoctorDashboardPage() {
         }));
         setAppointments(appointmentsList);
       }
-
-      // Load medical records (nếu cần)
-      // const recordsResponse = await doctorService.getPatientHistory(0);
-      // if (recordsResponse.success) setMedicalRecords(recordsResponse.data);
 
       setError(null);
     } catch (err: any) {
@@ -175,7 +164,7 @@ export default function DoctorDashboardPage() {
 
   const handleStartExam = async (patient: PatientDetail) => {
   try {
-    // BƯỚC 1: Tìm appointment thật trong danh sách appointments
+    //  Tìm appointment thật trong danh sách appointments
     const appointment = appointments.find(a => 
       a.id === patient.id || 
       a.patientName === patient.name ||
@@ -187,20 +176,20 @@ export default function DoctorDashboardPage() {
       return;
     }
 
-    // BƯỚC 2: Cập nhật trạng thái thành "in_progress" (nếu chưa)
+    // Cập nhật trạng thái thành in_progress trên server
     const success = await doctorService.startExam(appointment.id);
     if (!success) {
       alert("Không thể bắt đầu khám. Vui lòng thử lại!");
       return;
     }
 
-    // BƯỚC 3: Gán appointmentId vào patient để lưu bệnh án
+    //  Gán appointmentId vào patient để lưu bệnh án
     const patientWithAppointment: PatientDetail = {
       ...patient,
-      appointmentId: appointment.id, // ← QUAN TRỌNG NHẤT: có ID thật để gửi backend
+      appointmentId: appointment.id, 
     };
 
-    // BƯỚC 4: Mở form khám
+    //  Mở form khám
     setCurrentExamPatient(patientWithAppointment);
     setShowExamForm(true);
     setShowPatientModal(false);
@@ -218,7 +207,6 @@ export default function DoctorDashboardPage() {
   }
 };
 
-  // ĐÃ FIX: dùng alert thay vì toast
   const handleCompleteExam = async (formData: MedicalExamFormData) => {
     if (!currentExamPatient) return;
 
@@ -227,7 +215,6 @@ export default function DoctorDashboardPage() {
 
       const payload = {
   patient_id: currentExamPatient.id,
-  // Chỉ gửi appointment_id nếu có thật
   ...(currentExamPatient.appointmentId && { 
     appointment_id: currentExamPatient.appointmentId 
   }),
@@ -308,7 +295,6 @@ export default function DoctorDashboardPage() {
         appointments={appointments}
         waitingPatients={waitingPatients}
         medicalRecords={medicalRecords}
-        currentDoctor={currentDoctor}
         getPriorityColor={getPriorityColor}
         getPriorityText={getPriorityText}
         onViewPatientDetail={handleViewPatientDetail}

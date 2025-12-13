@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; // THÊM useEffect
+import { useState, useEffect } from "react"; 
 import DashboardStats from "./DashboardStats";
 import TodayAppointments from "./TodayAppointments";
 import WaitingPatients from "./WaitingPatients";
@@ -85,19 +85,11 @@ export default function DashboardTab({
     }
   };
 
-  // HÀM QUAN TRỌNG: Xử lý bắt đầu khám
+  // Xử lý bắt đầu khám
   const handleStartExam = (patientDetail: PatientDetail) => {
   console.log('👨‍⚕️ Bắt đầu khám cho:', patientDetail.name);
-  
-  // === BỎ GỌI API THẬT (vì backend chưa có endpoint) ===
-  // try {
-  //   await doctorService.startExam(patient.appointmentId);
-  // } catch (error) {
-  //   console.error("Lỗi bắt đầu khám:", error);
-  //   // Không return, vẫn mở form (demo/mock)
-  // }
 
-  // Chỉ update state local như cũ (code bạn đã có)
+  // Update state local 
   setAppointments(prev => 
     prev.map(appt => {
       const isPatientAppointment = 
@@ -120,7 +112,7 @@ export default function DashboardTab({
   setShowExamForm(true);
 };
 
-  // HÀM QUAN TRỌNG: Xử lý khi hoàn thành khám
+  // Xử lý khi hoàn thành khám
  const handleExamComplete = (formData: MedicalExamFormData) => {
   if (!selectedPatientForExam) return;
 
@@ -147,7 +139,7 @@ export default function DashboardTab({
   setSelectedPatientForExam(null);
 };
 
-  // HÀM MỚI: Xử lý khi hủy khám
+  // Xử lý khi hủy khám
   const handleCancelExam = () => {
   if (!selectedPatientForExam) return;
   
@@ -195,7 +187,7 @@ export default function DashboardTab({
   setSelectedPatientForExam(null);
 };
 
-  // Tính toán các giá trị cần thiết - SỬA để dùng appointments state
+  // Tính toán các giá trị cần thiết 
   const inProgressCount = appointments.filter(a => a.status === "in_progress").length;
   const today = new Date().toISOString().split('T')[0];
   const todayAppointments = appointments.filter(appt => {
@@ -208,7 +200,7 @@ export default function DashboardTab({
     }
   });
 
-  // Tính paginated appointments - SỬA để dùng appointments state
+  // Tính paginated appointments 
   const filteredAppointments = appointments.filter(appt => {
     if (searchTerm && !appt.patientName?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
@@ -225,36 +217,6 @@ export default function DashboardTab({
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-white rounded-2xl p-6 border border-blue-100">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Chào mừng quay lại, <span className="text-blue-600">BS. {currentDoctor.FullName}</span>!
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Chuyên khoa: <span className="font-semibold text-gray-800">{currentDoctor.specialty?.SpecialtyName || "Nội tổng quát"}</span>
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Hôm nay là {new Date().toLocaleDateString('vi-VN', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'numeric', 
-                year: 'numeric' 
-              })}
-            </p>
-          </div>
-          <div className="hidden lg:block">
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Số bệnh nhân hôm nay</div>
-              <div className="text-3xl font-bold text-blue-600">{todayAppointments.length}</div>
-              <div className="text-sm text-gray-500 mt-1">
-                Đang khám: <span className="font-bold">{inProgressCount}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Stats Section */}
       <DashboardStats 
@@ -271,7 +233,7 @@ export default function DashboardTab({
         {/* Left Column - Appointments (2/3 width) */}
         <div className="xl:col-span-2 space-y-6">
           <TodayAppointments
-            appointments={appointments} // TRUYỀN STATE MỚI
+            appointments={appointments} 
             waitingPatients={waitingPatients}
             medicalRecords={medicalRecords}
             searchTerm={searchTerm}
@@ -298,7 +260,7 @@ export default function DashboardTab({
         {/* Right Column - Sidebar (1/3 width) */}
         <div className="space-y-6">
           <ExamInProgress
-            appointments={appointments} // TRUYỀN STATE MỚI
+            appointments={appointments}
             waitingPatients={waitingPatients}
             medicalRecords={medicalRecords}
             currentDoctor={currentDoctor}
@@ -308,7 +270,7 @@ export default function DashboardTab({
           />
 
           <WaitingPatients
-            waitingPatients={waitingPatients} // TRUYỀN STATE MỚI
+            waitingPatients={waitingPatients} 
             medicalRecords={medicalRecords}
             getStatusInfo={getStatusInfo}
             getPriorityColor={getPriorityColor}
@@ -326,7 +288,7 @@ export default function DashboardTab({
       {showExamForm && selectedPatientForExam && (
         <MedicalExamForm
           patient={selectedPatientForExam}
-          onClose={handleCancelExam} // SỬA: Gọi hàm hủy khám
+          onClose={handleCancelExam} 
           onComplete={handleExamComplete}
         />
       )}

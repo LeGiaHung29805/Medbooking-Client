@@ -119,33 +119,36 @@ useEffect(() => {
   const handleSaveChanges = async () => {
   setSaveStatus("saving");
   try {
-    // Gọi API update (chỉ gửi field backend chấp nhận)
     await doctorService.updateProfile({
       FullName: doctorInfo.name,
       email: doctorInfo.email,
       phone: doctorInfo.phone,
-      // Không gửi specialty vì backend không xử lý
     });
 
-    // === FIX HOÀN HẢO: Tạo cấu trúc cache chính xác như API getMyProfile trả về ===
+    // Lấy cache hiện tại để giữ các field khác
+    const currentCache = localStorage.getItem("doctorInfo");
+    let existingData = {};
+    if (currentCache) {
+      try {
+        existingData = JSON.parse(currentCache);
+      } catch {}
+    }
+
+    // Tạo cache mới
     const updatedCache = {
+      ...existingData,  
       FullName: doctorInfo.name,
       email: doctorInfo.email,
       phone: doctorInfo.phone,
       specialty: {
-        SpecialtyName: doctorInfo.specialty  // Tên mới người dùng nhập
+        SpecialtyName: doctorInfo.specialty.trim()  
       }
-      // Nếu có thêm field khác như id, Role... thì thêm vào đây cũng được
     };
 
-    // Cập nhật localStorage với cấu trúc chuẩn
     localStorage.setItem("doctorInfo", JSON.stringify(updatedCache));
-
-    // Phát event để tất cả component reload ngay
     window.dispatchEvent(new Event("doctorInfoUpdated"));
 
-    // Optional: Log để check
-    console.log("Cache updated:", updatedCache);
+    console.log("Cache updated successfully:", updatedCache);
 
     setSaveStatus("saved");
     setTimeout(() => setSaveStatus("idle"), 2000);
@@ -230,49 +233,6 @@ useEffect(() => {
         deviceManagement: prev.deviceManagement.filter(device => device.id !== deviceId)
       }));
       alert(`✅ Đã đăng xuất thiết bị`);
-    }
-  };
-
-  const handleResetToDefaults = () => {
-    if (confirm("Bạn có chắc muốn khôi phục cài đặt về mặc định? Thao tác này không thể hoàn tác.")) {
-      setDoctorInfo({
-        id: "DOC001",
-        name: "Nguyễn Văn A",
-        specialty: "Nội tổng quát",
-        email: "doctor.a@hospital.com",
-        phone: "0901234567",
-        department: "Khoa Nội tổng quát",
-        licenseNumber: "BS-2023-00123",
-        experience: "10 năm",
-        education: "Bác sĩ chuyên khoa I - Đại học Y Hà Nội",
-        bio: "Chuyên gia về các bệnh lý nội khoa, có kinh nghiệm trong điều trị các bệnh mãn tính như tiểu đường, cao huyết áp.",
-        address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-        workingHours: {
-          morning: "07:30 - 11:30",
-          afternoon: "13:30 - 17:00"
-        },
-        consultationFee: "300,000 VND",
-        languages: ["Tiếng Việt", "Tiếng Anh"]
-      });
-      
-      setPreferences({
-        theme: "light",
-        language: "vi",
-        timezone: "Asia/Ho_Chi_Minh",
-        dateFormat: "dd/MM/yyyy",
-        timeFormat: "24h",
-        recordsPerPage: 20,
-        autoSave: true,
-        keyboardShortcuts: true,
-        animations: true,
-        soundEffects: false,
-        dashboardWidgets: ["stats", "appointments", "patients", "calendar"],
-        defaultView: "dashboard",
-        consultationTemplate: "Mẫu khám chuẩn",
-        prescriptionTemplate: "Mẫu đơn thuốc chuẩn"
-      });
-      
-      alert("✅ Đã khôi phục cài đặt mặc định");
     }
   };
 
@@ -808,11 +768,6 @@ useEffect(() => {
                   onChange={(e) => handleInputChange("security", "sessionTimeout", parseInt(e.target.value))}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
-                  <option value={15}>15 phút</option>
-                  <option value={30}>30 phút</option>
-                  <option value={60}>60 phút</option>
-                  <option value={120}>2 giờ</option>
-                  <option value={0}>Không tự động đăng xuất</option>
                 </select>
               </div>
             </div>

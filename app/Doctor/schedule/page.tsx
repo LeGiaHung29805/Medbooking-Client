@@ -79,7 +79,7 @@ const generateMockPatients = (): Patient[] => {
       phone: "0934567890",
       symptoms: "Đau ngực trái, khó thở khi vận động",
       appointmentTime: "2025-12-10T10:00:00",
-      status: "in_progress",
+      status: "checked_in",
       checkInTime: "09:45",
       priority: "emergency",
       allergies: ["Không có"],
@@ -129,20 +129,6 @@ const generateMockPatients = (): Patient[] => {
     },
     {
       id: 7,
-      name: "Đỗ Văn Hải",
-      age: 60,
-      gender: "male",
-      phone: "0978901234",
-      symptoms: "Hoa mắt, chóng mặt, tê bì chân tay",
-      appointmentTime: "2025-12-12T11:00:00",
-      status: "completed",
-      checkInTime: "10:45",
-      priority: "high",
-      allergies: ["Không có"],
-      medicalHistory: ["Tăng huyết áp", "Tiểu đường"]
-    },
-    {
-      id: 8,
       name: "Bùi Thị Kim",
       age: 25,
       gender: "female",
@@ -156,7 +142,7 @@ const generateMockPatients = (): Patient[] => {
       medicalHistory: ["Rối loạn kinh nguyệt"]
     },
     {
-      id: 9,
+      id: 8,
       name: "Nguyễn Quốc Bảo",
       age: 45,
       gender: "male",
@@ -170,7 +156,7 @@ const generateMockPatients = (): Patient[] => {
       medicalHistory: ["Thoát vị đĩa đệm"]
     },
     {
-      id: 10,
+      id: 9,
       name: "Trần Văn Đạt",
       age: 38,
       gender: "male",
@@ -450,18 +436,6 @@ function AppointmentDetailModal({
         </div>
 
         <div className="p-6 border-t border-gray-200 flex gap-3">
-          {(appointment.status === "checked_in" || appointment.status === "waiting") && (
-            <button
-              onClick={() => {
-                onStartExam(appointment.id)
-                onClose()
-              }}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center gap-2"
-            >
-              <User className="w-5 h-5" />
-              Bắt đầu khám
-            </button>
-          )}
           <button
             onClick={onClose}
             className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
@@ -849,8 +823,6 @@ export default function SchedulePage() {
               <option value="all">Tất cả trạng thái</option>
               <option value="waiting">Đang chờ</option>
               <option value="checked_in">Đã check-in</option>
-              <option value="in_progress">Đang khám</option>
-              <option value="completed">Đã hoàn thành</option>
               <option value="cancelled">Đã hủy</option>
             </select>
           </div>
@@ -972,19 +944,6 @@ export default function SchedulePage() {
                       <span className="font-medium">{statusInfo.text}</span>
                     </div>
                     
-                    {(appointment.status === "checked_in" || appointment.status === "waiting") && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartExam(appointment.id);
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center gap-2"
-                      >
-                        <User className="w-4 h-4" />
-                        Bắt đầu khám
-                      </button>
-                    )}
-                    
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1010,8 +969,6 @@ export default function SchedulePage() {
           {[
             { status: "waiting", text: "Đang chờ" },
             { status: "checked_in", text: "Đã check-in" },
-            { status: "in_progress", text: "Đang khám" },
-            { status: "completed", text: "Đã hoàn thành" },
             { status: "cancelled", text: "Đã hủy" },
           ].map((item) => {
             const info = getStatusInfo(item.status)

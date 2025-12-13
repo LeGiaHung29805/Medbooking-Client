@@ -536,10 +536,10 @@ export default function RecordsPage() {
         </div>
       </div>
 
-      {/* Filters - CHỈ CÓ 1 BỘ FILTER Ở ĐÂY */}
+      {/* Filters */}
       <div className="bg-white rounded-2xl p-6 border border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Search - DUY NHẤT */}
+          {/* Search  */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tìm kiếm bệnh án
@@ -556,7 +556,7 @@ export default function RecordsPage() {
             </div>
           </div>
           
-          {/* Status filter - DUY NHẤT */}
+          {/* Status filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Trạng thái
@@ -675,7 +675,7 @@ export default function RecordsPage() {
         </div>
       </div>
 
-      {/* Main Records Content - KHÔNG CÓ FILTER BÊN TRONG */}
+      {/* Main Records Content */}
       <MedicalRecordsTab
         medicalRecords={filteredRecords}
         handleViewMedicalRecord={handleViewMedicalRecord}

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react" // THÊM useEffect
+import { useState, useEffect } from "react" 
 import { AlertTriangle } from "lucide-react"
 import type { PatientDetail, MedicalRecord } from "@/lib/model"
-import { doctorService } from "../../services/doctorService" // Kiểm tra đường dẫn này
+import { doctorService } from "../../services/doctorService" 
 
 interface PatientDetailModalProps {
   patient: PatientDetail
@@ -20,7 +20,7 @@ const PatientDetailModal = ({
 }: PatientDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<'info' | 'history' | 'allergies'>('info')
   const [patientHistory, setPatientHistory] = useState<MedicalRecord[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false); // THÊM loading state
+  const [loadingHistory, setLoadingHistory] = useState(false); 
 
   useEffect(() => {
     const loadPatientHistory = async () => {
