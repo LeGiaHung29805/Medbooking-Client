@@ -447,7 +447,7 @@ export const adminCreateSpecialty = async (
   const response = await apiClient.post("/admin/specialties", formData, {
     headers: { ...getAuthHeaders(), "Content-Type": "multipart/form-data" },
   });
-  return response.data;
+  return response.data; 
 };
 //Admin cập nhật chuyên khoa
 export const adminUpdateSpecialty = async (

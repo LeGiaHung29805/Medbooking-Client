@@ -5,7 +5,6 @@ import Layout from "@/components/layout";
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
-// Dữ liệu từ Laravel API
 interface ServiceFromApi {
   ServiceID: number;
   ServiceName: string;
@@ -19,7 +18,6 @@ interface ServiceFromApi {
   } | null;
 }
 
-// Dữ liệu dùng cho UI (giống interface cũ)
 interface Service {
   id: number;
   name: string;
@@ -121,7 +119,7 @@ export default function ServicesPage() {
     loadServices();
   }, []);
 
-  // ===== 2. Lọc dịch vụ =====
+  //Lọc dịch vụ
   const filteredServices = services.filter((service) => {
     const keyword = searchTerm.toLowerCase();
 
@@ -144,7 +142,7 @@ export default function ServicesPage() {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
-  // ===== 3. Phân trang =====
+  //Phân trang
   const totalPages =
     Math.ceil(filteredServices.length / servicesPerPage) || 1;
   const startIndex = (currentPage - 1) * servicesPerPage;
@@ -157,7 +155,7 @@ export default function ServicesPage() {
     setCurrentPage(1);
   }, [selectedCategory, searchTerm, priceRange]);
 
-  // ===== 4. Modal đặt lịch =====
+  //Modal đặt lịch
   const openModal = (service: Service) => {
     setSelectedService(service);
     setIsModalOpen(true);
@@ -192,10 +190,8 @@ export default function ServicesPage() {
     }
 
     alert(
-      `Đặt lịch thành công!\n\nDịch vụ: ${selectedService?.name}\nHọ tên: ${
-        formData.name
-      }\nSĐT: ${formData.phone}\nNgày: ${formData.date}\nGiờ: ${
-        formData.time
+      `Đặt lịch thành công!\n\nDịch vụ: ${selectedService?.name}\nHọ tên: ${formData.name
+      }\nSĐT: ${formData.phone}\nNgày: ${formData.date}\nGiờ: ${formData.time
       }\n\nCảm ơn bạn đã đặt lịch!`
     );
     closeModal();
@@ -218,11 +214,10 @@ export default function ServicesPage() {
       .join(", ");
   };
 
-  // ===== 5. JSX =====
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
-        {/* Hero Section */}
+
         <section className="relative py-20 overflow-hidden min-h-[500px] flex items-center">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -367,8 +362,7 @@ export default function ServicesPage() {
                     </span>{" "}
                     dịch vụ
                     {selectedCategory !== "all" &&
-                      ` trong ${
-                        categories.find((c) => c.id === selectedCategory)?.name
+                      ` trong ${categories.find((c) => c.id === selectedCategory)?.name
                       }`}
                   </h2>
 

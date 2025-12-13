@@ -5,7 +5,6 @@ import {
   Bell,
   CalendarClock,
   AlertTriangle,
-  Eye,
   Loader2,
   Check,
 } from "lucide-react";
@@ -40,7 +39,6 @@ export default function ThongBao() {
     return "HeThong";
   };
 
-  // 2. Load dữ liệu
   useEffect(() => {
     async function fetchData() {
       try {
@@ -68,7 +66,7 @@ export default function ThongBao() {
     fetchData();
   }, []);
 
-  // 3. Xử lý đọc tin
+  //Xử lý đọc tin
   const handleMarkAsRead = async (noti: NotificationUI) => {
     setSelected(noti);
     if (noti.read) return;
