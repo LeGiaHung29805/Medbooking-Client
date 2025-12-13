@@ -156,7 +156,7 @@ export default function LoginPage() {
           <p className="text-sm text-center mt-6 text-gray-600">
             Chưa có tài khoản?{" "}
             <a
-              href="/dang-ky"
+              href="/register"
               className="text-green-600 font-bold hover:underline"
             >
               Đăng ký ngay
