@@ -1,33 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import SettingsTab from "../components/SettingsTab";
-import LoadingState from "../components/LoadingState";
-import ErrorState from "../components/ErrorState";
-import {
-  User,
-  Shield,
-  Bell,
-  Globe,
-  Database,
-  HelpCircle,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  GraduationCap,
-  Briefcase,
-  Award,
-  Save,
-  RefreshCw,
-  Key,
-  Smartphone,
-  Monitor,
-  Moon,
-  Sun,
-  FileText
+import { 
+  User, Shield, Bell, Globe, Database, HelpCircle, Mail, Phone,
+  MapPin, Calendar, GraduationCap, Briefcase, Award, Save,
+  RefreshCw, Key, Smartphone, Monitor, Moon, Sun, FileText
 } from "lucide-react";
+import { doctorService } from "../../services/doctorService";
 
 export default function SettingsPage() {
   // ==================== STATES ====================
@@ -35,6 +14,8 @@ export default function SettingsPage() {
   const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "preferences">("profile");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [specialties, setSpecialties] = useState<{ SpecialtyID: number; SpecialtyName: string }[]>([]);
+const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | null>(null);
 
   // ==================== DOCTOR PROFILE ====================
   const [doctorInfo, setDoctorInfo] = useState({
@@ -49,10 +30,7 @@ export default function SettingsPage() {
     education: "Bác sĩ chuyên khoa I - Đại học Y Hà Nội",
     bio: "Chuyên gia về các bệnh lý nội khoa, có kinh nghiệm trong điều trị các bệnh mãn tính như tiểu đường, cao huyết áp.",
     address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-    workingHours: {
-      morning: "07:30 - 11:30",
-      afternoon: "13:30 - 17:00"
-    },
+    workingHours: { morning: "07:30 - 11:30", afternoon: "13:30 - 17:00" },
     consultationFee: "300,000 VND",
     languages: ["Tiếng Việt", "Tiếng Anh"]
   });
@@ -117,35 +95,69 @@ export default function SettingsPage() {
 
   // ==================== MOCK DATA LOADING ====================
 
-  useEffect(() => {
-    const savedDoctorInfo = localStorage.getItem('doctorInfo');
-    if (savedDoctorInfo) {
-      setDoctorInfo(JSON.parse(savedDoctorInfo));
-    }
+useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await doctorService.getMyProfile();
+        if (profile) {
+          setDoctorInfo(prev => ({
+            ...prev,
+            name: profile.FullName || prev.name,
+            specialty: profile.specialty?.SpecialtyName || prev.specialty,
+            email: profile.email || prev.email,
+            phone: profile.phone || prev.phone,
+          }));
+        }
+      } catch (err) {
+        console.error("Không tải được profile:", err);
+      }
+    };
+    loadProfile();
   }, []);
 
+  // ==================== HANDLE SAVE  ====================
   const handleSaveChanges = async () => {
-    try {
-      setSaveStatus("saving");
+  setSaveStatus("saving");
+  try {
+    await doctorService.updateProfile({
+      FullName: doctorInfo.name,
+      email: doctorInfo.email,
+      phone: doctorInfo.phone,
+    });
 
-      // 1. Lưu localStorage
-      localStorage.setItem('doctorInfo', JSON.stringify(doctorInfo));
-
-      // 2. Gửi event
-      window.dispatchEvent(new CustomEvent('doctorInfoUpdated', {
-        detail: doctorInfo
-      }));
-
-      // 3. Đợi 1 chút rồi redirect về dashboard
-      setTimeout(() => {
-        alert("✅ Đã lưu thành công! Chuyển về Dashboard...");
-        router.push('/Doctor'); // Redirect về dashboard
-      }, 1000);
-
-    } catch (err) {
-      setSaveStatus("error");
+    // Lấy cache hiện tại để giữ các field khác
+    const currentCache = localStorage.getItem("doctorInfo");
+    let existingData = {};
+    if (currentCache) {
+      try {
+        existingData = JSON.parse(currentCache);
+      } catch {}
     }
-  };
+
+    // Tạo cache mới
+    const updatedCache = {
+      ...existingData,  
+      FullName: doctorInfo.name,
+      email: doctorInfo.email,
+      phone: doctorInfo.phone,
+      specialty: {
+        SpecialtyName: doctorInfo.specialty.trim()  
+      }
+    };
+
+    localStorage.setItem("doctorInfo", JSON.stringify(updatedCache));
+    window.dispatchEvent(new Event("doctorInfoUpdated"));
+
+    console.log("Cache updated successfully:", updatedCache);
+
+    setSaveStatus("saved");
+    setTimeout(() => setSaveStatus("idle"), 2000);
+  } catch (err) {
+    console.error("Lưu thất bại:", err);
+    setSaveStatus("error");
+    setTimeout(() => setSaveStatus("idle"), 3000);
+  }
+};
   // ==================== EVENT HANDLERS ====================
   const handleInputChange = (section: string, field: string, value: any) => {
     switch (section) {
@@ -181,20 +193,20 @@ export default function SettingsPage() {
       alert("Mật khẩu mới không khớp!");
       return;
     }
-
+    
     if (securitySettings.newPassword.length < 8) {
       alert("Mật khẩu phải có ít nhất 8 ký tự!");
       return;
     }
-
+    
     try {
       setSaveStatus("saving");
-
+      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-
+      
       alert("✅ Đổi mật khẩu thành công!");
-
+      
       // Reset password fields
       setSecuritySettings(prev => ({
         ...prev,
@@ -202,10 +214,10 @@ export default function SettingsPage() {
         newPassword: "",
         confirmPassword: ""
       }));
-
+      
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-
+      
     } catch (err) {
       console.error("❌ Lỗi khi đổi mật khẩu:", err);
       alert("❌ Đổi mật khẩu thất bại. Vui lòng thử lại.");
@@ -224,49 +236,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleResetToDefaults = () => {
-    if (confirm("Bạn có chắc muốn khôi phục cài đặt về mặc định? Thao tác này không thể hoàn tác.")) {
-      setDoctorInfo({
-        id: "DOC001",
-        name: "Nguyễn Văn A",
-        specialty: "Nội tổng quát",
-        email: "doctor.a@hospital.com",
-        phone: "0901234567",
-        department: "Khoa Nội tổng quát",
-        licenseNumber: "BS-2023-00123",
-        experience: "10 năm",
-        education: "Bác sĩ chuyên khoa I - Đại học Y Hà Nội",
-        bio: "Chuyên gia về các bệnh lý nội khoa, có kinh nghiệm trong điều trị các bệnh mãn tính như tiểu đường, cao huyết áp.",
-        address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-        workingHours: {
-          morning: "07:30 - 11:30",
-          afternoon: "13:30 - 17:00"
-        },
-        consultationFee: "300,000 VND",
-        languages: ["Tiếng Việt", "Tiếng Anh"]
-      });
-
-      setPreferences({
-        theme: "light",
-        language: "vi",
-        timezone: "Asia/Ho_Chi_Minh",
-        dateFormat: "dd/MM/yyyy",
-        timeFormat: "24h",
-        recordsPerPage: 20,
-        autoSave: true,
-        keyboardShortcuts: true,
-        animations: true,
-        soundEffects: false,
-        dashboardWidgets: ["stats", "appointments", "patients", "calendar"],
-        defaultView: "dashboard",
-        consultationTemplate: "Mẫu khám chuẩn",
-        prescriptionTemplate: "Mẫu đơn thuốc chuẩn"
-      });
-
-      alert("✅ Đã khôi phục cài đặt mặc định");
-    }
-  };
-
   const handleExportSettings = () => {
     const settingsData = {
       exportedAt: new Date().toISOString(),
@@ -274,7 +243,7 @@ export default function SettingsPage() {
       preferences: preferences,
       notificationSettings: notificationSettings
     };
-
+    
     const blob = new Blob([JSON.stringify(settingsData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -284,7 +253,7 @@ export default function SettingsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
+    
     alert("📥 Đã xuất cài đặt thành công!");
   };
 
@@ -303,8 +272,8 @@ export default function SettingsPage() {
 
   if (error) {
     return (
-      <ErrorState
-        message="Không thể tải cài đặt"
+      <ErrorState 
+        message="Không thể tải cài đặt" 
         onRetry={handleRefreshData}
       />
     );
@@ -328,7 +297,7 @@ export default function SettingsPage() {
               Quản lý thông tin cá nhân, bảo mật và tùy chỉnh hệ thống
             </p>
           </div>
-
+          
           {/* Save status and actions */}
           <div className="flex flex-wrap items-center gap-3">
             {saveStatus === "saving" && (
@@ -337,19 +306,19 @@ export default function SettingsPage() {
                 Đang lưu...
               </div>
             )}
-
+            
             {saveStatus === "saved" && (
               <div className="px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm flex items-center gap-2">
                 ✓ Đã lưu
               </div>
             )}
-
+            
             {saveStatus === "error" && (
               <div className="px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-sm">
                 ❌ Lỗi khi lưu
               </div>
             )}
-
+            
             <button
               onClick={handleExportSettings}
               className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -357,7 +326,7 @@ export default function SettingsPage() {
               <Database className="w-4 h-4" />
               Xuất cài đặt
             </button>
-
+            
             <button
               onClick={handleSaveChanges}
               disabled={saveStatus === "saving"}
@@ -368,54 +337,58 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
-
+        
         {/* Navigation tabs */}
         <div className="mt-6 flex flex-wrap gap-2 border-b border-gray-200">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "profile"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === "profile"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
           >
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Hồ sơ cá nhân
             </div>
           </button>
-
+          
           <button
             onClick={() => setActiveTab("security")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "security"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === "security"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
           >
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Bảo mật
             </div>
           </button>
-
+          
           <button
             onClick={() => setActiveTab("notifications")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "notifications"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === "notifications"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
           >
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
               Thông báo
             </div>
           </button>
-
+          
           <button
             onClick={() => setActiveTab("preferences")}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${activeTab === "preferences"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
+            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === "preferences"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
           >
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
@@ -434,7 +407,7 @@ export default function SettingsPage() {
               <User className="w-5 h-5 text-indigo-600" />
               Thông tin cơ bản
             </h3>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -447,7 +420,7 @@ export default function SettingsPage() {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Chuyên khoa
@@ -459,7 +432,7 @@ export default function SettingsPage() {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
@@ -474,7 +447,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Số điện thoại
@@ -489,7 +462,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Khoa
@@ -501,7 +474,7 @@ export default function SettingsPage() {
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Số chứng chỉ hành nghề
@@ -522,7 +495,7 @@ export default function SettingsPage() {
               <Briefcase className="w-5 h-5 text-indigo-600" />
               Thông tin chuyên môn
             </h3>
-
+            
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -538,7 +511,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Học vấn
@@ -553,7 +526,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Giới thiệu bản thân
@@ -566,7 +539,7 @@ export default function SettingsPage() {
                   placeholder="Giới thiệu về chuyên môn, kinh nghiệm..."
                 />
               </div>
-
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -583,7 +556,7 @@ export default function SettingsPage() {
                     placeholder="07:30 - 11:30"
                   />
                 </div>
-
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Giờ làm việc (Chiều)
@@ -609,7 +582,7 @@ export default function SettingsPage() {
               <Award className="w-5 h-5 text-indigo-600" />
               Thông tin bổ sung
             </h3>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -625,7 +598,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phí tư vấn
@@ -638,7 +611,7 @@ export default function SettingsPage() {
                   placeholder="300,000 VND"
                 />
               </div>
-
+              
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Ngôn ngữ
@@ -687,7 +660,7 @@ export default function SettingsPage() {
               <Key className="w-5 h-5 text-indigo-600" />
               Đổi mật khẩu
             </h3>
-
+            
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -701,7 +674,7 @@ export default function SettingsPage() {
                   placeholder="Nhập mật khẩu hiện tại"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Mật khẩu mới
@@ -717,7 +690,7 @@ export default function SettingsPage() {
                   Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt
                 </p>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Xác nhận mật khẩu mới
@@ -730,7 +703,7 @@ export default function SettingsPage() {
                   placeholder="Nhập lại mật khẩu mới"
                 />
               </div>
-
+              
               <button
                 onClick={handlePasswordChange}
                 className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -746,7 +719,7 @@ export default function SettingsPage() {
               <Shield className="w-5 h-5 text-indigo-600" />
               Cài đặt bảo mật
             </h3>
-
+            
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -755,16 +728,18 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => handleInputChange("security", "twoFactorAuth", !securitySettings.twoFactorAuth)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${securitySettings.twoFactorAuth ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                    securitySettings.twoFactorAuth ? 'bg-indigo-600' : 'bg-gray-300'
+                  }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${securitySettings.twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                      securitySettings.twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
+                    }`}
                   />
                 </button>
               </div>
-
+              
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium text-gray-900">Cảnh báo đăng nhập</div>
@@ -772,16 +747,18 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => handleInputChange("security", "loginAlerts", !securitySettings.loginAlerts)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${securitySettings.loginAlerts ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                    securitySettings.loginAlerts ? 'bg-indigo-600' : 'bg-gray-300'
+                  }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${securitySettings.loginAlerts ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                      securitySettings.loginAlerts ? 'translate-x-6' : 'translate-x-1'
+                    }`}
                   />
                 </button>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Thời gian tự động đăng xuất
@@ -791,11 +768,6 @@ export default function SettingsPage() {
                   onChange={(e) => handleInputChange("security", "sessionTimeout", parseInt(e.target.value))}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
-                  <option value={15}>15 phút</option>
-                  <option value={30}>30 phút</option>
-                  <option value={60}>60 phút</option>
-                  <option value={120}>2 giờ</option>
-                  <option value={0}>Không tự động đăng xuất</option>
                 </select>
               </div>
             </div>
@@ -807,7 +779,7 @@ export default function SettingsPage() {
               <Smartphone className="w-5 h-5 text-indigo-600" />
               Quản lý thiết bị
             </h3>
-
+            
             <div className="space-y-4">
               {securitySettings.deviceManagement.map(device => (
                 <div key={device.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -834,7 +806,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
               ))}
-
+              
               <div className="text-sm text-gray-600">
                 Hiện có {securitySettings.deviceManagement.length} thiết bị đang hoạt động
               </div>
@@ -852,7 +824,7 @@ export default function SettingsPage() {
               <Mail className="w-5 h-5 text-indigo-600" />
               Thông báo qua Email
             </h3>
-
+            
             <div className="space-y-4">
               {Object.entries(notificationSettings.emailNotifications).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
@@ -874,12 +846,14 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleInputChange("notifications", `emailNotifications.${key}`, !value)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${value ? 'bg-indigo-600' : 'bg-gray-300'
-                      }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                      value ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${value ? 'translate-x-6' : 'translate-x-1'
-                        }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                        value ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                     />
                   </button>
                 </div>
@@ -893,7 +867,7 @@ export default function SettingsPage() {
               <Bell className="w-5 h-5 text-indigo-600" />
               Thông báo đẩy
             </h3>
-
+            
             <div className="space-y-4">
               {Object.entries(notificationSettings.pushNotifications).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
@@ -913,12 +887,14 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleInputChange("notifications", `pushNotifications.${key}`, !value)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${value ? 'bg-indigo-600' : 'bg-gray-300'
-                      }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                      value ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${value ? 'translate-x-6' : 'translate-x-1'
-                        }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                        value ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                     />
                   </button>
                 </div>
@@ -932,7 +908,7 @@ export default function SettingsPage() {
               <Moon className="w-5 h-5 text-indigo-600" />
               Giờ yên tĩnh
             </h3>
-
+            
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -941,16 +917,18 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => handleInputChange("notifications", "quietHours.enabled", !notificationSettings.quietHours.enabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${notificationSettings.quietHours.enabled ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                    notificationSettings.quietHours.enabled ? 'bg-indigo-600' : 'bg-gray-300'
+                  }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${notificationSettings.quietHours.enabled ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                      notificationSettings.quietHours.enabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
                   />
                 </button>
               </div>
-
+              
               {notificationSettings.quietHours.enabled && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -991,7 +969,7 @@ export default function SettingsPage() {
               <Monitor className="w-5 h-5 text-indigo-600" />
               Hiển thị & Giao diện
             </h3>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1000,30 +978,33 @@ export default function SettingsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleInputChange("preferences", "theme", "light")}
-                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${preferences.theme === "light"
-                      ? "border-indigo-600 bg-indigo-50"
-                      : "border-gray-300 hover:bg-gray-50"
-                      }`}
+                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${
+                      preferences.theme === "light" 
+                        ? "border-indigo-600 bg-indigo-50" 
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     <Sun className="w-6 h-6" />
                     <span>Sáng</span>
                   </button>
                   <button
                     onClick={() => handleInputChange("preferences", "theme", "dark")}
-                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${preferences.theme === "dark"
-                      ? "border-indigo-600 bg-indigo-50"
-                      : "border-gray-300 hover:bg-gray-50"
-                      }`}
+                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${
+                      preferences.theme === "dark" 
+                        ? "border-indigo-600 bg-indigo-50" 
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     <Moon className="w-6 h-6" />
                     <span>Tối</span>
                   </button>
                   <button
                     onClick={() => handleInputChange("preferences", "theme", "auto")}
-                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${preferences.theme === "auto"
-                      ? "border-indigo-600 bg-indigo-50"
-                      : "border-gray-300 hover:bg-gray-50"
-                      }`}
+                    className={`flex-1 p-4 border rounded-lg flex flex-col items-center gap-2 ${
+                      preferences.theme === "auto" 
+                        ? "border-indigo-600 bg-indigo-50" 
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1032,7 +1013,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Ngôn ngữ
@@ -1046,7 +1027,7 @@ export default function SettingsPage() {
                   <option value="en">English</option>
                 </select>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Định dạng ngày
@@ -1061,7 +1042,7 @@ export default function SettingsPage() {
                   <option value="yyyy-MM-dd">yyyy-MM-dd</option>
                 </select>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Định dạng giờ
@@ -1075,7 +1056,7 @@ export default function SettingsPage() {
                   <option value="12h">12 giờ</option>
                 </select>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Múi giờ
@@ -1092,7 +1073,7 @@ export default function SettingsPage() {
                   <option value="Asia/Tokyo">(GMT+9) Tokyo</option>
                 </select>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Số bản ghi/trang
@@ -1119,7 +1100,7 @@ export default function SettingsPage() {
               </svg>
               Hành vi & Hiệu suất
             </h3>
-
+            
             <div className="space-y-4">
               {[
                 { key: "autoSave", label: "Tự động lưu", description: "Tự động lưu thay đổi" },
@@ -1134,12 +1115,14 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleInputChange("preferences", item.key, !preferences[item.key as keyof typeof preferences])}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${preferences[item.key as keyof typeof preferences] ? 'bg-indigo-600' : 'bg-gray-300'
-                      }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                      preferences[item.key as keyof typeof preferences] ? 'bg-indigo-600' : 'bg-gray-300'
+                    }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${preferences[item.key as keyof typeof preferences] ? 'translate-x-6' : 'translate-x-1'
-                        }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                        preferences[item.key as keyof typeof preferences] ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                     />
                   </button>
                 </div>
@@ -1153,7 +1136,7 @@ export default function SettingsPage() {
               <FileText className="w-5 h-5 text-indigo-600" />
               Mẫu mặc định
             </h3>
-
+            
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1169,7 +1152,7 @@ export default function SettingsPage() {
                   <option value="Mẫu khám chi tiết">Mẫu khám chi tiết</option>
                 </select>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Mẫu đơn thuốc
@@ -1184,7 +1167,7 @@ export default function SettingsPage() {
                   <option value="Mẫu đơn thuốc chi tiết">Mẫu đơn thuốc chi tiết</option>
                 </select>
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Trang mặc định
@@ -1208,12 +1191,12 @@ export default function SettingsPage() {
               <RefreshCw className="w-5 h-5 text-indigo-600" />
               Khôi phục & Đặt lại
             </h3>
-
+            
             <div className="space-y-4">
               <p className="text-gray-600">
                 Khôi phục tất cả cài đặt về giá trị mặc định ban đầu.
               </p>
-
+              
               <div className="flex gap-3">
                 <button
                   onClick={handleResetToDefaults}
@@ -1221,7 +1204,7 @@ export default function SettingsPage() {
                 >
                   Khôi phục mặc định
                 </button>
-
+                
                 <button
                   onClick={handleExportSettings}
                   className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -1229,7 +1212,7 @@ export default function SettingsPage() {
                   Sao lưu cài đặt
                 </button>
               </div>
-
+              
               <p className="text-sm text-gray-500">
                 Lưu ý: Thao tác khôi phục mặc định không thể hoàn tác.
               </p>
@@ -1240,29 +1223,35 @@ export default function SettingsPage() {
 
       {/* Footer Actions */}
       <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-        <div className="text-sm text-gray-500">
-          ID: {doctorInfo.id} • Cập nhật lần cuối: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={handleRefreshData}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Làm mới
-          </button>
-
-          <button
-            onClick={handleSaveChanges}
-            disabled={saveStatus === "saving"}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {saveStatus === "saving" ? "Đang lưu..." : "Lưu tất cả thay đổi"}
-          </button>
-        </div>
-      </div>
+  <div className="text-sm text-gray-500">
+    ID: {doctorInfo.id} • Cập nhật lần cuối: 
+    <span suppressHydrationWarning>
+      {typeof window !== 'undefined' 
+        ? new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+        : '--:--'
+      }
+    </span>
+  </div>
+  
+  <div className="flex gap-3">
+    <button
+      onClick={handleRefreshData}
+      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+    >
+      <RefreshCw className="w-4 h-4" />
+      Làm mới
+    </button>
+    
+    <button
+      onClick={handleSaveChanges}
+      disabled={saveStatus === "saving"}
+      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+    >
+      <Save className="w-4 h-4" />
+      {saveStatus === "saving" ? "Đang lưu..." : "Lưu tất cả thay đổi"}
+    </button>
+  </div>
+</div>
     </div>
   );
 }

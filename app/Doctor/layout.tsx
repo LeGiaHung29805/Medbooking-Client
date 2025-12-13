@@ -1,79 +1,120 @@
-// app/Doctor/layout.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import DoctorSidebar from "./components/DoctorSidebar";
 import Header from "./components/Header";
+import { doctorService } from "../services/doctorService";
+
+interface DoctorProfile {
+  FullName: string;
+  specialty: { SpecialtyName: string };
+  email?: string;
+  phone?: string;
+}
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [doctorInfo, setDoctorInfo] = useState({
-    name: "Nguyễn Văn A",
-    specialty: "Nội tổng quát"
+  const [currentDoctor, setCurrentDoctor] = useState<DoctorProfile>({
+    FullName: "Đang tải...",
+    specialty: { SpecialtyName: "Bác sĩ" }
   });
 
-  // Load doctor info từ localStorage khi component mount
-  useEffect(() => {
-    const savedDoctorInfo = localStorage.getItem('doctorInfo');
-    if (savedDoctorInfo) {
-      try {
-        const parsedInfo = JSON.parse(savedDoctorInfo);
-        setDoctorInfo({
-          name: parsedInfo.name || "Nguyễn Văn A",
-          specialty: parsedInfo.specialty || "Nội tổng quát"
-        });
-      } catch (error) {
-        console.error("Error parsing doctor info:", error);
-      }
-    }
-  }, []);
+  // Hàm tải thông tin bác sĩ 
+  const loadDoctorProfile = async (forceRefresh = false) => {
+    try {
+      const cached = localStorage.getItem("doctorInfo");
+      if (cached && !forceRefresh) {
+        const parsed = JSON.parse(cached);
 
-  // Listen for storage changes (khi Settings page lưu thay đổi)
-  useEffect(() => {
-  const handleDoctorInfoUpdate = () => {
-    const savedDoctorInfo = localStorage.getItem('doctorInfo');
-    if (savedDoctorInfo) {
-      try {
-        const parsedInfo = JSON.parse(savedDoctorInfo);
-        setDoctorInfo({
-          name: parsedInfo.name || "Nguyễn Văn A",
-          specialty: parsedInfo.specialty || "Nội tổng quát"
+        setCurrentDoctor({
+          FullName: parsed.FullName || "Bác sĩ",
+          specialty: {
+            SpecialtyName:
+              typeof parsed.specialty === "string"
+                ? parsed.specialty
+                : (parsed.specialty?.SpecialtyName || "Chưa xác định")
+          },
+          email: parsed.email,
+          phone: parsed.phone
         });
-      } catch (error) {
-        console.error("Error parsing doctor info:", error);
+        return; 
       }
+
+      const profileData = await doctorService.getMyProfile();
+
+      if (profileData) {
+        const doctorData = {
+          FullName: profileData.FullName || "Bác sĩ",
+          specialty: {
+            SpecialtyName: profileData.specialty?.SpecialtyName || "Chưa xác định"
+          },
+          email: profileData.email,
+          phone: profileData.phone
+        };
+
+        // Cập nhật state
+        setCurrentDoctor(doctorData);
+        localStorage.setItem("doctorInfo", JSON.stringify(doctorData));
+      }
+    } catch (error) {
+      console.error("Không thể tải thông tin bác sĩ:", error);
+      setCurrentDoctor({
+        FullName: "Lỗi tải dữ liệu",
+        specialty: { SpecialtyName: "Bác sĩ" }
+      });
     }
   };
 
-  // Lắng nghe cả storage event VÀ custom event
-  window.addEventListener('storage', handleDoctorInfoUpdate);
-  window.addEventListener('doctorInfoUpdated', handleDoctorInfoUpdate);
-  
+  // Load lần đầu khi mount
+  useEffect(() => {
+    loadDoctorProfile();
+  }, []);
+
+  // Lắng nghe sự kiện cập nhật thông tin bác sĩ
+  useEffect(() => {
+  const handleDoctorUpdate = () => {
+    loadDoctorProfile(false); 
+  };
+
+  window.addEventListener("doctorInfoUpdated", handleDoctorUpdate);
+
   return () => {
-    window.removeEventListener('storage', handleDoctorInfoUpdate);
-    window.removeEventListener('doctorInfoUpdated', handleDoctorInfoUpdate);
+    window.removeEventListener("doctorInfoUpdated", handleDoctorUpdate);
   };
 }, []);
 
-  // Xác định tab hiện tại từ URL
-  const activeTab = pathname === "/Doctor/schedule" ? "schedule" :
-                    pathname === "/Doctor/records" ? "records" :
-                    pathname === "/Doctor/settings" ? "settings" : "dashboard";
+  // Tự động refresh khi có flag 
+  useEffect(() => {
+    const shouldRefresh = localStorage.getItem("profileNeedsRefresh");
+    if (shouldRefresh === "true") {
+      loadDoctorProfile(true);
+      localStorage.removeItem("profileNeedsRefresh");
+    }
+  }, [pathname]);
+
+  // Xác định tab hiện tại
+  const activeTab = pathname === "/Doctor/schedule" ? "schedule"
+    : pathname === "/Doctor/records" ? "records"
+    : pathname === "/Doctor/settings" ? "settings"
+    : "dashboard";
 
   const handleTabChange = (tab: "dashboard" | "schedule" | "records" | "settings") => {
-    if (tab === "dashboard") router.push("/Doctor");
-    if (tab === "schedule") router.push("/Doctor/schedule");
-    if (tab === "records") router.push("/Doctor/records");
-    if (tab === "settings") router.push("/Doctor/settings");
+    const routes: Record<string, string> = {
+      dashboard: "/Doctor",
+      schedule: "/Doctor/schedule",
+      records: "/Doctor/records",
+      settings: "/Doctor/settings"
+    };
+    router.push(routes[tab]);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("api_token");
-    localStorage.removeItem("doctorInfo"); // Xóa thông tin bác sĩ
-    window.location.href = "/login";
+    localStorage.clear();
+    router.push("/login");
   };
 
   return (
@@ -83,10 +124,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         setSidebarOpen={setSidebarOpen}
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        currentDoctor={{
-          FullName: doctorInfo.name, // Dùng state động
-          specialty: { SpecialtyName: doctorInfo.specialty }
-        }}
+        currentDoctor={currentDoctor}
         handleLogout={handleLogout}
       />
 

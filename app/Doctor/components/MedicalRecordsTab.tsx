@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { MedicalRecord } from  "@/lib/model"
-
+import { generatePrescriptionPDF } from "../components/InPrescriptionPDF";
 interface MedicalRecordsTabProps {
   medicalRecords: MedicalRecord[]
   handleViewMedicalRecord: (id: number) => void
