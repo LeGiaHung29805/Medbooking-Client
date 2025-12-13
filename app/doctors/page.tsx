@@ -59,7 +59,7 @@ export default function DoctorsBookingPage() {
         const docsWithUI: DoctorUI[] = doctorsData.map(d => ({
           ...d,
           // price: 300000,
-          hospital: "Bệnh viện MedBooking",
+          hospital: "Bệnh viện HUNRE",
           location: "Hà Nội",
           schedule: {}
         }));
