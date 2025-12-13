@@ -209,7 +209,20 @@ export const cancelAppointment = async (
   );
   return response.data;
 };
+// Lấy thông báo của chính mình
+export const getMyNotifications = async (): Promise<Model.Notification[]> => {
+  const response = await apiClient.get("/my-notifications", {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
 
+// Đánh dấu đã đọc
+export const markNotificationAsRead = async (id: number): Promise<void> => {
+  await apiClient.put(`/notifications/${id}/read`, {}, {
+    headers: getAuthHeaders(),
+  });
+};
 //4. NHÓM BÁC SĨ (DOCTOR)
 //Lấy thống kê của bác sĩ
 export const doctorGetDashboard = async (): Promise<Model.DashboardStats> => {
