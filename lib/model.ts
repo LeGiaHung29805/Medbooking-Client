@@ -172,7 +172,7 @@ export interface NotificationLog {
   recipient: string;
   title: string;
   content: string;
-  type: "SystemAlert" | "AppointmentReminder" | "Other";
+  type: "SystemAlert" | "Reminder" | "Other";
   sent_at: string;
   status: string;
 }

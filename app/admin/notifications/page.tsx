@@ -330,7 +330,7 @@ export default function NotificationManagerPage() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 {getTypeIcon(log.type)}
-                                <span className={`text-sm font-semibold ${log.type === 'AppointmentReminder' ? 'text-blue-700' : 'text-orange-700'}`}>
+                                <span className={`text-sm font-semibold ${log.type === 'Reminder' ? 'text-blue-700' : 'text-orange-700'}`}>
                                   {getTypeName(log.type)}
                                 </span>
                               </div>

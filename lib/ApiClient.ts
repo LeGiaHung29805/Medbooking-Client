@@ -1,8 +1,6 @@
 import axios from "axios";
 import * as Model from "./model";
-import { relative } from "path";
 
-// 1. Cấu hình URL Backend
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 const apiClient = axios.create({
@@ -57,7 +55,7 @@ const getAuthHeaders = () => {
   return {};
 };
 
-//1. NHÓM XÁC THỰC (AUTH) 
+//NHÓM XÁC THỰC
 
 export const register = async (
   data: FormData
@@ -77,7 +75,7 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
   if (token && typeof window !== "undefined") {
     localStorage.setItem("api_token", token);
     localStorage.setItem("user_role", response.data.user.Role || response.data.user.role);
-    console.log("Đã lưu token:", token); // thêm dòng này để debug
+    console.log("Đã lưu token:", token);
   }
 
   return response.data;
@@ -96,7 +94,7 @@ export const logout = async (): Promise<Model.MessageResponse> => {
   return response.data;
 };
 
-//2. NHÓM CÔNG KHAI (PUBLIC)
+//NHÓM CÔNG KHAI (PUBLIC)
 //Lấy tất cả dịch vụ
 export const getAllServices = async (
   search?: string
@@ -123,11 +121,11 @@ export const getDoctors = async (
   search?: string,
   specialtyId?: number
 ): Promise<Model.Doctor[]> => {
-  // 1. Định nghĩa rõ kiểu: object này có thể có key 'search' và 'specialty_id'
+  //Định nghĩa rõ kiểu: object này vì có key 'search' và 'specialty_id'
   const params: { search?: string; specialty_id?: number } = {};
 
   if (search) params.search = search;
-  if (specialtyId) params.specialty_id = specialtyId; // Backend cần key này
+  if (specialtyId) params.specialty_id = specialtyId;
 
   const response = await apiClient.get("/doctors", { params });
   return response.data;
@@ -155,7 +153,7 @@ export const getTopFeedbacks = async (): Promise<Model.TopFeedback[]> => {
   const response = await apiClient.get<Model.TopFeedback[]>("/top-feedbacks");
   return response.data;
 };
-//3. NHÓM BỆNH NHÂN (PATIENT)
+//NHÓM BỆNH NHÂN (PATIENT)
 //Lấy profile chính mình
 export const getMe = async (): Promise<Model.User> => {
   const response = await apiClient.get("/user", { headers: getAuthHeaders() });
@@ -233,7 +231,7 @@ export const deleteMyNotification = async (
   });
   return response.data; 
 };
-//4. NHÓM BÁC SĨ (DOCTOR)
+//NHÓM BÁC SĨ (DOCTOR)
 //Lấy thống kê của bác sĩ
 export const doctorGetDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/doctor/dashboard-stats-test");
@@ -330,7 +328,7 @@ export const getAppointmentDetail = async (id: number): Promise<Model.Appointmen
   return response.data;
 };
 
-//5. NHÓM STAFF & ADMIN
+//NHÓM STAFF & ADMIN
 //Lấy thống kê của nhân viên y tế
 export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/staff/dashboard-stats", {
@@ -410,9 +408,9 @@ export const adminDeleteDoctor = async (id: number): Promise<void> => {
     headers: getAuthHeaders(),
   });
 };
-//6. CÁC API BỔ SUNG (CHO ADMIN & TRA CỨU)
+//CÁC API BỔ SUNG (CHO ADMIN & TRA CỨU)
 
-// --- Quản lý Tài khoản (Admin) ---
+//Quản lý Tài khoản (Admin)
 export const adminGetUsers = async (
   role?: string,
   search?: string
@@ -569,7 +567,6 @@ export const updateProfile = async (
   data: Model.UpdateProfileRequest
 ): Promise<Model.MessageResponse> => {
   // Dùng method PUT (hoặc POST + _method:PUT nếu muốn gửi form-data đồng bộ)
-  // Ở đây dùng JSON cho đơn giản vì không có file
   const response = await apiClient.put("/user/profile", data, {
     headers: getAuthHeaders(),
   });
@@ -634,10 +631,6 @@ export const adminCreatePatient = async (
 };
 
 // Cập nhật người dùng (Sửa lại để nhận FormData => Hỗ trợ upload ảnh & Method Spoofing)
-
-// Xóa người dùng (Dùng API xóa bệnh nhân - Vì UserManagementController chưa có hàm destroy)
-// Nếu xóa Bác sĩ, nên dùng adminDeleteDoctor.
-// tạm dùng endpoint của patients cho các user thông thường.
 export const adminDeleteUser = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/patients/${id}`, {
     headers: getAuthHeaders(),
