@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import {
   Bell,
-  CalendarClock, // Icon cho Lịch hẹn
-  AlertTriangle, // Icon cho Bảo trì hệ thống
+  CalendarClock,
+  AlertTriangle,
   Eye,
   Loader2,
   Check,
@@ -19,13 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import * as Api from "@/lib/ApiClient";
 
-// Interface đơn giản hóa
 interface NotificationUI {
   id: number;
   title: string;
   message: string;
   date: string;
-  type: "LichHen" | "HeThong"; // Chỉ còn 2 loại này
+  type: "LichHen" | "HeThong";
   read: boolean;
 }
 
