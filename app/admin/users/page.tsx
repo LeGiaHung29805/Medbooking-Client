@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { AxiosError } from "axios";
+import { Search } from "lucide-react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
@@ -549,15 +550,19 @@ export default function UserManagementPage() {
       </div>
 
       <div className="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
-        <div className="flex-grow w-full md:w-auto relative">
-          <input
-            type="text"
-            placeholder="Tìm theo tên, email, số điện thoại..."
-            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <span className="absolute left-4 top-3.5 text-gray-400 text-lg"></span>
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="flex-grow w-full md:w-auto relative">
+            <input
+              type="text"
+              placeholder="Tìm theo tên, email, số điện thoại..."
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="w-full md:w-64 relative">

@@ -9,7 +9,6 @@ import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AxiosError } from 'axios';
-// Component chọn sao (Star Rating)
 const StarRatingInput = ({ rating, setRating }: { rating: number, setRating: (r: number) => void }) => {
     return (
         <div className="flex gap-1">

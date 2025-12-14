@@ -47,7 +47,7 @@ export default function LoginPage() {
             router.push("/Doctor");
             break;
           case "NhanVien":
-            router.push("/staff");
+            router.push("/Staff");
             break;
           default:
             router.push("/dat-lich");
