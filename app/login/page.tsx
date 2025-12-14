@@ -16,6 +16,12 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
+
+    console.log("Sending request:", {
+  email: username,
+  password: password.substring(0, 1) + "***" // Ẩn mật khẩu
+});
+
     try {
       const res = await fetch("http://localhost:8000/api/login", {
         method: "POST",
@@ -29,6 +35,10 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
+
+      console.log("API Response:", data);
+    console.log("Status:", res.status);
+    console.log("Full response:", { status: res.status, ok: res.ok, data });
 
       // HIỂN THỊ THÔNG BÁO 
       if (!res.ok) {
@@ -45,17 +55,18 @@ export default function LoginPage() {
       localStorage.setItem("user_role", data.user.Role);
 
       // REDIRECT CHO STAFF + ADMIN 
+      console.log("Stored role in localStorage:", data.user.Role);
       const role = data.user.Role.toLowerCase().trim().replace(/\s+/g, ""); // xóa khoảng trắng
 
       if (role === "doctor" || role.includes("doctor")) {
-        router.push("/Doctor");
-      } else if (role.includes("nhanvien") || role.includes("nhânvien") || role.includes("staff")) {
-        router.push("/Staff");
-      } else if (role.includes("quantrivien") || role.includes("quantri") || role.includes("admin")) {
-        router.push("/admin");
-      } else {
-        router.push("/dat-lich");
-      }
+  router.push("/Doctor");
+} else if (role.includes("nhanvien") || role.includes("nhânvien") || role.includes("staff")) {
+  router.push("/Staff");  // Đây mới quan trọng
+} else if (role.includes("quantrivien") || role.includes("quantri") || role.includes("admin")) {
+  router.push("/admin");
+} else {
+  router.push("/dat-lich");
+}
 
     } catch (err: any) {
       setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
@@ -63,6 +74,8 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  
 
   return (
     <LayoutBook>
