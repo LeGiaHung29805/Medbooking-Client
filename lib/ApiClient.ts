@@ -728,8 +728,6 @@ export const sendNotification = async (
   });
   return response.data;
 };
-<<<<<<< HEAD
-// [MỚI] Lấy danh sách lịch hẹn chờ xác nhận (Pending)
 export const getPendingAppointments = async (): Promise<Model.Appointment[]> => {
   try {
     // Gọi endpoint có sẵn
@@ -741,7 +739,8 @@ export const getPendingAppointments = async (): Promise<Model.Appointment[]> => 
     console.log("Pending appointments endpoint not available, returning empty array");
     return [];
   }
-=======
+};
+
 // Xóa thông báo quản lí
 export const deleteNotification = async (
   id: number | string
@@ -751,6 +750,7 @@ export const deleteNotification = async (
   });
   return response.data; 
 };
+
 //Xóa tất cả
 export const deleteAllNotifications = async (): Promise<Model.MessageResponse> => {
   const response = await apiClient.delete(`/admin/notifications/delete-all`, {
@@ -758,21 +758,12 @@ export const deleteAllNotifications = async (): Promise<Model.MessageResponse> =
   });
   return response.data;
 };
+
 export const triggerReminders = async (): Promise<Model.MessageResponse> => {
   const response = await apiClient.post(`/admin/notifications/trigger-reminders`, {}, {
     headers: getAuthHeaders(),
   });
   return response.data;
-};
-//Lấy danh sách lịch hẹn chờ xác nhận (Pending)
-export const getPendingAppointments = async (): Promise<
-  Model.Appointment[]
-> => {
-
-  //Gọi API lấy tất cả rồi lọc
-  const allAppointments = await getAllAppointments();
-  return allAppointments.filter((app) => app.Status === "Pending");
->>>>>>> c57feb74e819d533c7633318560c2382d93e22d9
 };
 //Staff tạo lịch hẹn thay mặt bệnh nhân
 export const staffCreateAppointment = async (
@@ -843,3 +834,4 @@ export const searchUserPublic = async (query: string): Promise<Model.User[]> => 
     });
     return response.data;
 };
+export { apiClient };

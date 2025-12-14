@@ -1,4 +1,4 @@
-import  apiClient  from "@/lib/ApiClient";
+import { apiClient } from "@/lib/ApiClient";
 import type { 
   Patient, 
   MedicalRecord, 

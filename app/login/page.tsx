@@ -24,73 +24,60 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-
     console.log("Sending request:", {
-  email: username,
-  password: password.substring(0, 1) + "***" // Ẩn mật khẩu
-});
+      email: username,
+      password: password.substring(0, 1) + "***" // Ẩn mật khẩu
+    });
 
     try {
-
       const formData = new FormData();
-      formData.append("Username", username);
+      formData.append("email", username);
       formData.append("password", password);
 
-<<<<<<< HEAD
+      // CODE CỦA BẠN (fetch)
+      const res = await fetch("http://127.0.0.1:8000/api/login", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
       console.log("API Response:", data);
-    console.log("Status:", res.status);
-    console.log("Full response:", { status: res.status, ok: res.ok, data });
+      console.log("Status:", res.status);
+      console.log("Full response:", { status: res.status, ok: res.ok, data });
 
       // HIỂN THỊ THÔNG BÁO 
       if (!res.ok) {
         throw new Error(data.message || "Sai email hoặc mật khẩu");
       }
-=======
-      const response = await Api.login(formData);
->>>>>>> c57feb74e819d533c7633318560c2382d93e22d9
 
-      if (response.token) {
-        localStorage.setItem("user", JSON.stringify(response.user));
+      // Lưu token
+      const token = data.access_token || data.token;
+      if (token) {
+        localStorage.setItem("api_token", token);
+        localStorage.setItem("user_role", data.user.Role || data.user.role);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        console.log("Đã lưu token:", token);
+      }
 
-        const role = response.user.Role;
-
-<<<<<<< HEAD
       // REDIRECT CHO STAFF + ADMIN 
       console.log("Stored role in localStorage:", data.user.Role);
       const role = data.user.Role.toLowerCase().trim().replace(/\s+/g, ""); // xóa khoảng trắng
 
       if (role === "doctor" || role.includes("doctor")) {
-  router.push("/Doctor");
-} else if (role.includes("nhanvien") || role.includes("nhânvien") || role.includes("staff")) {
-  router.push("/Staff");  // Đây mới quan trọng
-} else if (role.includes("quantrivien") || role.includes("quantri") || role.includes("admin")) {
-  router.push("/admin");
-} else {
-  router.push("/dat-lich");
-}
-=======
-        alert(`Đăng nhập thành công! Xin chào ${response.user.FullName}`);
-
-        switch (role) {
-          case "QuanTriVien":
-            router.push("/admin");
-            break;
-          case "BacSi":
-            router.push("/Doctor");
-            break;
-          case "NhanVien":
-            router.push("/staff");
-            break;
-          default:
-            router.push("/dat-lich");
-            break;
-        }
+        router.push("/Doctor");
+      } else if (role.includes("nhanvien") || role.includes("nhânvien") || role.includes("staff")) {
+        router.push("/Staff");  // Đây mới quan trọng
+      } else if (role.includes("quantrivien") || role.includes("quantri") || role.includes("admin")) {
+        router.push("/admin");
       } else {
-        setError("Không nhận được token xác thực.");
+        router.push("/dat-lich");
       }
+
+      alert(`Đăng nhập thành công! Xin chào ${data.user.FullName || data.user.name}`);
+
     } catch (err) {
       console.error("Login failed:", err);
->>>>>>> c57feb74e819d533c7633318560c2382d93e22d9
 
       const error = err as AxiosError<{ message: string }>;
 
@@ -104,8 +91,6 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-
-  
 
   return (
     <LayoutBook>
