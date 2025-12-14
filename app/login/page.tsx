@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
 import LayoutBook from "@/components/layoutBook";
-import * as Api from "@/lib/ApiClient";
+import apiClient from "@/lib/ApiClient";
+
+
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -16,75 +17,59 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     if (!username || !password) {
       setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-
-    console.log("Sending request:", {
-      email: username,
-      password: password.substring(0, 1) + "***" // Ẩn mật khẩu
-    });
-
     try {
-      const formData = new FormData();
-      formData.append("email", username);
-      formData.append("password", password);
-
-      // CODE CỦA BẠN (fetch)
-      const res = await fetch("http://127.0.0.1:8000/api/login", {
-        method: "POST",
-        body: formData,
+      // Bước 1: Lấy CSRF cookie từ Sanctum (bắt buộc)
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", {
+        method: "GET",
+        credentials: "include", // Quan trọng: gửi/nhận cookie
       });
 
-      const data = await res.json();
+      // Bước 2: Gửi login bằng JSON (backend nhận field "email")
+     const res = await apiClient.post("/login", {
+  email: username,      
+  password: password,
+});
 
-      console.log("API Response:", data);
-      console.log("Status:", res.status);
-      console.log("Full response:", { status: res.status, ok: res.ok, data });
 
-      // HIỂN THỊ THÔNG BÁO 
-      if (!res.ok) {
-        throw new Error(data.message || "Sai email hoặc mật khẩu");
+      const data = res.data;
+
+      console.log("Login success:", data);
+
+      // Lưu role để redirect (không lưu token nữa)
+      if (data.user?.Role) {
+        localStorage.setItem("user_role", data.user.Role);
       }
 
-      // Lưu token
-      const token = data.access_token || data.token;
-      if (token) {
-        localStorage.setItem("api_token", token);
-        localStorage.setItem("user_role", data.user.Role || data.user.role);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        console.log("Đã lưu token:", token);
-      }
+      // Redirect theo role
+      const role = (data.user?.Role || "").toLowerCase().trim();
 
-      // REDIRECT CHO STAFF + ADMIN 
-      console.log("Stored role in localStorage:", data.user.Role);
-      const role = data.user.Role.toLowerCase().trim().replace(/\s+/g, ""); // xóa khoảng trắng
-
-      if (role === "doctor" || role.includes("doctor")) {
+      if (role.includes("doctor") || role.includes("bacsi")) {
         router.push("/Doctor");
-      } else if (role.includes("nhanvien") || role.includes("nhânvien") || role.includes("staff")) {
-        router.push("/Staff");  // Đây mới quan trọng
-      } else if (role.includes("quantrivien") || role.includes("quantri") || role.includes("admin")) {
+      } else if (role.includes("nhanvien") || role.includes("staff")) {
+        router.push("/Staff");
+      } else if (role.includes("quantrivien") || role.includes("admin")) {
         router.push("/admin");
       } else {
         router.push("/dat-lich");
       }
 
-      alert(`Đăng nhập thành công! Xin chào ${data.user.FullName || data.user.name}`);
+      alert(`Đăng nhập thành công! Xin chào ${data.user?.FullName || "bạn"}`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login failed:", err);
 
-      const error = err as AxiosError<{ message: string }>;
-
       const msg =
-        error.response?.data?.message ||
-        error.message ||
-        "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+        err.response?.data?.message ||
+        err.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại kết nối hoặc tài khoản.";
 
       setError(msg);
     } finally {
@@ -109,15 +94,16 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Tên đăng nhập
+                Tên đăng nhập hoặc Email
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 transition"
-                placeholder="Nhập tên đăng nhập"
+                placeholder="Nhập tên đăng nhập hoặc email"
                 disabled={isLoading}
+                required
               />
             </div>
 
@@ -132,16 +118,18 @@ export default function LoginPage() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 transition"
                 placeholder="••••••••"
                 disabled={isLoading}
+                required
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full text-white py-2.5 rounded-lg font-bold transition flex justify-center items-center ${isLoading
-                ? "bg-green-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700 shadow-md"
-                }`}
+              className={`w-full text-white py-2.5 rounded-lg font-bold transition flex justify-center items-center ${
+                isLoading
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 shadow-md"
+              }`}
             >
               {isLoading ? (
                 <>
@@ -175,10 +163,7 @@ export default function LoginPage() {
 
           <p className="text-sm text-center mt-6 text-gray-600">
             Chưa có tài khoản?{" "}
-            <a
-              href="/register"
-              className="text-green-600 font-bold hover:underline"
-            >
+            <a href="/register" className="text-green-600 font-bold hover:underline">
               Đăng ký ngay
             </a>
           </p>

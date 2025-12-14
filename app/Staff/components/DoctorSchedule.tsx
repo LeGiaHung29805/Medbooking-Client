@@ -32,60 +32,69 @@ export default function DoctorSchedule() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlotUI | null>(null);
 
   // --- 1. LOAD BÁC SĨ ---
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const data = await Api.getDoctors();
-        setDoctors(data);
-      } catch (error) {
-        console.error("Lỗi tải bác sĩ:", error);
-      }
-    };
-    fetchDoctors();
-  }, []);
 
   // --- 2. LOAD SLOT (Khi chọn Bác sĩ) ---
-  const loadSlots = useCallback(async () => {
-    if (!selectedDoctor) return;
-
-    setLoading(true);
-    try {
       // Gọi API lấy lịch trống
-      const data = await Api.getDoctorAvailability(Number(selectedDoctor));
+      const loadSlots = useCallback(async () => {
+  if (!selectedDoctor) return;
 
-      // Map dữ liệu từ Backend -> UI
-      const mappedSlots: TimeSlotUI[] = data.map((slot) => {
-        // Tách ngày và giờ từ chuỗi "YYYY-MM-DD HH:mm:ss"
-        const startObj = new Date(slot.StartTime);
-        const endObj = new Date(slot.EndTime);
+  setLoading(true);
+  try {
+    const data = await Api.getDoctorAvailability(Number(selectedDoctor));
 
-        return {
-          id: slot.SlotID,
-          doctorId: slot.DoctorID,
-          date: startObj.toLocaleDateString("en-CA"), // YYYY-MM-DD
-          startTime: startObj.toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }), // HH:mm
-          endTime: endObj.toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          status: "available", // API này chỉ trả về available
-        };
-      });
+    // 🛡️ Guard array
+    const safeData = Array.isArray(data) ? data : [];
 
-      setTimeSlots(mappedSlots);
-    } catch (error) {
-      console.error("Lỗi tải lịch:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedDoctor]);
+    const mappedSlots: TimeSlotUI[] = safeData.map((slot) => {
+      const startObj = new Date(slot.StartTime);
+      const endObj = new Date(slot.EndTime);
 
+      return {
+        id: slot.SlotID,
+        doctorId: slot.DoctorID,
+        date: startObj.toISOString().slice(0, 10), // YYYY-MM-DD (ổn định hơn locale)
+        startTime: startObj.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        endTime: endObj.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        status: "available",
+      };
+    });
+
+    setTimeSlots(mappedSlots);
+  } catch (error) {
+    console.error("Lỗi tải lịch:", error);
+    setTimeSlots([]); // 👈 fallback để không dính .length
+  } finally {
+    setLoading(false);
+  }
+}, [selectedDoctor]);
+
+
+  // --- 1. LOAD BÁC SĨ ---
   useEffect(() => {
-    loadSlots();
-  }, [loadSlots]);
+  const fetchDoctors = async () => {
+    try {
+      const doctors = await Api.getDoctors();
+      setDoctors(Array.isArray(doctors) ? doctors : []);
+    } catch (error) {
+      console.error("Lỗi tải bác sĩ:", error);
+      setDoctors([]);
+    }
+  };
+
+  fetchDoctors();
+}, []);
+
+useEffect(() => {
+  loadSlots();
+}, [loadSlots]);
+
+
 
   // --- 3. XỬ LÝ CẬP NHẬT / XÓA ---
   const updateSlotStatus = async (
@@ -173,17 +182,21 @@ export default function DoctorSchedule() {
               Chọn bác sĩ
             </label>
             <select
-              value={selectedDoctor}
-              onChange={(e) => setSelectedDoctor(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">-- Chọn bác sĩ --</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.DoctorID} value={doctor.DoctorID}>
-                  {doctor.user?.FullName} - {doctor.specialty?.SpecialtyName}
-                </option>
-              ))}
-            </select>
+  value={selectedDoctor}
+  onChange={(e) => setSelectedDoctor(e.target.value)}
+  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value="">-- Chọn bác sĩ --</option>
+  {doctors.length > 0 ? (
+    doctors.map((doctor) => (
+      <option key={doctor.DoctorID} value={doctor.DoctorID}>
+        {doctor.user?.FullName || "Bác sĩ"} - {doctor.specialty?.SpecialtyName || "Chưa có chuyên khoa"}
+      </option>
+    ))
+  ) : (
+    <option disabled>Đang tải bác sĩ...</option>
+  )}
+</select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

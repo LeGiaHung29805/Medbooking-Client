@@ -453,20 +453,23 @@ export default function DoctorManagementPage() {
   const ITEMS_PER_PAGE = 10;
 
   const loadData = async () => {
-    setLoading(true);
-    try {
-      const [docsData, specsData] = await Promise.all([
-        Api.getDoctors(),
-        Api.getSpecialties(),
-      ]);
-      setDoctors(docsData);
-      setSpecialties(specsData);
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const [docsData, specsData] = await Promise.all([
+      Api.getDoctors(),
+      Api.getSpecialties(),
+    ]);
+    setDoctors(docsData); // ← ĐÚNG – backend trả mảng trực tiếp
+    // Nếu backend trả { success: true, data: [...] } thì dùng:
+    // setDoctors(docsData.data);
+    setSpecialties(specsData);
+  } catch (error) {
+    console.error("Error:", error);
+    setDoctors([]); // fallback array rỗng để tránh lỗi .filter
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     loadData();
   }, []);
@@ -495,19 +498,20 @@ export default function DoctorManagementPage() {
   };
 
   const filteredDoctors = useMemo(() => {
-    return doctors.filter((doc) => {
-      const name = doc.user?.FullName?.toLowerCase() || "";
-      const email = (doc.user?.Email || "").toLowerCase();
-      const query = searchQuery.toLowerCase();
+  if (!Array.isArray(doctors)) return [];
+  return doctors.filter((doc) => {
+    const name = doc.user?.FullName?.toLowerCase() || "";
+    const email = (doc.user?.Email || "").toLowerCase();
+    const query = searchQuery.toLowerCase();
 
-      const matchesSearch = name.includes(query) || email.includes(query);
-      const matchesSpec =
-        filterSpecialty === "ALL" ||
-        doc.SpecialtyID === Number(filterSpecialty);
+    const matchesSearch = name.includes(query) || email.includes(query);
+    const matchesSpec =
+      filterSpecialty === "ALL" ||
+      doc.SpecialtyID === Number(filterSpecialty);
 
-      return matchesSearch && matchesSpec;
-    });
-  }, [doctors, searchQuery, filterSpecialty]);
+    return matchesSearch && matchesSpec;
+  });
+}, [doctors, searchQuery, filterSpecialty]);
 
   const totalPages = Math.ceil(filteredDoctors.length / ITEMS_PER_PAGE);
   const currentDoctors = useMemo(() => {

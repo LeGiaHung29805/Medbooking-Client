@@ -38,26 +38,28 @@ export default function PatientManagement() {
     fetchPatients();
   }, []);
 
-  const fetchPatients = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("api_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/patients", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      });
+ const fetchPatients = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch("http://localhost:8000/api/admin/patients", {
+      credentials: "include", // <-- Quan trọng: dùng cookie auth (Sanctum)
+    });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setPatients(data);
-    } catch (err) {
-      console.error("❌ Lỗi tải dữ liệu:", err);
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      if (res.status === 401) {
+        alert("Bạn cần đăng nhập bằng tài khoản Admin để xem trang này!");
+        return;
+      }
+      throw new Error(`HTTP ${res.status}`);
     }
-  };
+    const data = await res.json();
+    setPatients(data);
+  } catch (err) {
+    console.error("Lỗi tải dữ liệu:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // 2. TÌM KIẾM (Search Logic)
   const filteredPatients = patients.filter((p) => {
@@ -73,29 +75,25 @@ export default function PatientManagement() {
   // 3. XEM CHI TIẾT & LỊCH SỬ
   // =============================
   const viewPatient = async (patient: Patient) => {
-    setSelectedPatient(patient);
-    setShowDetailModal(true);
-    setMedicalHistory([]); // Reset lịch sử cũ
+  setSelectedPatient(patient);
+  setShowDetailModal(true);
+  setMedicalHistory([]);
 
-    try {
-      const token = localStorage.getItem("api_token");
-      const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/patients/${patient.UserID}/history`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setMedicalHistory(data);
+  try {
+    const res = await fetch(
+      `http://localhost:8000/api/admin/patients/${patient.UserID}/history`,
+      {
+        credentials: "include", // <-- Thêm để dùng cookie
       }
-    } catch (error) {
-      console.error("❌ Lỗi tải lịch sử khám:", error);
+    );
+    if (res.ok) {
+      const data = await res.json();
+      setMedicalHistory(data);
     }
-  };
+  } catch (error) {
+    console.error("Lỗi tải lịch sử khám:", error);
+  }
+};
   // =============================
   // 4. THÊM BỆNH NHÂN MỚI (ĐÃ SỬA LỖI 422)
   // =============================
