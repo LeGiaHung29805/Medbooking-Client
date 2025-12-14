@@ -178,7 +178,7 @@ export default function Header() {
                                     <Link href="/Users/ket-qua-benh-kham">Kết quả bệnh khám</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/Users/lich-su-kham">Lịch hẹn khám lại</Link>
+                                    <Link href="/Users/lich-hen-kham-lai">Lịch hẹn khám lại</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/Users/bac-si-cua-toi">Bác sĩ của tôi</Link>

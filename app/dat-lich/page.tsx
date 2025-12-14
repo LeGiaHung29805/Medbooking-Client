@@ -44,7 +44,6 @@ export default function BookingPage() {
                 setSelectedPerson(userData.FullName); // Mặc định chọn chính mình (lưu tên hoặc ID tùy logic)
                 setIsLoggedIn(true);
 
-                // Set Family
                 setFamilyMembers(familyData);
                 //ghi nhớ người dùng
                 const savedPerson = localStorage.getItem("booking_for_person");

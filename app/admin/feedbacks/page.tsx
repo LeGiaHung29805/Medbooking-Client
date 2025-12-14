@@ -2,21 +2,19 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
-// import * as Model from "@/lib/model"; // Không cần import vì dùng type suy luận hoặc any cho đơn giản trong UI
+// import * as Model from "@/lib/model";
 
-// 1. Định nghĩa lại Interface cho UI (Khớp với dữ liệu Backend trả về)
 interface FeedbackUI {
   id: number;
-  patientName: string;   // Tên người gửi
-  patientAvatar?: string; // Ảnh người gửi
-  targetName: string;    // Gửi cho ai (BS A hay Hệ thống)
-  type: 'Doctor' | 'System'; // Loại (Để tô màu badge)
+  patientName: string;
+  patientAvatar?: string;
+  targetName: string;
+  type: 'Doctor' | 'System';
   rating: number;
   comment: string;
   date: string;
 }
 
-// Component hiển thị sao (Giữ nguyên)
 const StarRating = ({ rating }: { rating: number }) => {
   return (
     <div className="flex">
@@ -148,7 +146,7 @@ export default function FeedbacksPage() {
                         <span className="text-sm font-bold text-gray-800 ml-1">{fb.rating}.0</span>
                       </div>
                       <p className="text-gray-700 text-base leading-relaxed bg-gray-50/50 p-3 rounded-lg border border-gray-100 italic">
-                        "{fb.comment}"
+                        &quot; {fb.comment} &quot;&quot;
                       </p>
                     </div>
 

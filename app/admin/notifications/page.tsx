@@ -1,60 +1,62 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Bell,
-  Send,
-  History,
-  Loader,
-  Megaphone,
-  CalendarClock,
-  CheckCircle2
-} from "lucide-react";
+import { Bell, Send, History, Loader, Megaphone, CalendarClock, CheckCircle2, Trash2, Trash, AlertCircle, PlayCircle } from "lucide-react";
 import * as Api from "@/lib/ApiClient";
+import * as Model from "@/lib/model";
+import { AxiosError } from "axios";
 
-interface NotificationLog {
-  id: number | string;
-  recipient: string;
-  title: string;
-  content: string;
-  type: "SystemAlert" | "AppointmentReminder" | "Other";
-  sent_at: string;
-  status: string;
-}
 
 export default function NotificationManagerPage() {
   const [activeTab, setActiveTab] = useState<"broadcast" | "logs">("broadcast");
-  const [logs, setLogs] = useState<NotificationLog[]>([]);
+  const [logs, setLogs] = useState<Model.NotificationLog[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // Form gửi thông báo (Mặc định chọn Bệnh nhân & In-app)
+  const [deletingId, setDeletingId] = useState<number | string | null>(null);
   const [broadcastForm, setBroadcastForm] = useState({
     title: "",
     content: "",
     targetGroup: "patients",
     channel: "in_app",
   });
+  const handleTriggerReminders = async () => {
+    if (!confirm("Hệ thống sẽ quét lịch khám ngày mai và gửi thông báo cho bệnh nhân ngay lập tức.\nBạn có muốn tiếp tục?")) return;
 
-  //LOAD DỮ LIỆU LOGS
+    setLoading(true);
+    try {
+      const res = await Api.triggerReminders();
+      alert("" + res.message);
+      setActiveTab("logs");
+      loadData();
+    } catch (error: any) {
+      console.error(error);
+      alert("Lỗi: " + (error.response?.data?.message || "Không thể chạy lệnh"));
+    } finally {
+      setLoading(false);
+    }
+  };
   const loadData = useCallback(async () => {
     if (activeTab !== "logs") return;
 
     setLoading(true);
     try {
       const data = await Api.getNotificationLogs();
+      const rawData = (Array.isArray(data)
+        ? data
+        : (data as { data: Model.RawApiNotification[] })?.data || []) as Model.RawApiNotification[];
 
-      // Xử lý dữ liệu trả về từ Laravel
-      const arrayData = Array.isArray(data) ? data : (data as any)?.data || [];
+      if (Array.isArray(rawData)) {
+        const mappedLogs: Model.NotificationLog[] = rawData.map(
+          (item) => ({
+            id: item.NotificationID,
 
-      if (Array.isArray(arrayData)) {
-        const mappedLogs: NotificationLog[] = arrayData.map(
-          (item: any, index: number) => ({
-            id: item.NotificationID || index,
-            // Nếu có quan hệ user thì lấy tên, không thì lấy nhóm đích
-            recipient: item.user ? item.user.FullName : (item.target_group === 'patients' ? 'Tất cả Bệnh nhân' : 'Tất cả'),
+            recipient: item.user
+              ? item.user.FullName
+              : (item.target_group === 'patients' ? 'Tất cả Bệnh nhân' : 'Tất cả'),
+
             title: item.Title || "Không tiêu đề",
             content: item.Content,
-            type: item.NotificationType || "Other",
+            type: (item.NotificationType as "SystemAlert" | "Reminder" | "Other") || "Other",
+
             sent_at: item.created_at
               ? new Date(item.created_at).toLocaleString("vi-VN")
               : "N/A",
@@ -87,8 +89,8 @@ export default function NotificationManagerPage() {
       await Api.sendNotification({
         Title: broadcastForm.title,
         Content: broadcastForm.content,
-        TargetGroup: broadcastForm.targetGroup,
-        Channel: broadcastForm.channel,
+        TargetGroup: "patients",
+        Channel: "in_app",
       });
 
       alert("Đã gửi thông báo thành công!");
@@ -103,31 +105,67 @@ export default function NotificationManagerPage() {
 
       // Chuyển sang tab logs để xem kết quả
       setActiveTab("logs");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      alert("Gửi thất bại: " + (error.response?.data?.message || "Lỗi hệ thống"));
+
+      const err = error as AxiosError<{ message: string }>;
+
+      alert("Gửi thất bại: " + (err.response?.data?.message || "Lỗi hệ thống"));
+    }
+  };
+  //XÓA TỪNG DÒNG
+  const handleDeleteOne = async (id: number | string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa thông báo này khỏi lịch sử?")) return;
+    //loading
+    setDeletingId(id);
+    try {
+      await Api.deleteNotification(id);
+
+      setLogs((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Lỗi xóa:", error);
+      alert("Không thể xóa thông báo này.");
+    } finally {
+      setDeletingId(null); // Tắt loading
     }
   };
 
-  //Icon cho loại thông báo
+  const handleDeleteAll = async () => {
+    if (logs.length === 0) return;
+
+    const confirmText = prompt("Hành động này sẽ xóa toàn bộ lịch sử thông báo và không thể khôi phục.\nNhập 'DELETE' để xác nhận:");
+    if (confirmText !== 'DELETE') return;
+
+    setLoading(true);
+    try {
+      await Api.deleteAllNotifications();
+
+      //Chuyển logs về rỗng []
+      setLogs([]);
+      alert("Đã xóa toàn bộ lịch sử.");
+    } catch (error) {
+      console.error("Lỗi xóa tất cả:", error);
+      alert("Có lỗi xảy ra khi xóa dữ liệu.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const getTypeIcon = (type: string) => {
-    if (type === 'AppointmentReminder') return <CalendarClock className="w-5 h-5 text-blue-600" />;
+    if (type === 'Reminder') return <CalendarClock className="w-5 h-5 text-blue-600" />;
     if (type === 'SystemAlert') return <Megaphone className="w-5 h-5 text-orange-600" />;
     return <Bell className="w-5 h-5 text-gray-500" />;
   };
 
-  // Helper: Tên hiển thị loại
   const getTypeName = (type: string) => {
-    if (type === 'AppointmentReminder') return "Nhắc hẹn tự động";
+    if (type === 'Reminder') return "Nhắc hẹn tự động";
     if (type === 'SystemAlert') return "Thông báo hệ thống";
     return "Khác";
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
-      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-md overflow-hidden min-h-[600px] flex flex-col">
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-md overflow-hidden min-h-[600px] flex flex-col">
 
-        {/* HEADER */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -160,6 +198,14 @@ export default function NotificationManagerPage() {
               <History className="w-4 h-4 inline-block mr-2" />
               Lịch sử gửi
             </button>
+            <button
+              onClick={handleTriggerReminders}
+              className="text-blue-700 hover:bg-red-400 px-4 py-2 text-sm font-semibold rounded-md transition-all"
+              title="Chạy thủ công lệnh quét lịch ngày mai"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Quét Nhắc Hẹn
+            </button>
           </div>
         </div>
 
@@ -182,14 +228,11 @@ export default function NotificationManagerPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Đối tượng nhận</label>
-                    <select
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm"
-                      value={broadcastForm.targetGroup}
-                      onChange={(e) => setBroadcastForm({ ...broadcastForm, targetGroup: e.target.value })}
-                    >
-                      <option value="patients">Chỉ Bệnh nhân</option>
-                      <option value="all">Tất cả (Bác sĩ + Bệnh nhân)</option>
-                    </select>
+                    <input
+                      disabled
+                      value="Tất cả Bệnh nhân"
+                      className="w-full border border-gray-200 bg-gray-100 text-gray-500 rounded-lg px-3 py-2.5 text-sm cursor-not-allowed"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Kênh gửi</label>
@@ -240,13 +283,25 @@ export default function NotificationManagerPage() {
           )}
           {activeTab === "logs" && (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              {logs.length > 0 && (
+                <div className="px-6 py-3 bg-gray-50 border-b flex justify-between items-center">
+                  <span className="text-xs font-semibold text-gray-500">Tổng: {logs.length} thông báo</span>
+                  <button
+                    onClick={handleDeleteAll}
+                    className="flex items-center gap-1.5 text-red-600 hover:text-white hover:bg-red-600 px-3 py-1.5 rounded-md transition text-xs font-bold border border-red-200 hover:border-red-600"
+                  >
+                    <Trash className="w-4 h-4" />
+                    Xóa tất cả
+                  </button>
+                </div>
+              )}
               {loading ? (
                 <div className="p-12 text-center text-gray-500 flex flex-col items-center">
                   <Loader className="w-8 h-8 animate-spin text-blue-600 mb-2" />
                   <p>Đang tải dữ liệu...</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto ">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -255,12 +310,14 @@ export default function NotificationManagerPage() {
                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tiêu đề / Nội dung</th>
                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Người nhận</th>
                         <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Trạng thái</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Hành động</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {logs.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                          <td colSpan={6} className="px-6 py-10 text-center text-gray-400">
+                            <AlertCircle className="w-10 h-10 text-gray-300 mb-2" />
                             Chưa có lịch sử thông báo nào
                           </td>
                         </tr>
@@ -273,7 +330,7 @@ export default function NotificationManagerPage() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 {getTypeIcon(log.type)}
-                                <span className={`text-sm font-semibold ${log.type === 'AppointmentReminder' ? 'text-blue-700' : 'text-orange-700'}`}>
+                                <span className={`text-sm font-semibold ${log.type === 'Reminder' ? 'text-blue-700' : 'text-orange-700'}`}>
                                   {getTypeName(log.type)}
                                 </span>
                               </div>
@@ -292,6 +349,20 @@ export default function NotificationManagerPage() {
                                 <CheckCircle2 className="w-3 h-3" />
                                 Đã gửi
                               </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <button
+                                onClick={() => handleDeleteOne(log.id)}
+                                disabled={deletingId === log.id}
+                                className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition disabled:opacity-50"
+                                title="Xóa thông báo này"
+                              >
+                                {deletingId === log.id ? (
+                                  <Loader className="w-4 h-4 animate-spin text-red-600" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </button>
                             </td>
                           </tr>
                         ))

@@ -35,8 +35,6 @@ export default function DataThumbnail({
         setImgSrc(src ? getFullImageUrl(src) : PLACEHOLDERS[fallbackType]);
     }, [src, fallbackType]);
 
-    // Fallback UI Avatar nếu không có ảnh (Dành cho User/Doctor)
-    // Nếu src rỗng mà là user/doctor -> Dùng ui-avatars tạo ảnh theo tên
     useEffect(() => {
         if (!src && (fallbackType === 'user' || fallbackType === 'doctor')) {
             setImgSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(alt)}&background=random`);

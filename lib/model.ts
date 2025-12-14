@@ -14,7 +14,14 @@ export interface User {
   Gender?: string | null;
   Address?: string | null;
 }
-
+export interface FamilyMember extends User{
+  RelationType?: string;
+    pivot?: {
+        UserID: number;
+        RelativeUserID: number;
+        RelationType: string;
+    }
+}
 export interface Service {
   ServiceID: number;
   SpecialtyID: number;
@@ -61,6 +68,19 @@ export interface ExamResult {
   created_at: string;
 }
 
+export interface MedicalRecord {
+  RecordID: number;
+  AppointmentID: number;
+  PatientID: number;
+  DoctorID: number;
+  Diagnosis: string;
+  Notes: string | null;
+  created_at: string;
+  exam_results?: ExamResult[]; // Danh sách file đính kèm
+  doctor?: Doctor; // Bác sĩ khám
+  patient?: User; // Bệnh nhân
+}
+
 export interface Appointment {
   AppointmentID: number;
   PatientID: number;
@@ -90,7 +110,25 @@ export interface Feedback {
   created_at: string;
   patient?: User;
 }
+export interface AdminFeedback {
+    FeedbackID: number;
+    Rating: number;
+    Comment: string;
+    CreatedAt: string;
+    
+    ReviewerName: string;
+    ReviewerAvatar?: string;
 
+    TargetName: string;
+    Type: 'Doctor' | 'System';
+}
+export interface TopFeedback {
+    FeedbackID: number;
+    Rating: number;     // 1 đến 5
+    Comment: string;
+    FullName: string;   // Tên bệnh nhân
+    avatar_url?: string;
+}
 // 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE)
 
 export interface LoginResponse {
@@ -123,33 +161,43 @@ export interface Notification {
   created_at: string;
   updated_at: string;
 }
-//nâng cấp thêm về sau
-export interface FamilyMember extends User{
-  RelationType?: string;
-  LinkedAt?: string;
+export interface SendNotificationRequest {
+  Title: string;
+  Content: string;
+  TargetGroup: "all" | "patients" | "doctors" | "staff";
+  Channel: "in_app" | "email";
 }
-
-
+export interface NotificationLog {
+  id: number | string;
+  recipient: string;
+  title: string;
+  content: string;
+  type: "SystemAlert" | "Reminder" | "Other";
+  sent_at: string;
+  status: string;
+}
+export interface RawApiNotification {
+  NotificationID: number;
+  Title: string | null;
+  Content: string;
+  NotificationType: string; 
+  created_at: string;
+  Status: string;
+  target_group?: string;       
+  user?: { FullName: string };
+}
 // Type cho Doctor
 
 export interface MedicalRecord {
-  RecordID: number;
-  AppointmentID: number;
-  PatientID: number;
-  DoctorID: number;
-  Diagnosis: string;
-  Notes: string | null;
-  created_at: string;
-  exam_results?: ExamResult[];
-  doctor?: Doctor;
-  patient?: User;
-  // Thêm các field mới
-  patientName?: string;
-  age?: number;
-  treatment?: string;
-  prescriptions?: Prescription[];
-  tests?: string[];
-  status?: "completed" | "pending";
+  id: number
+  patientName: string
+  age: number
+  diagnosis: string
+  treatment: string
+  prescriptions: Prescription[]
+  tests: string[]
+  date: string
+  status: "completed" | "pending"
 }
 
 export interface VitalSigns {
@@ -187,14 +235,6 @@ export interface ScheduleDay {
 }
 
 // Thêm các interface mới
-export interface Doctor {
-  id: number
-  FullName: string
-  specialty: Specialty
-  email?: string
-  phone?: string
-  avatar?: string
-}
 
 export interface Specialty {
   id: number
@@ -308,37 +348,21 @@ export interface PatientDetail extends Patient {
   medicalRecords: MedicalRecord[]
   vitalSigns?: VitalSigns
 }
-
-
-// CẦN THÊM CÁC INTERFACE:
-export interface ScheduleSlot {
-  id: number;
-  date: string;
-  startTime: string;
-  endTime: string;
-  isAvailable: boolean;
-  appointmentId?: number;
+export interface AdminUpdatePatientRequest {
+  FullName: string;
+  PhoneNumber: string;
+  Email?: string | null;
+  DateOfBirth?: string | null; // YYYY-MM-DD
+  Gender?: string | null;      // "Nam", "Nữ", "Khác"
+  Address?: string | null;
+  Status?: string;             // Admin có quyền sửa trạng thái (VD: "HoatDong", "Khoa")
 }
-
-export interface AppointmentDetail {
-  id: number;
-  patientId: number;
-  patientName: string;
-  patientAge: number;
-  patientPhone: string;
-  symptoms: string;
-  appointmentTime: string;
-  status: string;
-  priority: string;
-  medicalHistory: string[];
-  allergies: string[];
-  previousRecords: MedicalRecord[];
-}
-
-export interface ExamResult {
-  id: number;
-  recordId: number;
-  fileName: string;
-  fileUrl: string;
-  uploadedAt: string;
+export interface UpdateProfileRequest{
+  FullName: string;
+  PhoneNumber: string;
+  Email: string;
+  DateOfBirth?: string;
+  Gender?: string;
+  Address?: string;
+  avatar?: File | null;
 }

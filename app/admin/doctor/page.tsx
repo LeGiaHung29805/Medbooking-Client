@@ -25,7 +25,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  // --- Map dữ liệu API vào Form ---
+  // Map dữ liệu API vào Form
   const [formData, setFormData] = useState({
     FullName: "",
     Email: "",
