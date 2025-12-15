@@ -7,13 +7,13 @@ import MedicalExamForm from "./components/MedicalExamForm";
 import LoadingState from "./components/LoadingState";
 import ErrorState from "./components/ErrorState";
 
-import { RefreshCw } from "lucide-react"; 
+import { RefreshCw } from "lucide-react";
 import { doctorService } from "../services/doctorService";
-import type { 
-  Appointment, 
-  Patient, 
+import type {
+  Appointment,
+  Patient,
   PatientDetail,
-  MedicalExamFormData 
+  MedicalExamFormData
 } from "@/lib/model";
 
 export default function DoctorDashboardPage() {
@@ -23,7 +23,7 @@ export default function DoctorDashboardPage() {
   const [loadingMessage, setLoadingMessage] = useState("Đang tải dữ liệu...");
 
   const [dashboardStats, setDashboardStats] = useState({
-    totalAppointments: 0,
+    totalpointments: 0,
     completedAppointments: 0,
     waitingAppointments: 0,
     inProgressAppointments: 0,
@@ -163,49 +163,49 @@ export default function DoctorDashboardPage() {
   };
 
   const handleStartExam = async (patient: PatientDetail) => {
-  try {
-    //  Tìm appointment thật trong danh sách appointments
-    const appointment = appointments.find(a => 
-      a.id === patient.id || 
-      a.patientName === patient.name ||
-      a.id === patient.appointmentId
-    );
+    try {
+      //  Tìm appointment thật trong danh sách appointments
+      const appointment = appointments.find(a =>
+        a.id === patient.id ||
+        a.patientName === patient.name ||
+        a.id === patient.appointmentId
+      );
 
-    if (!appointment || !appointment.id) {
-      alert("Không tìm thấy lịch hẹn hợp lệ! Vui lòng chọn bệnh nhân từ 'Bệnh nhân đang chờ' hoặc 'Đang khám'");
-      return;
+      if (!appointment || !appointment.id) {
+        alert("Không tìm thấy lịch hẹn hợp lệ! Vui lòng chọn bệnh nhân từ 'Bệnh nhân đang chờ' hoặc 'Đang khám'");
+        return;
+      }
+
+      // Cập nhật trạng thái thành in_progress trên server
+      const success = await doctorService.startExam(appointment.id);
+      if (!success) {
+        alert("Không thể bắt đầu khám. Vui lòng thử lại!");
+        return;
+      }
+
+      //  Gán appointmentId vào patient để lưu bệnh án
+      const patientWithAppointment: PatientDetail = {
+        ...patient,
+        appointmentId: appointment.id,
+      };
+
+      //  Mở form khám
+      setCurrentExamPatient(patientWithAppointment);
+      setShowExamForm(true);
+      setShowPatientModal(false);
+
+      // Cập nhật UI
+      setAppointments(prev => prev.map(a =>
+        a.id === appointment.id ? { ...a, status: 'in_progress' } : a
+      ));
+
+      console.log('Bắt đầu khám thành công - AppointmentID:', appointment.id);
+
+    } catch (error) {
+      console.error('Lỗi bắt đầu khám:', error);
+      alert("Hệ thống lỗi khi bắt đầu khám");
     }
-
-    // Cập nhật trạng thái thành in_progress trên server
-    const success = await doctorService.startExam(appointment.id);
-    if (!success) {
-      alert("Không thể bắt đầu khám. Vui lòng thử lại!");
-      return;
-    }
-
-    //  Gán appointmentId vào patient để lưu bệnh án
-    const patientWithAppointment: PatientDetail = {
-      ...patient,
-      appointmentId: appointment.id, 
-    };
-
-    //  Mở form khám
-    setCurrentExamPatient(patientWithAppointment);
-    setShowExamForm(true);
-    setShowPatientModal(false);
-
-    // Cập nhật UI
-    setAppointments(prev => prev.map(a => 
-      a.id === appointment.id ? { ...a, status: 'in_progress' } : a
-    ));
-
-    console.log('Bắt đầu khám thành công - AppointmentID:', appointment.id);
-
-  } catch (error) {
-    console.error('Lỗi bắt đầu khám:', error);
-    alert("Hệ thống lỗi khi bắt đầu khám");
-  }
-};
+  };
 
   const handleCompleteExam = async (formData: MedicalExamFormData) => {
     if (!currentExamPatient) return;
@@ -214,25 +214,25 @@ export default function DoctorDashboardPage() {
       setLoading(true);
 
       const payload = {
-  patient_id: currentExamPatient.id,
-  ...(currentExamPatient.appointmentId && { 
-    appointment_id: currentExamPatient.appointmentId 
-  }),
-  diagnosis: formData.diagnosis,
-  treatment: formData.clinicalNotes || "",
-  prescriptions: formData.prescriptions.filter(p => p.medicine?.trim()),
-  tests: formData.tests.filter(t => t?.trim()),
-  vital_signs: {
-    blood_pressure: formData.vitalSigns.bloodPressure || "",
-    heart_rate: Number(formData.vitalSigns.heartRate) || 0,
-    temperature: Number(formData.vitalSigns.temperature) || 36.5,
-    respiratory_rate: Number(formData.vitalSigns.respiratoryRate) || 16,
-    sp_o2: Number(formData.vitalSigns.spO2) || 98,
-    weight: Number(formData.vitalSigns.weight) || 0,
-    height: Number(formData.vitalSigns.height) || 0,
-  },
-  notes: formData.clinicalNotes,
-};
+        patient_id: currentExamPatient.id,
+        ...(currentExamPatient.appointmentId && {
+          appointment_id: currentExamPatient.appointmentId
+        }),
+        diagnosis: formData.diagnosis,
+        treatment: formData.clinicalNotes || "",
+        prescriptions: formData.prescriptions.filter(p => p.medicine?.trim()),
+        tests: formData.tests.filter(t => t?.trim()),
+        vital_signs: {
+          blood_pressure: formData.vitalSigns.bloodPressure || "",
+          heart_rate: Number(formData.vitalSigns.heartRate) || 0,
+          temperature: Number(formData.vitalSigns.temperature) || 36.5,
+          respiratory_rate: Number(formData.vitalSigns.respiratoryRate) || 16,
+          sp_o2: Number(formData.vitalSigns.spO2) || 98,
+          weight: Number(formData.vitalSigns.weight) || 0,
+          height: Number(formData.vitalSigns.height) || 0,
+        },
+        notes: formData.clinicalNotes,
+      };
 
       const response = await doctorService.createMedicalRecord(payload);
 

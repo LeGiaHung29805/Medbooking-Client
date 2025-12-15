@@ -365,7 +365,7 @@ export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
     const response = await apiClient.get("/staff/pending-appointments", {
       headers: getAuthHeaders(),
     });
-    return response.data;
+    return response.data?.data || [];
   } catch (error) {
     console.log("No appointments endpoint, returning empty array");
     return [];
@@ -734,7 +734,7 @@ export const getPendingAppointments = async (): Promise<Model.Appointment[]> => 
     const response = await apiClient.get("/staff/pending-appointments", {
       headers: getAuthHeaders(),
     });
-    return response.data || [];
+    return response.data?.data || [];
   } catch (error) {
     console.log("Pending appointments endpoint not available, returning empty array");
     return [];
