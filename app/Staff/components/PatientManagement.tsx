@@ -42,7 +42,7 @@ export default function PatientManagement() {
   try {
     setLoading(true);
     const res = await fetch("http://localhost:8000/api/admin/patients", {
-      credentials: "include", // <-- Quan trọng: dùng cookie auth (Sanctum)
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -52,8 +52,17 @@ export default function PatientManagement() {
       }
       throw new Error(`HTTP ${res.status}`);
     }
-    const data = await res.json();
-    setPatients(data);
+
+    const json = await res.json();
+
+    // ✅ CHUẨN HOÁ ĐÚNG STATE
+    const patientsData = Array.isArray(json)
+      ? json
+      : Array.isArray(json.data)
+        ? json.data
+        : [];
+
+    setPatients(patientsData); // ✅ ĐÚNG
   } catch (err) {
     console.error("Lỗi tải dữ liệu:", err);
   } finally {
@@ -87,8 +96,16 @@ export default function PatientManagement() {
       }
     );
     if (res.ok) {
-      const data = await res.json();
-      setMedicalHistory(data);
+      const json = await res.json();
+
+const history = Array.isArray(json)
+  ? json
+  : Array.isArray(json.data)
+    ? json.data
+    : [];
+
+setMedicalHistory(history);
+
     }
   } catch (error) {
     console.error("Lỗi tải lịch sử khám:", error);

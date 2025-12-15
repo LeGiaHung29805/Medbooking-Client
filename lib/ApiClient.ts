@@ -302,7 +302,6 @@ export const getDoctorDashboard = async (): Promise<any> => {
 };
 
 // ==================== NHÓM STAFF & ADMIN ====================
-
 export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/staff/dashboard-stats");
   return response.data;
@@ -323,10 +322,12 @@ export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
     const response = await apiClient.get("/admin/all-appointments");
     
     // API trả về { success: true, data: [...] }
-    if (response.data.success && Array.isArray(response.data.data)) {
-      console.log('✅ All appointments count:', response.data.count);
-      return response.data.data; // Trả về mảng data
-    }
+    if (response.data && Array.isArray(response.data.data)) {
+  return response.data.data
+}
+
+console.error("Unexpected response format:", response.data)
+return []
     
     console.warn('Unexpected response format:', response.data);
     return [];
