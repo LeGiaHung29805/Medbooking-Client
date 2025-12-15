@@ -38,37 +38,28 @@ export default function PatientManagement() {
     fetchPatients();
   }, []);
 
- const fetchPatients = async () => {
-  try {
-    setLoading(true);
-    const res = await fetch("http://localhost:8000/api/admin/patients", {
-      credentials: "include",
-    });
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:8000/api/admin/patients", {
+        credentials: "include", //Quan trọng: dùng cookie auth (Sanctum)
+      });
 
-    if (!res.ok) {
-      if (res.status === 401) {
-        alert("Bạn cần đăng nhập bằng tài khoản Admin để xem trang này!");
-        return;
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert("Bạn cần đăng nhập bằng tài khoản Admin để xem trang này!");
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
       }
-      throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setPatients(data);
+    } catch (err) {
+      console.error("Lỗi tải dữ liệu:", err);
+    } finally {
+      setLoading(false);
     }
-
-    const json = await res.json();
-
-    // ✅ CHUẨN HOÁ ĐÚNG STATE
-    const patientsData = Array.isArray(json)
-      ? json
-      : Array.isArray(json.data)
-        ? json.data
-        : [];
-
-    setPatients(patientsData); // ✅ ĐÚNG
-  } catch (err) {
-    console.error("Lỗi tải dữ liệu:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // 2. TÌM KIẾM (Search Logic)
   const filteredPatients = patients.filter((p) => {
@@ -84,33 +75,25 @@ export default function PatientManagement() {
   // 3. XEM CHI TIẾT & LỊCH SỬ
   // =============================
   const viewPatient = async (patient: Patient) => {
-  setSelectedPatient(patient);
-  setShowDetailModal(true);
-  setMedicalHistory([]);
+    setSelectedPatient(patient);
+    setShowDetailModal(true);
+    setMedicalHistory([]);
 
-  try {
-    const res = await fetch(
-      `http://localhost:8000/api/admin/patients/${patient.UserID}/history`,
-      {
-        credentials: "include", // <-- Thêm để dùng cookie
+    try {
+      const res = await fetch(
+        `http://localhost:8000/api/admin/patients/${patient.UserID}/history`,
+        {
+          credentials: "include", // <-- Thêm để dùng cookie
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMedicalHistory(data);
       }
-    );
-    if (res.ok) {
-      const json = await res.json();
-
-const history = Array.isArray(json)
-  ? json
-  : Array.isArray(json.data)
-    ? json.data
-    : [];
-
-setMedicalHistory(history);
-
+    } catch (error) {
+      console.error("Lỗi tải lịch sử khám:", error);
     }
-  } catch (error) {
-    console.error("Lỗi tải lịch sử khám:", error);
-  }
-};
+  };
   // =============================
   // 4. THÊM BỆNH NHÂN MỚI (ĐÃ SỬA LỖI 422)
   // =============================
@@ -187,13 +170,12 @@ setMedicalHistory(history);
     const usernameToSend = selectedPatient.Username;
     // Tạo payload JSON
     const payload = {
-      Username: usernameToSend,
-      FullName: formData.get("FullName"),
-      Email: formData.get("Email"),
-      PhoneNumber: formData.get("PhoneNumber"),
-      DateOfBirth: formData.get("DateOfBirth"),
-      Gender: formData.get("Gender"),
-      Address: formData.get("Address"),
+      FullName: (formData.get("FullName") as string) || "",
+      Email: (formData.get("Email") as string) || "",
+      PhoneNumber: (formData.get("PhoneNumber") as string) || "",
+      DateOfBirth: (formData.get("DateOfBirth") as string) || "",
+      Gender: (formData.get("Gender") as string) || "",
+      Address: (formData.get("Address") as string) || "",
     };
 
     try {
@@ -308,7 +290,7 @@ setMedicalHistory(history);
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => viewPatient(p)}
-                          className="text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded-md"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md"
                         >
                           Chi tiết
                         </button>

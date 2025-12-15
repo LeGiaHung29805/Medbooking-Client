@@ -3,6 +3,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
+import {
+  ClipboardList,
+  PhoneCall,
+  UserRound,
+  CalendarFold,
+  Clock3,
+  CheckCheck,
+} from "lucide-react";
 
 export default function Dashboard() {
   // State dữ liệu
@@ -157,7 +165,7 @@ export default function Dashboard() {
         </div>
 
         {/* Card 4: Tổng bác sĩ */}
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+        <div className="bg-white rounded-lg p-6 border-l-4 border-purple-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Tổng bác sĩ</p>
@@ -189,8 +197,9 @@ export default function Dashboard() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              📋 Danh sách chờ xác nhận
+            <h2 className="flex gap-2 text-center text-lg font-semibold text-gray-900">
+              <ClipboardList className="text-yellow-500" />
+              Danh sách chờ xác nhận
             </h2>
             <p className="text-sm text-gray-500 mt-1">
               Các lịch hẹn mới cần được duyệt
@@ -232,14 +241,18 @@ export default function Dashboard() {
                       </h3>
 
                       <div className="mt-1 text-sm text-gray-600 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                        <p>📞 {apt.patient?.PhoneNumber}</p>
-                        <p>👨‍⚕️ BS. {apt.doctor?.user?.FullName}</p>
                         <p>
-                          📅{" "}
+                          <PhoneCall /> {apt.patient?.PhoneNumber}
+                        </p>
+                        <p>
+                          <UserRound /> BS. {apt.doctor?.user?.FullName}
+                        </p>
+                        <p>
+                          <CalendarFold />{" "}
                           {new Date(apt.StartTime).toLocaleDateString("vi-VN")}
                         </p>
                         <p>
-                          ⏰{" "}
+                          <Clock3 />{" "}
                           {new Date(apt.StartTime).toLocaleTimeString("vi-VN", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -249,7 +262,7 @@ export default function Dashboard() {
 
                       {apt.InitialSymptoms && (
                         <p className="mt-2 text-sm text-gray-700 italic border-l-2 border-yellow-300 pl-2">
-                          " {apt.InitialSymptoms} "
+                          `{apt.InitialSymptoms}`
                         </p>
                       )}
                     </div>
@@ -259,7 +272,7 @@ export default function Dashboard() {
                         onClick={() => handleConfirm(apt.AppointmentID)}
                         className="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-sm"
                       >
-                        ✅ Xác nhận
+                        <CheckCheck /> Xác nhận
                       </button>
                     </div>
                   </div>

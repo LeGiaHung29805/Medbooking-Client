@@ -55,41 +55,41 @@ export default function AppointmentManagement() {
 
   // --- LOAD DATA ---
   const loadData = useCallback(async () => {
-  setLoading(true);
-  try {
-    const [apptData, docData] = await Promise.all([
-      Api.getAllAppointments(),
-      Api.getDoctors(),
-    ]);
+    setLoading(true);
+    try {
+      const [apptData, docData] = await Promise.all([
+        Api.getAllAppointments(),
+        Api.getDoctors(),
+      ]);
 
-    const mapped: AppointmentUI[] = apptData.map((item) => {
-      const dateObj = new Date(item.StartTime);
-      return {
-        id: `APT${item.AppointmentID}`,
-        realId: item.AppointmentID,
-        patientName: item.patient?.FullName || "Khách vãng lai",
-        patientPhone: item.patient?.PhoneNumber || "",
-        patientEmail: item.patient?.Email || "",
-        doctorName: item.doctor?.user?.FullName || "Chưa xếp",
-        doctorId: item.doctor?.DoctorID.toString() || "",
-        date: dateObj.toLocaleDateString("en-CA"),
-        time: dateObj.toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        status: item.Status.toLowerCase() as AppointmentStatus,
-        reason: item.InitialSymptoms || "",
-      };
-    });
+      const mapped: AppointmentUI[] = apptData.map((item) => {
+        const dateObj = new Date(item.StartTime);
+        return {
+          id: `APT${item.AppointmentID}`,
+          realId: item.AppointmentID,
+          patientName: item.patient?.FullName || "Khách vãng lai",
+          patientPhone: item.patient?.PhoneNumber || "",
+          patientEmail: item.patient?.Email || "",
+          doctorName: item.doctor?.user?.FullName || "Chưa xếp",
+          doctorId: item.doctor?.DoctorID.toString() || "",
+          date: dateObj.toLocaleDateString("en-CA"),
+          time: dateObj.toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          status: item.Status.toLowerCase() as AppointmentStatus,
+          reason: item.InitialSymptoms || "",
+        };
+      });
 
-    setAppointments(mapped.reverse());
-    setDoctors(docData); // ← ĐÚNG RỒI – vì backend trả mảng trực tiếp
-  } catch (error) {
-    console.error("Lỗi tải dữ liệu:", error);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+      setAppointments(mapped.reverse());
+      setDoctors(docData);
+    } catch (error) {
+      console.error("Lỗi tải dữ liệu:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -168,7 +168,7 @@ export default function AppointmentManagement() {
     }
 
     try {
-      // 1. TÌM HOẶC TẠO BỆNH NHÂN
+      // 1. TÌM HOẶC  TẠO BỆNH NHÂN
       let patientId = null;
 
       // Tìm user theo số điện thoại (Admin API hỗ trợ search)
@@ -375,22 +375,18 @@ export default function AppointmentManagement() {
             <option value="cancelled">Đã hủy</option>
             <option value="completed">Hoàn thành</option>
           </select>
-<select
-  value={filterDoctor}
-  onChange={(e) => setFilterDoctor(e.target.value)}
-  className="border p-2 rounded"
->
-  <option value="all">Tất cả bác sĩ</option>
-  {doctors.length > 0 ? (
-    doctors.map((doc) => (
-      <option key={doc.DoctorID} value={doc.DoctorID}>
-        {doc.user?.FullName || "Bác sĩ chưa có tên"}
-      </option>
-    ))
-  ) : (
-    <option disabled>Đang tải bác sĩ...</option>
-  )}
-</select>
+          <select
+            value={filterDoctor}
+            onChange={(e) => setFilterDoctor(e.target.value)}
+            className="border p-2 rounded"
+          >
+            <option value="all">Tất cả bác sĩ</option>
+            {doctors.map((doc) => (
+              <option key={doc.DoctorID} value={doc.DoctorID}>
+                {doc.user?.FullName}
+              </option>
+            ))}
+          </select>
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("calendar")}
@@ -631,22 +627,18 @@ export default function AppointmentManagement() {
                     Chọn Bác sĩ <span className="text-red-500">*</span>
                   </label>
                   <select
-  required
-  value={formData.doctorId}
-  onChange={(e) => handleDoctorChange(e.target.value)}
-  className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
->
-  <option value="" disabled>-- Chọn bác sĩ --</option>
-  {doctors.length > 0 ? (
-    doctors.map((doc) => (
-      <option key={doc.DoctorID} value={doc.DoctorID}>
-        {doc.user?.FullName} - {doc.specialty?.SpecialtyName}
-      </option>
-    ))
-  ) : (
-    <option disabled>Không có bác sĩ</option>
-  )}
-</select>
+                    required
+                    value={formData.doctorId}
+                    onChange={(e) => handleDoctorChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">-- Chọn bác sĩ --</option>
+                    {doctors.map((doc) => (
+                      <option key={doc.DoctorID} value={doc.DoctorID}>
+                        {doc.user?.FullName} - {doc.specialty?.SpecialtyName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Danh sách Slot */}

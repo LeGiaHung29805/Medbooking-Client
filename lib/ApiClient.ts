@@ -7,7 +7,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
-    Accept: "application/json",
+    'Accept': 'application/json',
     "Content-Type": "application/json",
   },
 });
@@ -51,7 +51,7 @@ apiClient.interceptors.request.use((config) => {
 });
 
 
-// ==================== NHÓM XÁC THỰC ====================
+//NHÓM XÁC THỰC
 
 export const register = async (data: FormData): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/register", data, {
@@ -312,14 +312,13 @@ return []
   }
 };
 
-// Trong ApiClient.ts, sửa getPendingAppointments
 export const getPendingAppointments = async (): Promise<Model.Appointment[]> => {
   try {
     const response = await apiClient.get("/staff/pending-appointments");
     
     // API trả về { success: true, data: [...] }
     if (response.data.success && Array.isArray(response.data.data)) {
-      console.log('✅ Pending appointments:', response.data.count);
+      console.log('Pending appointments:', response.data.count);
       return response.data.data; // Trả về mảng data
     }
     
