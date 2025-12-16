@@ -40,7 +40,7 @@ export default function ScheduleManagementPage() {
         // data đã là array từ ApiClient
         setDoctors(data || []);
       } catch (error) {
-        console.error('Error loading doctors:', error);
+        console.error("Error loading doctors:", error);
         setDoctors([]);
       }
     };
@@ -129,7 +129,7 @@ export default function ScheduleManagementPage() {
         setSelectedDate(newSlot.date);
       }
     } catch (error) {
-      handleError(error,"Thêm mới thất bại")
+      handleError(error, "Thêm mới thất bại")
     }
   };
 

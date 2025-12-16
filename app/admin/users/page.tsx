@@ -361,6 +361,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
                       onError={() =>
                         setPreviewUrl("https://placehold.co/100x100?text=Err")
                       }
+                      unoptimized={true}
                     />
                   </div>
                   <div className="flex flex-col w-full">

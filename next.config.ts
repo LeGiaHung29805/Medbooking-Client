@@ -3,8 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    dangerouslyAllowSVG: true, 
-    contentDispositionType: 'attachment',
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "127.0.0.1", // Backend Laravel
         port: "8000",
-        pathname: '/**',
+        pathname: "/**",
       },
       {
         protocol: "http",
