@@ -49,8 +49,8 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       ...prev,
       [name]:
         name === "EstimatedDuration" ||
-          name === "Price" ||
-          name === "SpecialtyID"
+        name === "Price" ||
+        name === "SpecialtyID"
           ? Number(value)
           : value,
     }));
@@ -427,7 +427,6 @@ export default function ServiceManagementPage() {
                         alt={service.ServiceName}
                         fallbackType="service"
                         className="w-10 h-10 rounded-lg"
-
                       />
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-800">

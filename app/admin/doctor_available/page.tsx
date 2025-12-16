@@ -33,19 +33,19 @@ export default function ScheduleManagementPage() {
   });
 
   // --- 1. LOAD DANH SÁCH BÁC SĨ ---
-useEffect(() => {
-  const loadDoctors = async () => {
-    try {
-      const data = await Api.getDoctors();
-      // data đã là array từ ApiClient
-      setDoctors(data || []);
-    } catch (error) {
-      console.error('Error loading doctors:', error);
-      setDoctors([]);
-    }
-  };
-  loadDoctors();
-}, []);
+  useEffect(() => {
+    const loadDoctors = async () => {
+      try {
+        const data = await Api.getDoctors();
+        // data đã là array từ ApiClient
+        setDoctors(data || []);
+      } catch (error) {
+        console.error("Error loading doctors:", error);
+        setDoctors([]);
+      }
+    };
+    loadDoctors();
+  }, []);
 
   // --- 2. LOAD LỊCH LÀM VIỆC ---
   const loadSlots = useCallback(async () => {
