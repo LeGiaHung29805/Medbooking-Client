@@ -6,7 +6,7 @@ import { RefreshCw } from "lucide-react";
 import * as Api from "@/lib/ApiClient";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import * as Model from "@/lib/model";
-
+import { handleError } from "@/lib/utils";
 interface DoctorUI extends Model.Doctor {
   schedule?: { [key: string]: string[] };
   price?: number;
@@ -67,9 +67,8 @@ export default function DoctorsBookingPage() {
         setDoctors(docsWithUI);
         const specNames = specialtiesData.map(s => s.SpecialtyName);
         setCategories(["Tất cả danh mục", ...specNames]);
-      } catch (e: any) {
-        console.error(e);
-        setError(e.message || "Có lỗi khi tải danh sách bác sĩ");
+      } catch (error) {
+        handleError(error, "Lỗi tải ảnh!");
       } finally {
         setLoading(false);
       }

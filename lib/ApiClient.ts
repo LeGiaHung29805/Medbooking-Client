@@ -7,11 +7,18 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
-    'Accept': 'application/json',
+    "Accept": "application/json",
     "Content-Type": "application/json",
   },
 });
-
+export interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message: string;
+}
 apiClient.interceptors.response.use(
   (response) => {
     console.log("API Response Success:", {

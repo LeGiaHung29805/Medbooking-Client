@@ -95,7 +95,7 @@ export default function DoctorBookingPage() {
         localStorage.setItem("booking_for_person", value);
     };
     // Mở sheet chọn bác sĩ
-    // Khi bấm vào 1 bác sĩ trong list, ta gọi API lấy lịch ngay
+    // Gọi API lấy lịch ngay
     const handleViewDoctor = async (doctor: Model.Doctor) => {
         setViewingDoctor(doctor);
         setSelectedDate(""); // Reset ngày đã chọn

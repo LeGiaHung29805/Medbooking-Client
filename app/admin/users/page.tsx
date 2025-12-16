@@ -495,10 +495,10 @@ export default function UserManagementPage() {
         setUsers((prev) =>
           prev.map((u) => (u.UserID === userId ? { ...u, Status: "Khoa" } : u))
         );
-        alert("🔒 Đã khóa tài khoản thành công.");
+        alert("Đã khóa tài khoản thành công.");
       } catch (error) {
         console.error(error);
-        alert("❌ Thao tác thất bại.");
+        alert("Thao tác thất bại.");
       }
     }
   };

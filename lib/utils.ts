@@ -24,3 +24,22 @@ export const getFullImageUrl = (url: string | null | undefined) => {
 
   return `${backendUrl}/${cleanPath}`;
 };
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+export const handleError = (error: unknown, defaultMsg: string = "Có lỗi xảy ra") => {
+  console.error("Chi tiết lỗi:", error);
+
+  const err = error as ApiError;
+
+  const msg =
+    err?.response?.data?.message || 
+    err?.message ||                 
+    defaultMsg;
+  alert("" + msg);
+};

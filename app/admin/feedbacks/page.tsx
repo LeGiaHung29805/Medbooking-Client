@@ -146,7 +146,7 @@ export default function FeedbacksPage() {
                         <span className="text-sm font-bold text-gray-800 ml-1">{fb.rating}.0</span>
                       </div>
                       <p className="text-gray-700 text-base leading-relaxed bg-gray-50/50 p-3 rounded-lg border border-gray-100 italic">
-                        &quot; {fb.comment} &quot;&quot;
+                        `{fb.comment}`
                       </p>
                     </div>
 

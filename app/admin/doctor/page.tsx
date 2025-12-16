@@ -7,6 +7,7 @@ import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
+import { Plus, Search } from "lucide-react";
 
 interface DoctorFormProps {
   doctor: Model.Doctor | null;
@@ -453,23 +454,23 @@ export default function DoctorManagementPage() {
   const ITEMS_PER_PAGE = 10;
 
   const loadData = async () => {
-  setLoading(true);
-  try {
-    const [docsData, specsData] = await Promise.all([
-      Api.getDoctors(),
-      Api.getSpecialties(),
-    ]);
-    setDoctors(docsData); // ← ĐÚNG – backend trả mảng trực tiếp
-    // Nếu backend trả { success: true, data: [...] } thì dùng:
-    // setDoctors(docsData.data);
-    setSpecialties(specsData);
-  } catch (error) {
-    console.error("Error:", error);
-    setDoctors([]); // fallback array rỗng để tránh lỗi .filter
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const [docsData, specsData] = await Promise.all([
+        Api.getDoctors(),
+        Api.getSpecialties(),
+      ]);
+      setDoctors(docsData); // ← ĐÚNG – backend trả mảng trực tiếp
+      // Nếu backend trả { success: true, data: [...] } thì dùng:
+      // setDoctors(docsData.data);
+      setSpecialties(specsData);
+    } catch (error) {
+      console.error("Error:", error);
+      setDoctors([]); // fallback array rỗng để tránh lỗi .filter
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     loadData();
   }, []);
@@ -498,20 +499,20 @@ export default function DoctorManagementPage() {
   };
 
   const filteredDoctors = useMemo(() => {
-  if (!Array.isArray(doctors)) return [];
-  return doctors.filter((doc) => {
-    const name = doc.user?.FullName?.toLowerCase() || "";
-    const email = (doc.user?.Email || "").toLowerCase();
-    const query = searchQuery.toLowerCase();
+    if (!Array.isArray(doctors)) return [];
+    return doctors.filter((doc) => {
+      const name = doc.user?.FullName?.toLowerCase() || "";
+      const email = (doc.user?.Email || "").toLowerCase();
+      const query = searchQuery.toLowerCase();
 
-    const matchesSearch = name.includes(query) || email.includes(query);
-    const matchesSpec =
-      filterSpecialty === "ALL" ||
-      doc.SpecialtyID === Number(filterSpecialty);
+      const matchesSearch = name.includes(query) || email.includes(query);
+      const matchesSpec =
+        filterSpecialty === "ALL" ||
+        doc.SpecialtyID === Number(filterSpecialty);
 
-    return matchesSearch && matchesSpec;
-  });
-}, [doctors, searchQuery, filterSpecialty]);
+      return matchesSearch && matchesSpec;
+    });
+  }, [doctors, searchQuery, filterSpecialty]);
 
   const totalPages = Math.ceil(filteredDoctors.length / ITEMS_PER_PAGE);
   const currentDoctors = useMemo(() => {
@@ -534,6 +535,9 @@ export default function DoctorManagementPage() {
         <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
           <div className="flex space-x-3 items-center w-full md:w-auto">
             <div className="relative flex-grow">
+              <div className="absolute left-0 inset-y-0 pl-4 flex items-center ">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
               <input
                 type="text"
                 placeholder="Tìm kiếm theo tên, email, chuyên khoa..."
@@ -565,8 +569,10 @@ export default function DoctorManagementPage() {
             onClick={() => handleOpenModal()}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md w-full md:w-auto"
           >
-            <span></span>
-            <span>Thêm Bác sĩ Mới</span>
+            <Plus className="w-4 h-4" />
+            <span>
+              Thêm Bác sĩ Mới
+            </span>
           </button>
         </div>
       </div>

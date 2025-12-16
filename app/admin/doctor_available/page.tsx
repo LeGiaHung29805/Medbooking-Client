@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
-
+import { handleError } from "@/lib/utils";
 // Interface cho form tạo mới
 interface NewSlotForm {
   doctor_id: number;
@@ -33,19 +33,19 @@ export default function ScheduleManagementPage() {
   });
 
   // --- 1. LOAD DANH SÁCH BÁC SĨ ---
-useEffect(() => {
-  const loadDoctors = async () => {
-    try {
-      const data = await Api.getDoctors();
-      // data đã là array từ ApiClient
-      setDoctors(data || []);
-    } catch (error) {
-      console.error('Error loading doctors:', error);
-      setDoctors([]);
-    }
-  };
-  loadDoctors();
-}, []);
+  useEffect(() => {
+    const loadDoctors = async () => {
+      try {
+        const data = await Api.getDoctors();
+        // data đã là array từ ApiClient
+        setDoctors(data || []);
+      } catch (error) {
+        console.error('Error loading doctors:', error);
+        setDoctors([]);
+      }
+    };
+    loadDoctors();
+  }, []);
 
   // --- 2. LOAD LỊCH LÀM VIỆC ---
   const loadSlots = useCallback(async () => {
@@ -128,12 +128,8 @@ useEffect(() => {
         setSelectedDoctorId(newSlot.doctor_id.toString());
         setSelectedDate(newSlot.date);
       }
-    } catch (error: any) {
-      console.error(error);
-      const msg =
-        error.response?.data?.message ||
-        "Thêm lịch thất bại. Có thể bị trùng giờ.";
-      alert("❌ " + msg);
+    } catch (error) {
+      handleError(error,"Thêm mới thất bại")
     }
   };
 

@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/pagination";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
-import { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
-
+import { handleError } from "@/lib/utils";
 interface AggregatedService extends Model.Service {
     SpecialtyName: string;
 }
@@ -190,19 +190,13 @@ export default function ServiceBookingPage() {
                 selectedSlotId,
                 reason,
                 file || undefined,
-                selectedService.ServiceID
+                // selectedService.ServiceID
             );
 
             alert("Đặt lịch thành công! Vui lòng chờ xác nhận.");
             router.push("/dat-lich");
-        } catch (error: unknown) {
-            let msg = "Đặt lịch thất bại.";
-
-            // Kiểm tra nếu đây là lỗi từ Axios và có response từ server
-            if (error instanceof AxiosError && error.response?.data?.message) {
-                msg = error.response.data.message;
-            }
-            alert(" " + msg);
+        } catch (error) {
+            handleError(error, "Lỗi đặt lịch!")
         } finally {
             setBookingLoading(false);
         }
