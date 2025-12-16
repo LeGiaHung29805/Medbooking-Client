@@ -138,6 +138,7 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
                       "https://placehold.co/64x64/E0E0E0/000?text=Err"
                     )
                   }
+                  unoptimized={true}
                 />
               </div>
               <input

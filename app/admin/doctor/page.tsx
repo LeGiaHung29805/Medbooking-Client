@@ -25,18 +25,18 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  // --- Map dữ liệu API vào Form ---
+  // Map dữ liệu API vào Form
   const [formData, setFormData] = useState({
-    FullName: doctor?.user?.FullName || "",
-    Email: doctor?.user?.Email || "",
-    Username: doctor?.user?.Username || "",
+    FullName: "",
+    Email: "",
+    Username: "",
     Password: "",
-    PhoneNumber: doctor?.user?.PhoneNumber || "",
-    SpecialtyID: doctor?.SpecialtyID || specialties[0]?.SpecialtyID || 0,
-    Degree: doctor?.Degree || "",
-    YearsOfExperience: doctor?.YearsOfExperience || 1,
-    ProfileDescription: doctor?.ProfileDescription || "",
-    Status: doctor?.user?.Status || "HoatDong",
+    PhoneNumber: "",
+    SpecialtyID: specialties[0]?.SpecialtyID || 0,
+    Degree: "",
+    YearsOfExperience: 1,
+    ProfileDescription: "",
+    Status: "HoatDong",
   });
 
   // State xử lý file ảnh
@@ -47,7 +47,41 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>(
     initialImage ? getFullImageUrl(initialImage) : ""
   );
+  useEffect(() => {
+    if (doctor) {
+      setFormData({
+        FullName: doctor.user?.FullName || "",
+        Email: doctor.user?.Email || "",
+        Username: doctor.user?.Username || "",
+        Password: "",
+        PhoneNumber: doctor.user?.PhoneNumber || "",
+        SpecialtyID: doctor.SpecialtyID || specialties[0]?.SpecialtyID || 0,
+        Degree: doctor.Degree || "",
+        YearsOfExperience: doctor.YearsOfExperience || 1,
+        ProfileDescription: doctor.ProfileDescription || "",
+        Status: doctor.user?.Status || "HoatDong",
+      });
 
+      // Cập nhật ảnh preview theo bác sĩ đang chọn
+      const img = doctor.imageURL || doctor.user?.avatar_url;
+      setPreviewUrl(img ? getFullImageUrl(img) : "");
+    } else {
+      setFormData({
+        FullName: "",
+        Email: "",
+        Username: "",
+        Password: "",
+        PhoneNumber: "",
+        SpecialtyID: specialties[0]?.SpecialtyID || 0,
+        Degree: "",
+        YearsOfExperience: 1,
+        ProfileDescription: "",
+        Status: "HoatDong",
+      });
+      setPreviewUrl("");
+      setSelectedFile(null);
+    }
+  }, [doctor, specialties]);
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -107,13 +141,13 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
       if (formData.ProfileDescription)
         data.append("ProfileDescription", formData.ProfileDescription);
 
-      if (formData.Password && (isResettingPassword || !isEdit)) {
+      if (formData.Password) {
         data.append("password", formData.Password);
       }
 
       //Gửi file vào key 'image'
       if (selectedFile) {
-        data.append("image", selectedFile);
+        data.append("imageURL", selectedFile);
       }
 
       if (isEdit && doctor) {
@@ -315,6 +349,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
                     onError={() =>
                       setPreviewUrl("https://placehold.co/100x100?text=Err")
                     }
+                    unoptimized={true}
                   />
                 </div>
                 <div className="flex flex-col w-full">
@@ -403,6 +438,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
 //MAIN COMPONENT
 export default function DoctorManagementPage() {
+
   const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
   const [loading, setLoading] = useState(true);
@@ -417,20 +453,23 @@ export default function DoctorManagementPage() {
   const ITEMS_PER_PAGE = 10;
 
   const loadData = async () => {
-    setLoading(true);
-    try {
-      const [docsData, specsData] = await Promise.all([
-        Api.getDoctors(),
-        Api.getSpecialties(),
-      ]);
-      setDoctors(docsData);
-      setSpecialties(specsData);
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const [docsData, specsData] = await Promise.all([
+      Api.getDoctors(),
+      Api.getSpecialties(),
+    ]);
+    setDoctors(docsData); // ← ĐÚNG – backend trả mảng trực tiếp
+    // Nếu backend trả { success: true, data: [...] } thì dùng:
+    // setDoctors(docsData.data);
+    setSpecialties(specsData);
+  } catch (error) {
+    console.error("Error:", error);
+    setDoctors([]); // fallback array rỗng để tránh lỗi .filter
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     loadData();
   }, []);
@@ -459,19 +498,20 @@ export default function DoctorManagementPage() {
   };
 
   const filteredDoctors = useMemo(() => {
-    return doctors.filter((doc) => {
-      const name = doc.user?.FullName?.toLowerCase() || "";
-      const email = (doc.user?.Email || "").toLowerCase();
-      const query = searchQuery.toLowerCase();
+  if (!Array.isArray(doctors)) return [];
+  return doctors.filter((doc) => {
+    const name = doc.user?.FullName?.toLowerCase() || "";
+    const email = (doc.user?.Email || "").toLowerCase();
+    const query = searchQuery.toLowerCase();
 
-      const matchesSearch = name.includes(query) || email.includes(query);
-      const matchesSpec =
-        filterSpecialty === "ALL" ||
-        doc.SpecialtyID === Number(filterSpecialty);
+    const matchesSearch = name.includes(query) || email.includes(query);
+    const matchesSpec =
+      filterSpecialty === "ALL" ||
+      doc.SpecialtyID === Number(filterSpecialty);
 
-      return matchesSearch && matchesSpec;
-    });
-  }, [doctors, searchQuery, filterSpecialty]);
+    return matchesSearch && matchesSpec;
+  });
+}, [doctors, searchQuery, filterSpecialty]);
 
   const totalPages = Math.ceil(filteredDoctors.length / ITEMS_PER_PAGE);
   const currentDoctors = useMemo(() => {
@@ -607,11 +647,10 @@ export default function DoctorManagementPage() {
                     </td>
                     <td className="py-3 px-4 text-sm">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
-                          status === "HoatDong"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-orange-100 text-orange-700"
-                        }`}
+                        className={`px-2 py-1 text-xs font-semibold rounded ${status === "HoatDong"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-orange-100 text-orange-700"
+                          }`}
                       >
                         {status === "HoatDong" ? "Active" : "Inactive"}
                       </span>

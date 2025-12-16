@@ -16,11 +16,11 @@ export default function ProfilePage() {
 
     const [loading, setLoading] = useState(true);
 
-    // 2. Load dữ liệu từ API khi vào trang
+    //Load dữ liệu từ API khi vào trang
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const userData = await Api.getMe(); // Lấy từ Database
+                const userData = await Api.getMe();
                 setFormData({
                     FullName: userData.FullName || "",
                     DateOfBirth: userData.DateOfBirth || "",
@@ -39,16 +39,16 @@ export default function ProfilePage() {
         fetchProfile();
     }, []);
 
-    // 3. Xử lý nhập liệu
+    //Xử lý nhập liệu
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // 4. Lưu thông tin lên Server
+    //Lưu thông tin lên Server
     const handleSave = async () => {
         try {
-            await Api.updateProfile(formData); // Gọi API Update
+            await Api.updateProfile(formData);
             alert("Cập nhật thông tin thành công!");
         } catch (error) {
             console.log(error);
@@ -75,7 +75,7 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Họ và tên</label>
                             <input
-                                name="FullName" // Khớp với state
+                                name="FullName"
                                 value={formData.FullName}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
@@ -84,7 +84,7 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Ngày sinh</label>
                             <input
-                                name="DateOfBirth" // Khớp với state
+                                name="DateOfBirth"
                                 type="date"
                                 value={formData.DateOfBirth}
                                 onChange={handleChange}
@@ -95,7 +95,7 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Giới tính</label>
                             <select
-                                name="Gender" // Khớp với state
+                                name="Gender"
                                 value={formData.Gender}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
@@ -109,7 +109,7 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Số điện thoại</label>
                             <input
-                                name="PhoneNumber" // Khớp với state
+                                name="PhoneNumber"
                                 value={formData.PhoneNumber}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
@@ -119,18 +119,18 @@ export default function ProfilePage() {
                         <div>
                             <label className="block text-sm font-medium mb-1">Email</label>
                             <input
-                                name="Email" // Khớp với state
+                                name="Email"
                                 type="email"
                                 value={formData.Email}
                                 onChange={handleChange}
-                                disabled // Email thường không cho sửa, nếu muốn sửa thì bỏ disabled đi
+                                disabled
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-gray-50 text-gray-500 cursor-not-allowed"
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Địa chỉ</label>
                             <input
-                                name="Address" // Khớp với state
+                                name="Address"
                                 value={formData.Address}
                                 onChange={handleChange}
                                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"

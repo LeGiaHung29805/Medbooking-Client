@@ -34,8 +34,6 @@ export default function DataThumbnail({
     setImgSrc(src ? getFullImageUrl(src) : PLACEHOLDERS[fallbackType]);
   }, [src, fallbackType]);
 
-  // Fallback UI Avatar nếu không có ảnh (Dành cho User/Doctor)
-  // Nếu src rỗng mà là user/doctor -> Dùng ui-avatars tạo ảnh theo tên
   useEffect(() => {
     if (!src && (fallbackType === "user" || fallbackType === "doctor")) {
       setImgSrc(
@@ -45,7 +43,10 @@ export default function DataThumbnail({
       );
     }
   }, [src, alt, fallbackType]);
-
+  // console.log("Ảnh đang tải:", {
+  //     inputDB: src,
+  //     outputFull: imgSrc
+  // });
   return (
     <div
       className={`relative border overflow-hidden bg-gray-100 flex-shrink-0 ${className}`}
@@ -57,7 +58,7 @@ export default function DataThumbnail({
         sizes="(max-width: 768px) 100vw, 50px"
         className="object-cover"
         onError={() => setImgSrc(PLACEHOLDERS[fallbackType])}
-        unoptimized={false}
+        unoptimized={true}
       />
     </div>
   );

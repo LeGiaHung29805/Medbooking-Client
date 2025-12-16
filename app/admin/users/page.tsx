@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { AxiosError } from "axios";
+import { Search } from "lucide-react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
@@ -59,7 +60,36 @@ const UserFormModal: React.FC<UserFormProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>(
     user?.avatar_url ? getFullImageUrl(user.avatar_url) : ""
   );
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        FullName: user.FullName || "",
+        Email: user.Email || "",
+        Username: user.Username || "",
+        PhoneNumber: user.PhoneNumber || "",
+        Role: user.Role || "BenhNhan",
+        Status: user.Status || "HoatDong",
+        Password: "",
+        SpecialtyID: 0,
+      });
 
+      // Cập nhật ảnh preview
+      setPreviewUrl(user.avatar_url ? getFullImageUrl(user.avatar_url) : "");
+    } else {
+      setFormData({
+        FullName: "",
+        Email: "",
+        Username: "",
+        PhoneNumber: "",
+        Role: "BenhNhan",
+        Status: "HoatDong",
+        Password: "",
+        SpecialtyID: 0,
+      });
+      setPreviewUrl("");
+      setSelectedFile(null);
+    }
+  }, [user]);
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -117,7 +147,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
       }
 
       if (selectedFile) {
-        data.append("avatar", selectedFile);
+        data.append("avatar_url", selectedFile);
       }
 
       if (formData.Role === "BacSi" && formData.SpecialtyID > 0) {
@@ -520,15 +550,19 @@ export default function UserManagementPage() {
       </div>
 
       <div className="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
-        <div className="flex-grow w-full md:w-auto relative">
-          <input
-            type="text"
-            placeholder="Tìm theo tên, email, số điện thoại..."
-            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <span className="absolute left-4 top-3.5 text-gray-400 text-lg"></span>
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="flex-grow w-full md:w-auto relative">
+            <input
+              type="text"
+              placeholder="Tìm theo tên, email, số điện thoại..."
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="w-full md:w-64 relative">
@@ -608,15 +642,14 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold
-                        ${
-                          u.Role === "QuanTriVien"
+                        ${u.Role === "QuanTriVien"
                             ? "bg-purple-100 text-purple-800"
                             : u.Role === "BacSi"
-                            ? "bg-blue-100 text-blue-800"
-                            : u.Role === "NhanVien"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }
+                              ? "bg-blue-100 text-blue-800"
+                              : u.Role === "NhanVien"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                          }
                       `}
                       >
                         {ROLE_LABELS[u.Role] || u.Role}
@@ -625,11 +658,10 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80
-                        ${
-                          u.Status === "HoatDong"
+                        ${u.Status === "HoatDong"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                        }
+                          }
                       `}
                         onClick={() => handleToggleStatus(u)}
                         title="Bấm để đổi trạng thái"

@@ -41,19 +41,21 @@ export default function PatientManagement() {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("api_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/patients", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const res = await fetch("http://localhost:8000/api/admin/patients", {
+        credentials: "include", //Quan trọng: dùng cookie auth (Sanctum)
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert("Bạn cần đăng nhập bằng tài khoản Admin để xem trang này!");
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json();
       setPatients(data);
     } catch (err) {
-      console.error("❌ Lỗi tải dữ liệu:", err);
+      console.error("Lỗi tải dữ liệu:", err);
     } finally {
       setLoading(false);
     }
@@ -75,17 +77,13 @@ export default function PatientManagement() {
   const viewPatient = async (patient: Patient) => {
     setSelectedPatient(patient);
     setShowDetailModal(true);
-    setMedicalHistory([]); // Reset lịch sử cũ
+    setMedicalHistory([]);
 
     try {
-      const token = localStorage.getItem("api_token");
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/patients/${patient.UserID}/history`,
+        `http://localhost:8000/api/admin/patients/${patient.UserID}/history`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
+          credentials: "include", // <-- Thêm để dùng cookie
         }
       );
       if (res.ok) {
@@ -93,7 +91,7 @@ export default function PatientManagement() {
         setMedicalHistory(data);
       }
     } catch (error) {
-      console.error("❌ Lỗi tải lịch sử khám:", error);
+      console.error("Lỗi tải lịch sử khám:", error);
     }
   };
   // =============================
@@ -149,12 +147,12 @@ export default function PatientManagement() {
         throw new Error(errorData.message || "Lỗi thêm mới");
       }
 
-      alert("✅ Thêm bệnh nhân thành công!");
+      alert("Thêm bệnh nhân thành công!");
       setShowAddModal(false);
       fetchPatients(); // Tải lại danh sách
     } catch (error: any) {
       // Hiển thị thông báo lỗi cụ thể
-      alert(`❌ Lỗi: \n${error.message}`);
+      alert(`Lỗi: \n${error.message}`);
       console.error(error);
     }
   };
@@ -169,15 +167,15 @@ export default function PatientManagement() {
     if (!selectedPatient) return;
 
     const formData = new FormData(event.currentTarget);
-
+    const usernameToSend = selectedPatient.Username;
     // Tạo payload JSON
     const payload = {
-      FullName: formData.get("FullName"),
-      Email: formData.get("Email"),
-      PhoneNumber: formData.get("PhoneNumber"),
-      DateOfBirth: formData.get("DateOfBirth"),
-      Gender: formData.get("Gender"),
-      Address: formData.get("Address"),
+      FullName: (formData.get("FullName") as string) || "",
+      Email: (formData.get("Email") as string) || "",
+      PhoneNumber: (formData.get("PhoneNumber") as string) || "",
+      DateOfBirth: (formData.get("DateOfBirth") as string) || "",
+      Gender: (formData.get("Gender") as string) || "",
+      Address: (formData.get("Address") as string) || "",
     };
 
     try {
@@ -292,7 +290,7 @@ export default function PatientManagement() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => viewPatient(p)}
-                          className="text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded-md"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md"
                         >
                           Chi tiết
                         </button>

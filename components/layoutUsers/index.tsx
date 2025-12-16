@@ -1,22 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import DataThumbnail from "../thumnail/DataThumbnail";
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMe } from "@/lib/ApiClient";
 import { User as UserModel } from "@/lib/model";
 
-import {
-    FaUser,
-    FaUsers,
-    FaCalendarAlt,
-    FaFileMedical,
-    FaStethoscope,
-    FaFilePrescription,
-    FaShieldAlt,
-    FaBell,
-} from "react-icons/fa";
+import { FaUser, FaUsers, FaCalendarAlt, FaFileMedical, FaStethoscope, FaBell } from "react-icons/fa";
 import Header from "./Header";
 import Footer from "./Footer";
 
@@ -46,7 +37,6 @@ export default function LayoutUser({ children }: LayoutUserProps) {
                 setUser(userData);
             } catch (error) {
                 console.error("Lỗi xác thực:", error);
-                // Nếu token lỗi hoặc hết hạn -> Đăng xuất và về trang login
                 localStorage.removeItem("api_token");
                 localStorage.removeItem("token");
                 router.push("/login");
@@ -71,7 +61,6 @@ export default function LayoutUser({ children }: LayoutUserProps) {
         { name: "Thông báo", icon: <FaBell />, path: "/Users/thong-bao" },
     ];
 
-    // Màn hình chờ khi đang tải dữ liệu user
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -82,29 +71,24 @@ export default function LayoutUser({ children }: LayoutUserProps) {
 
     return (
         <div className="flex flex-col min-h-screen">
-            {/* Header nhận diện được trạng thái đăng nhập nhờ localStorage */}
             <Header />
 
             <div className="flex flex-1 container mx-auto py-6 gap-6">
                 <aside className="w-64 bg-white border rounded-lg shadow-sm p-4 h-fit">
                     <div className="text-center mb-6">
                         <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden relative border-2 border-green-600">
-                            {/* Hiển thị avatar thực tế hoặc avatar mặc định */}
-                            <Image
-                                src={user?.avatar_url || "/image/default-avatar.png"} // Cần đảm bảo có file default-avatar.png trong public/image
-                                alt="avatar"
-                                fill
-                                style={{ objectFit: "cover" }}
-                                className="rounded-full"
+                            <DataThumbnail
+                                src={user?.avatar_url}
+                                alt={user?.FullName || "User"}
+                                fallbackType="user"
+                                className="w-24 h-24 rounded-full border-4 border-green-100 text-2xl"
                             />
                         </div>
 
-                        {/* Hiển thị tên thực tế */}
                         <h2 className="font-bold text-lg text-gray-800">
                             {user?.FullName || "Người dùng"}
                         </h2>
 
-                        {/* Hiển thị SĐT hoặc Email */}
                         <p className="text-gray-500 text-sm">
                             {user?.PhoneNumber || user?.Email || "Chưa cập nhật thông tin"}
                         </p>

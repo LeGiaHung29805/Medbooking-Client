@@ -6,15 +6,12 @@ import * as Model from "@/lib/model";
 
 // Định nghĩa Interface cho UI (Map từ Model Backend sang)
 interface TimeSlotUI {
-  id: number; // ID thật từ DB
+  id: number;
   doctorId: number;
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
   status: "available" | "booked" | "unavailable";
-  // (Lưu ý: API Availability chỉ trả về slot trống.
-  // Slot 'booked' thực ra nằm bên bảng Appointments.
-  // Ở đây ta tập trung quản lý slot trống trước)
 }
 
 export default function DoctorSchedule() {
@@ -32,60 +29,69 @@ export default function DoctorSchedule() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlotUI | null>(null);
 
   // --- 1. LOAD BÁC SĨ ---
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const data = await Api.getDoctors();
-        setDoctors(data);
-      } catch (error) {
-        console.error("Lỗi tải bác sĩ:", error);
-      }
-    };
-    fetchDoctors();
-  }, []);
 
   // --- 2. LOAD SLOT (Khi chọn Bác sĩ) ---
+  // Gọi API lấy lịch trống
   const loadSlots = useCallback(async () => {
     if (!selectedDoctor) return;
 
     setLoading(true);
     try {
-      // Gọi API lấy lịch trống
       const data = await Api.getDoctorAvailability(Number(selectedDoctor));
 
-      // Map dữ liệu từ Backend -> UI
-      const mappedSlots: TimeSlotUI[] = data.map((slot) => {
-        // Tách ngày và giờ từ chuỗi "YYYY-MM-DD HH:mm:ss"
+      // 🛡️ Guard array
+      const safeData = Array.isArray(data) ? data : [];
+
+      const mappedSlots: TimeSlotUI[] = safeData.map((slot) => {
         const startObj = new Date(slot.StartTime);
         const endObj = new Date(slot.EndTime);
 
         return {
           id: slot.SlotID,
           doctorId: slot.DoctorID,
-          date: startObj.toLocaleDateString("en-CA"), // YYYY-MM-DD
+          date: startObj.toISOString().slice(0, 10), // YYYY-MM-DD (ổn định hơn locale)
           startTime: startObj.toLocaleTimeString("vi-VN", {
             hour: "2-digit",
             minute: "2-digit",
-          }), // HH:mm
+          }),
           endTime: endObj.toLocaleTimeString("vi-VN", {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          status: "available", // API này chỉ trả về available
+          status: "available",
         };
       });
 
       setTimeSlots(mappedSlots);
     } catch (error) {
       console.error("Lỗi tải lịch:", error);
+      setTimeSlots([]); // 👈 fallback để không dính .length
     } finally {
       setLoading(false);
     }
   }, [selectedDoctor]);
 
+
+  // --- 1. LOAD BÁC SĨ ---
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const doctors = await Api.getDoctors();
+        setDoctors(Array.isArray(doctors) ? doctors : []);
+      } catch (error) {
+        console.error("Lỗi tải bác sĩ:", error);
+        setDoctors([]);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
+
   useEffect(() => {
     loadSlots();
   }, [loadSlots]);
+
+
 
   // --- 3. XỬ LÝ CẬP NHẬT / XÓA ---
   const updateSlotStatus = async (
@@ -178,11 +184,15 @@ export default function DoctorSchedule() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">-- Chọn bác sĩ --</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.DoctorID} value={doctor.DoctorID}>
-                  {doctor.user?.FullName} - {doctor.specialty?.SpecialtyName}
-                </option>
-              ))}
+              {doctors.length > 0 ? (
+                doctors.map((doctor) => (
+                  <option key={doctor.DoctorID} value={doctor.DoctorID}>
+                    {doctor.user?.FullName || "Bác sĩ"} - {doctor.specialty?.SpecialtyName || "Chưa có chuyên khoa"}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Đang tải bác sĩ...</option>
+              )}
             </select>
           </div>
           <div>

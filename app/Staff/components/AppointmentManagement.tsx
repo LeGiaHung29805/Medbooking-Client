@@ -168,7 +168,7 @@ export default function AppointmentManagement() {
     }
 
     try {
-      // 1. TÌM HOẶC TẠO BỆNH NHÂN
+      // 1. TÌM HOẶC  TẠO BỆNH NHÂN
       let patientId = null;
 
       // Tìm user theo số điện thoại (Admin API hỗ trợ search)

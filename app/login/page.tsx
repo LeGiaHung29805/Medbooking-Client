@@ -25,7 +25,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      //Chuẩn bị FormData để gửi (Vì API yêu cầu multipart/form-data)
+
       const formData = new FormData();
       formData.append("Username", username);
       formData.append("password", password);
@@ -33,10 +33,8 @@ export default function LoginPage() {
       const response = await Api.login(formData);
 
       if (response.token) {
-        // Đảm bảo lưu thông tin user để dùng ở các trang khác
         localStorage.setItem("user", JSON.stringify(response.user));
 
-        //Điều hướng dựa trên Role
         const role = response.user.Role;
 
         alert(`Đăng nhập thành công! Xin chào ${response.user.FullName}`);
@@ -46,13 +44,13 @@ export default function LoginPage() {
             router.push("/admin");
             break;
           case "BacSi":
-            router.push("/Doctor"); // Hoặc trang dành cho bác sĩ
+            router.push("/Doctor");
             break;
           case "NhanVien":
-            router.push("/staff");
+            router.push("/Staff");
             break;
-          default: // BenhNhan
-            router.push("/dat-lich"); // Về trang chủ hoặc trang đặt lịch
+          default:
+            router.push("/dat-lich");
             break;
         }
       } else {
@@ -61,7 +59,6 @@ export default function LoginPage() {
     } catch (err) {
       console.error("Login failed:", err);
 
-      //Ép kiểu lỗi về dạng AxiosError có chứa { message: string }
       const error = err as AxiosError<{ message: string }>;
 
       const msg =
@@ -85,7 +82,7 @@ export default function LoginPage() {
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
-              ⚠️ {error}
+              {error}
             </div>
           )}
 
@@ -121,11 +118,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full text-white py-2.5 rounded-lg font-bold transition flex justify-center items-center ${
-                isLoading
-                  ? "bg-green-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 shadow-md"
-              }`}
+              className={`w-full text-white py-2.5 rounded-lg font-bold transition flex justify-center items-center ${isLoading
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 shadow-md"
+                }`}
             >
               {isLoading ? (
                 <>
@@ -160,7 +156,7 @@ export default function LoginPage() {
           <p className="text-sm text-center mt-6 text-gray-600">
             Chưa có tài khoản?{" "}
             <a
-              href="/dang-ky"
+              href="/register"
               className="text-green-600 font-bold hover:underline"
             >
               Đăng ký ngay

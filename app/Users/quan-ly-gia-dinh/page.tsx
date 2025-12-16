@@ -88,11 +88,10 @@ export default function QuanLyGiaDinh() {
         msg = error.response.data.message;
       }
 
-      alert("❌ " + msg);
+      alert("" + msg);
     }
   };
-
-  // --- 4. HÀM XÓA THÀNH VIÊN ---
+  //Xóa thành viên
   const removeMember = async (id: number) => {
     if (!confirm("Bạn có chắc chắn muốn hủy liên kết với thành viên này?")) return;
 
@@ -115,7 +114,7 @@ export default function QuanLyGiaDinh() {
   return (
     <LayoutUsers>
       <div className="p-6 min-h-screen bg-gray-50">
-        {/* Tiêu đề */}
+
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-green-800">Quản lý gia đình</h1>
@@ -123,7 +122,6 @@ export default function QuanLyGiaDinh() {
           </div>
         </div>
 
-        {/* Form Thêm Thành Viên (Logic Tìm kiếm -> Link) */}
         {showForm ? (
           <div className="bg-white border rounded-xl shadow-sm p-6 mb-6 animate-in slide-in-from-top-2">
             <h2 className="text-lg font-bold mb-4 text-gray-800 flex items-center gap-2">
@@ -151,7 +149,6 @@ export default function QuanLyGiaDinh() {
                   </button>
                 </div>
 
-                {/* Kết quả tìm kiếm */}
                 {searchResult && (
                   <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="w-12 h-12">
@@ -165,7 +162,6 @@ export default function QuanLyGiaDinh() {
                 )}
               </div>
 
-              {/* Cột Phải: Chọn quan hệ & Lưu */}
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700">Bước 2: Chọn quan hệ</label>
                 <select
@@ -203,7 +199,6 @@ export default function QuanLyGiaDinh() {
             </div>
           </div>
         ) : (
-          /* Nút mở form */
           <button
             onClick={() => setShowForm(true)}
             className="mb-6 px-4 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700 shadow-sm transition"
@@ -212,7 +207,6 @@ export default function QuanLyGiaDinh() {
           </button>
         )}
 
-        {/* Danh sách thành viên */}
         {loading ? (
           <div className="text-center py-12 text-gray-500">Đang tải dữ liệu...</div>
         ) : members.length === 0 ? (

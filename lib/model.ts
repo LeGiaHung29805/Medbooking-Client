@@ -110,7 +110,25 @@ export interface Feedback {
   created_at: string;
   patient?: User;
 }
+export interface AdminFeedback {
+    FeedbackID: number;
+    Rating: number;
+    Comment: string;
+    CreatedAt: string;
+    
+    ReviewerName: string;
+    ReviewerAvatar?: string;
 
+    TargetName: string;
+    Type: 'Doctor' | 'System';
+}
+export interface TopFeedback {
+    FeedbackID: number;
+    Rating: number;     // 1 đến 5
+    Comment: string;
+    FullName: string;   // Tên bệnh nhân
+    avatar_url?: string;
+}
 // 2. CÁC ĐỐI TƯỢNG PHẢN HỒI (RESPONSE)
 
 export interface LoginResponse {
@@ -143,7 +161,31 @@ export interface Notification {
   created_at: string;
   updated_at: string;
 }
-
+export interface SendNotificationRequest {
+  Title: string;
+  Content: string;
+  TargetGroup: "all" | "patients" | "doctors" | "staff";
+  Channel: "in_app" | "email";
+}
+export interface NotificationLog {
+  id: number | string;
+  recipient: string;
+  title: string;
+  content: string;
+  type: "SystemAlert" | "Reminder" | "Other";
+  sent_at: string;
+  status: string;
+}
+export interface RawApiNotification {
+  NotificationID: number;
+  Title: string | null;
+  Content: string;
+  NotificationType: string; 
+  created_at: string;
+  Status: string;
+  target_group?: string;       
+  user?: { FullName: string };
+}
 // Type cho Doctor
 
 export interface MedicalRecord {
@@ -193,14 +235,6 @@ export interface ScheduleDay {
 }
 
 // Thêm các interface mới
-export interface Doctor {
-  id: number
-  FullName: string
-  specialty: Specialty
-  email?: string
-  phone?: string
-  avatar?: string
-}
 
 export interface Specialty {
   id: number
