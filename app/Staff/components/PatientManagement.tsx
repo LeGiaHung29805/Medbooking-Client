@@ -177,6 +177,7 @@ export default function PatientManagement() {
     const usernameToSend = selectedPatient.Username;
     // Tạo payload JSON
     const payload = {
+      Username: selectedPatient.Username,
       FullName: (formData.get("FullName") as string) || "",
       Email: (formData.get("Email") as string) || "",
       PhoneNumber: (formData.get("PhoneNumber") as string) || "",
@@ -186,7 +187,6 @@ export default function PatientManagement() {
     };
 
     try {
-      // Gọi API qua hàm adminUpdatePatient đã viết trong ApiClient.ts
       await adminUpdatePatient(selectedPatient.UserID, payload);
 
       alert("Cập nhật thông tin thành công!");

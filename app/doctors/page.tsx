@@ -475,7 +475,7 @@ export default function DoctorsBookingPage() {
                 <p className="text-sm text-gray-600">
                   Chuyên khoa: {viewDoctor.specialty?.SpecialtyName}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">Bệnh viện: MedBooking</p>
+                <p className="text-sm text-gray-500 mt-1">Bệnh viện: HUNRE Hospital</p>
               </div>
             </div>
 

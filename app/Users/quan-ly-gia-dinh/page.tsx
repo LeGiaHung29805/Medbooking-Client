@@ -9,18 +9,17 @@ import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import { AxiosError } from "axios";
 
 export default function QuanLyGiaDinh() {
-  // --- STATE QUẢN LÝ DỮ LIỆU ---
+  // state quản lí dữ liệu
   const [members, setMembers] = useState<Model.FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --- STATE FORM TÌM KIẾM & THÊM ---
+  // state form tìm kiếm và tên
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<Model.User | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [relation, setRelation] = useState("");
 
-  // --- 1. USE EFFECT: Load dữ liệu khi vào trang ---
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -37,13 +36,12 @@ export default function QuanLyGiaDinh() {
     loadData();
   }, [loadData]);
 
-  // --- 2. HÀM TÌM KIẾM NGƯỜI DÙNG ĐỂ THÊM ---
+  //Tìm kiếm người thân
   const handleSearchUser = async () => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     setSearchResult(null);
     try {
-      // Gọi API tìm user
       const users = await Api.searchUserPublic(searchQuery);
       // Lấy người đầu tiên tìm thấy khác với chính mình (logic lọc tùy backend)
       if (users.length > 0) {
@@ -59,7 +57,7 @@ export default function QuanLyGiaDinh() {
     }
   };
 
-  // --- 3. HÀM LƯU (LIÊN KẾT) THÀNH VIÊN ---
+  //Lưu liên kết thành viên
   const saveMember = async () => {
     if (!searchResult) {
       alert("Vui lòng tìm kiếm người thân trước!");
@@ -71,20 +69,17 @@ export default function QuanLyGiaDinh() {
     }
 
     try {
-      // Gọi API thêm thành viên
       await Api.addFamilyMember(searchResult.UserID, relation);
-      alert("✅ Thêm thành viên thành công!");
+      alert("Thêm thành viên thành công!");
 
       // Reset form và load lại danh sách
       resetForm();
       setShowForm(false);
       loadData();
-    } catch (error: unknown) { // 1. Khai báo là unknown (không biết trước kiểu lỗi)
+    } catch (error: unknown) {
       let msg = "Thêm thất bại";
 
-      // 2. Kiểm tra xem lỗi có phải từ Axios không
       if (error instanceof AxiosError && error.response?.data?.message) {
-        // TypeScript giờ đã hiểu cấu trúc bên trong error
         msg = error.response.data.message;
       }
 
@@ -97,7 +92,6 @@ export default function QuanLyGiaDinh() {
 
     try {
       await Api.removeFamilyMember(id);
-      // Cập nhật UI ngay lập tức (Optimistic UI)
       setMembers(members.filter((m) => m.UserID !== id));
     } catch (error) {
       console.log(error)
@@ -129,7 +123,7 @@ export default function QuanLyGiaDinh() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Cột Trái: Tìm kiếm */}
+              {/*Tìm kiếm */}
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700">Bước 1: Tìm người thân (SĐT/Email)</label>
                 <div className="flex gap-2">

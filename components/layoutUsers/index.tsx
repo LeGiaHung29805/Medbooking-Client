@@ -76,12 +76,12 @@ export default function LayoutUser({ children }: LayoutUserProps) {
             <div className="flex flex-1 container mx-auto py-6 gap-6">
                 <aside className="w-64 bg-white border rounded-lg shadow-sm p-4 h-fit">
                     <div className="text-center mb-6">
-                        <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden relative border-2 border-green-600">
+                        <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden relative border-2 border-green-600">
                             <DataThumbnail
                                 src={user?.avatar_url}
                                 alt={user?.FullName || "User"}
                                 fallbackType="user"
-                                className="w-24 h-24 rounded-full border-4 border-green-100 text-2xl"
+                                className="w-full h-full rounded-full border border-green-100 text-2xl"
                             />
                         </div>
 

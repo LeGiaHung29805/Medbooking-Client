@@ -62,7 +62,6 @@ export default function AppointmentsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Gọi API lấy tất cả lịch hẹn (qua Api Staff)
       const data = await Api.getAllAppointments();
       // Sắp xếp giảm dần theo thời gian (Mới nhất lên đầu)
       const sortedData = data.sort(
@@ -179,7 +178,7 @@ export default function AppointmentsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+              <span className="absolute left-3 top-2.5 text-gray-400"></span>
             </div>
 
             <select
@@ -356,7 +355,7 @@ export default function AppointmentsPage() {
                         rel="noreferrer"
                         className="text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        📎 Xem tài liệu đính kèm
+                        Xem tài liệu đính kèm
                       </a>
                     </div>
                   )}

@@ -14,6 +14,7 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { handleError } from "@/lib/utils";
 
 export default function Header() {
     const router = useRouter();
@@ -35,23 +36,18 @@ export default function Header() {
 
     const handleLogout = async () => {
         try {
-            // 4. Gọi API báo server đăng xuất
             await logout();
-        } catch (e) {
-            console.error("Logout API error", e);
+        } catch (error) {
+            handleError(error, "Đăng xuất thất bại!");
         }
 
-        // 5. Xóa sạch các loại token
         localStorage.removeItem("api_token");
         localStorage.removeItem("token");
         localStorage.removeItem("user_role");
-
-        // Xóa cả cookie nếu có
-        document.cookie = "token=; path=/; max-age=0";
-        document.cookie = "api_token=; path=/; max-age=0";
+        localStorage.removeItem("booking_for_person");
 
         setIsLoggedIn(false);
-        router.push("/login");
+        window.location.href = "/login";
     };
 
     return (

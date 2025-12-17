@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Import API & Model & Utils
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
@@ -22,18 +21,17 @@ export default function KetQuaKhamBenh() {
   const [completedAppointments, setCompletedAppointments] = useState<Model.Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --- STATE UI ---
+
   const [selectedRecord, setSelectedRecord] = useState<Model.MedicalRecord | null>(null);
   const [openRecordModal, setOpenRecordModal] = useState(false);
 
-  // 1. LOAD DỮ LIỆU
+  // LOAD DỮ LIỆU
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const appointments = await Api.getMyAppointments();
 
-        // Lọc ra các lịch ĐÃ HOÀN THÀNH (Completed) và CÓ KẾT QUẢ (medical_record)
         const finished = appointments.filter(
           (app) => app.Status === "Completed" && app.medical_record
         );
@@ -48,7 +46,7 @@ export default function KetQuaKhamBenh() {
     fetchData();
   }, []);
 
-  // 2. XỬ LÝ XEM CHI TIẾT
+  // XỬ LÝ XEM CHI TIẾT
   const handleViewDetail = (record: Model.MedicalRecord) => {
     setSelectedRecord(record);
     setOpenRecordModal(true);
@@ -74,7 +72,7 @@ export default function KetQuaKhamBenh() {
           Danh sách các hồ sơ khám bệnh và kết quả điều trị của bạn.
         </p>
 
-        {/* --- DANH SÁCH KẾT QUẢ --- */}
+        {/* DANH SÁCH KẾT QUẢ */}
         {loading ? (
           <div className="text-center py-10 text-gray-500">
             Đang tải dữ liệu...
@@ -154,7 +152,7 @@ export default function KetQuaKhamBenh() {
           </div>
         )}
 
-        {/* --- MODAL CHI TIẾT --- */}
+        {/* MODAL CHI TIẾT */}
         <Dialog open={openRecordModal} onOpenChange={setOpenRecordModal}>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -170,7 +168,7 @@ export default function KetQuaKhamBenh() {
                     <span className="block text-xs text-gray-500 uppercase font-bold">
                       Bệnh nhân
                     </span>
-                    {/* Lấy tên từ Appointment (hoặc currentUser nếu có state) */}
+
                     <span className="font-medium">
                       {selectedRecord.patient?.FullName || "Tôi"}
                     </span>

@@ -40,21 +40,18 @@ export default function FeedbacksPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // 2. Gọi API adminGetFeedbacks (API mới chúng ta vừa làm)
       const data = await Api.adminGetFeedbacks();
 
-      // 3. Map dữ liệu từ API sang UI
-      // Vì Backend đã xử lý hết logic "Tên bác sĩ" hay "Hệ thống" rồi
-      // Nên ở đây code rất ngắn gọn, không cần if/else lằng nhằng nữa
+      //Map dữ liệu từ API sang UI
       const mappedData: FeedbackUI[] = data.map((item) => ({
         id: item.FeedbackID,
-        patientName: item.ReviewerName,       // Lấy trực tiếp tên người gửi
-        patientAvatar: item.ReviewerAvatar,   // Lấy ảnh (nếu cần hiển thị)
-        targetName: item.TargetName,          // Lấy trực tiếp tên đối tượng (Đã có sẵn "BS..." hoặc "Hệ thống")
-        type: item.Type,                      // Lấy loại để tô màu
+        patientName: item.ReviewerName,
+        patientAvatar: item.ReviewerAvatar,
+        targetName: item.TargetName,
+        type: item.Type,
         rating: item.Rating,
         comment: item.Comment || "",
-        date: item.CreatedAt,                 // Backend đã format ngày rồi (Y-m-d H:i)
+        date: item.CreatedAt,
       }));
 
       setFeedbacks(mappedData);
@@ -77,7 +74,6 @@ export default function FeedbacksPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <section className="max-w-5xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
-        {/* Header - Giữ nguyên */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Đánh Giá & Phản Hồi</h1>
@@ -87,7 +83,6 @@ export default function FeedbacksPage() {
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-600">Lọc theo sao:</span>
             <div className="flex gap-1">
-              {/* Các nút lọc - Giữ nguyên */}
               <button onClick={() => setFilterRating("all")} className={`px-3 py-1 text-sm rounded-full border ${filterRating === "all" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 hover:bg-gray-100"}`}>Tất cả</button>
               <button onClick={() => setFilterRating(5)} className={`px-3 py-1 text-sm rounded-full border ${filterRating === 5 ? "bg-yellow-500 text-white border-yellow-500" : "bg-white text-gray-600 hover:bg-yellow-50"}`}>5★</button>
               <button onClick={() => setFilterRating(1)} className={`px-3 py-1 text-sm rounded-full border ${filterRating === 1 ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-600 hover:bg-red-50"}`}>1★</button>
@@ -126,8 +121,7 @@ export default function FeedbacksPage() {
                         </div>
                       </div>
 
-                      {/* Badge: Đánh giá cho ai? */}
-                      {/* Tô màu: Xanh nếu là Doctor, Xám nếu là System */}
+                      {/*Xanh nếu là Doctor, Xám nếu là System */}
                       <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${fb.type === 'Doctor' ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-gray-100 border-gray-200 text-gray-600'
                         }`}>
                         <span className="text-xs font-medium">Đánh giá:</span>

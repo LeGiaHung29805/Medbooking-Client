@@ -202,6 +202,16 @@ export const deleteMyNotification = async (id: number | string): Promise<Model.M
   return response.data;
 };
 
+export const sendOtp = async (email: string) => {
+    const response = await apiClient.post(`/forgot-password/send-otp`, { 
+        email: email 
+    });
+    return response.data;
+};
+export const resetPassword = async (data: { email: string, otp: string, password: string }) => {
+    const response = await apiClient.post(`/forgot-password/reset`, data);
+    return response.data;
+};
 // ==================== NHÓM BÁC SĨ ====================
 
 export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
@@ -307,9 +317,6 @@ export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
   return response.data.data
 }
 
-console.error("Unexpected response format:", response.data)
-return []
-    
     console.warn('Unexpected response format:', response.data);
     return [];
     

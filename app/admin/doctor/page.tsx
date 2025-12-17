@@ -625,7 +625,6 @@ export default function DoctorManagementPage() {
                     className="hover:bg-gray-50 transition"
                   >
                     <td className="py-3 px-4 text-sm text-gray-700">
-                      {/* SỬ DỤNG COMPONENT DataThumbnail CHUNG */}
                       <DataThumbnail
                         src={avatar}
                         alt={fullName}

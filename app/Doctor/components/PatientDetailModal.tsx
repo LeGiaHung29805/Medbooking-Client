@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react" 
+import { useState, useEffect } from "react"
 import { AlertTriangle } from "lucide-react"
 import type { PatientDetail, MedicalRecord } from "@/lib/model"
-import { doctorService } from "../../services/doctorService" 
+import { doctorService } from "../../services/doctorService"
 
 interface PatientDetailModalProps {
   patient: PatientDetail
@@ -11,26 +11,26 @@ interface PatientDetailModalProps {
   getPriorityText: (priority: string) => string
 }
 
-const PatientDetailModal = ({ 
-  patient, 
-  onClose, 
-  onStartExam, 
-  getPriorityColor, 
-  getPriorityText 
+const PatientDetailModal = ({
+  patient,
+  onClose,
+  onStartExam,
+  getPriorityColor,
+  getPriorityText
 }: PatientDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<'info' | 'history' | 'allergies'>('info')
   const [patientHistory, setPatientHistory] = useState<MedicalRecord[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false); 
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     const loadPatientHistory = async () => {
       if (!patient.id) return;
-      
+
       setLoadingHistory(true);
       try {
         console.log('📚 Loading patient history for patient:', patient.id);
         const history = await doctorService.getPatientHistory(patient.id);
-        
+
         if (history.success && Array.isArray(history.data)) {
           setPatientHistory(history.data);
         } else {
@@ -44,19 +44,19 @@ const PatientDetailModal = ({
         setLoadingHistory(false);
       }
     };
-    
+
     if (activeTab === 'history' && patient.id) {
       loadPatientHistory();
     }
   }, [activeTab, patient.id]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold">Thông tin bệnh nhân</h3>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded transition-colors"
           >
             ✕
@@ -94,31 +94,28 @@ const PatientDetailModal = ({
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setActiveTab('info')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              activeTab === 'info' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } transition-colors`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'info'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              } transition-colors`}
           >
             Thông tin
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              activeTab === 'history' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } transition-colors`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'history'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              } transition-colors`}
           >
             Lịch sử khám
           </button>
           <button
             onClick={() => setActiveTab('allergies')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              activeTab === 'allergies' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } transition-colors`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'allergies'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              } transition-colors`}
           >
             Tiền sử & Dị ứng
           </button>
@@ -138,8 +135,8 @@ const PatientDetailModal = ({
               <div>
                 <label className="text-sm text-gray-600">Giới tính</label>
                 <p className="font-semibold">
-                  {patient.gender === 'male' ? 'Nam' : 
-                   patient.gender === 'female' ? 'Nữ' : 'Khác'}
+                  {patient.gender === 'male' ? 'Nam' :
+                    patient.gender === 'female' ? 'Nữ' : 'Khác'}
                 </p>
               </div>
               <div>
@@ -176,8 +173,8 @@ const PatientDetailModal = ({
                 <div key={record.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
                   <div className="flex justify-between">
                     <span className="font-semibold">
-                      {record.date 
-                        ? new Date(record.date).toLocaleDateString('vi-VN') 
+                      {record.date
+                        ? new Date(record.date).toLocaleDateString('vi-VN')
                         : 'Không có ngày'}
                     </span>
                     <span className="text-sm text-gray-600">{record.diagnosis}</span>

@@ -8,14 +8,14 @@ interface MedicalExamFormProps {
   patient: PatientDetail
   onClose: () => void
   onComplete: (formData: MedicalExamFormData) => void
-  onCancel?: () => void 
+  onCancel?: () => void
 }
 
-const MedicalExamForm = ({ 
-  patient, 
-  onClose, 
+const MedicalExamForm = ({
+  patient,
+  onClose,
   onComplete,
-  onCancel 
+  onCancel
 }: MedicalExamFormProps) => {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([
     { medicine: '', dosage: '', frequency: '' }
@@ -37,13 +37,13 @@ const MedicalExamForm = ({
       height: 165
     }
   })
-  
+
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Đồng bộ prescriptions với formData
   useEffect(() => {
-    const validPrescriptions = prescriptions.filter(p => 
+    const validPrescriptions = prescriptions.filter(p =>
       p.medicine.trim() && p.dosage.trim() && p.frequency.trim()
     )
     setFormData(prev => ({
@@ -115,119 +115,61 @@ const MedicalExamForm = ({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
-    
+
     if (!formData.diagnosis.trim()) {
       newErrors.diagnosis = 'Vui lòng nhập chẩn đoán'
     }
-    
+
     if (!formData.currentSymptoms.trim()) {
       newErrors.currentSymptoms = 'Vui lòng nhập triệu chứng hiện tại'
     }
-    
+
     // Validate vital signs
     if (formData.vitalSigns.bloodPressure && !/^\d+\/\d+$/.test(formData.vitalSigns.bloodPressure)) {
       newErrors.bloodPressure = 'Huyết áp phải có định dạng 120/80'
     }
-    
+
     if (formData.vitalSigns.heartRate < 40 || formData.vitalSigns.heartRate > 200) {
       newErrors.heartRate = 'Mạch phải từ 40-200 lần/phút'
     }
-    
+
     if (formData.vitalSigns.temperature < 35 || formData.vitalSigns.temperature > 42) {
       newErrors.temperature = 'Nhiệt độ phải từ 35-42°C'
     }
-    
+
     if (formData.vitalSigns.spO2 < 70 || formData.vitalSigns.spO2 > 100) {
       newErrors.spO2 = 'SpO2 phải từ 70-100%'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleComplete = async () => {
-  if (!validateForm()) {
-    alert('Vui lòng kiểm tra lại thông tin nhập');
-    return;
-  }
-
-  setLoading(true);
-  
-  try {
-    console.log('🚀 Bắt đầu lưu bệnh án...');
-    
-    // 1. Tạo bệnh án 
-    const medicalRecordData = {
-      patient_id: patient.id,
-      appointment_id: patient.appointmentId || patient.id,
-      diagnosis: formData.diagnosis.trim(),
-      treatment: formData.clinicalNotes.trim(),
-      prescriptions: prescriptions
-        .filter(p => p.medicine.trim() && p.dosage.trim() && p.frequency.trim())
-        .map(p => ({
-          medicine: p.medicine.trim(),
-          dosage: p.dosage.trim(),
-          frequency: p.frequency.trim()
-        })),
-      tests: formData.tests.filter(t => t.trim()),
-      vital_signs: {
-        blood_pressure: formData.vitalSigns.bloodPressure,
-        heart_rate: formData.vitalSigns.heartRate,
-        temperature: formData.vitalSigns.temperature,
-        respiratory_rate: formData.vitalSigns.respiratoryRate,
-        sp_o2: formData.vitalSigns.spO2,
-        weight: formData.vitalSigns.weight,
-        height: formData.vitalSigns.height
-      },
-      notes: formData.clinicalNotes
-    };
-
-    console.log('📤 [MOCK] Gửi dữ liệu bệnh án:', medicalRecordData);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const result = {
-      success: true,
-      data: {
-        id: Date.now(),
-        ...medicalRecordData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      message: 'Tạo bệnh án thành công'
-    };
-    
-    console.log('✅ Kết quả tạo bệnh án:', result);
-
-    if (result.success) {
-      console.log('🎉 Bệnh án đã được lưu thành công!');
-      
-      // 2. Gọi callback để cập nhật UI
-      onComplete(formData);
-      
-      // 3. Hiển thị thông báo
-      alert(`✅ Đã lưu bệnh án thành công cho ${patient.name}!`);
-      
-      // 4. Đóng form
-      onClose();
-      
-    } else {
-      console.error('❌ Lỗi lưu bệnh án:', result.message);
-      alert(`❌ Lỗi: ${result.message || 'Không thể lưu bệnh án'}`);
+    // 1. Validate Form
+    if (!validateForm()) {
+      alert('Vui lòng kiểm tra lại thông tin nhập');
+      return;
     }
-    
-  } catch (error: any) {
-    console.error('💥 Lỗi nghiêm trọng khi lưu bệnh án:', error);
-    alert(`❌ Có lỗi xảy ra: ${error.message || 'Vui lòng thử lại sau'}`);
-  } finally {
-    setLoading(false);
-  }
-};
+    console.log("Check ID:", {
+      patient_id: patient.id,
+      appointmentId_tu_props: patient.appointmentId
+    });
+    setLoading(true);
+
+    try {
+      await onComplete(formData);
+
+    } catch (error) {
+      console.error("Lỗi khi lưu bệnh án:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ĐÂY LÀ PHẦN RETURN JSX
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-4">
+    <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto py-4">
       <div className="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 my-auto max-h-[95vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pt-2 pb-4 border-b">
           <div>
@@ -238,8 +180,8 @@ const MedicalExamForm = ({
               ID: {patient.id} • {patient.age} tuổi • {patient.gender === 'male' ? 'Nam' : 'Nữ'}
             </p>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             disabled={loading}
           >
@@ -426,7 +368,7 @@ const MedicalExamForm = ({
                 Thêm thuốc
               </button>
             </div>
-            
+
             <div className="space-y-3">
               {prescriptions.map((prescription, index) => (
                 <div key={index} className="grid grid-cols-12 gap-3 items-center">
@@ -470,7 +412,7 @@ const MedicalExamForm = ({
                 </div>
               ))}
             </div>
-            
+
             <p className="text-xs text-gray-500 mt-3">
               * Chỉ những thuốc có đầy đủ thông tin mới được lưu
             </p>
@@ -488,7 +430,7 @@ const MedicalExamForm = ({
                 Thêm chỉ định
               </button>
             </div>
-            
+
             <div className="space-y-3">
               {formData.tests.map((test, index) => (
                 <div key={index} className="flex gap-3 items-center">
@@ -519,7 +461,7 @@ const MedicalExamForm = ({
               <Upload className="w-5 h-5 text-blue-600" />
               Tải lên kết quả xét nghiệm/hình ảnh
             </h4>
-            
+
             <div className="mb-4">
               <input
                 type="file"
@@ -532,7 +474,7 @@ const MedicalExamForm = ({
                 Chấp nhận: JPG, PNG, PDF, DOC (tối đa 10MB mỗi file)
               </p>
             </div>
-            
+
             {formData.attachments.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-700">Files đã chọn:</p>
@@ -580,7 +522,7 @@ const MedicalExamForm = ({
               </>
             )}
           </button>
-          
+
           {/* Nút Hủy khám */}
           {onCancel && (
             <button
@@ -591,7 +533,7 @@ const MedicalExamForm = ({
               Hủy khám
             </button>
           )}
-          
+
           <button
             onClick={onClose}
             disabled={loading}

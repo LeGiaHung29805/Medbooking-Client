@@ -14,7 +14,7 @@ interface TodayAppointmentsProps {
   itemsPerPage: number;
   totalPages: number;
   paginatedAppointments: Appointment[];
-  getStatusInfo: (status: string) => any; 
+  getStatusInfo: (status: string) => any;
   getPriorityColor: (priority: string) => string;
   getPriorityText: (priority: string) => string;
   setSearchTerm: (term: string) => void;
@@ -59,11 +59,10 @@ export default function TodayAppointments({
         <button
           key={i}
           onClick={() => setCurrentPage(i)}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
-            i === currentPage
+          className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${i === currentPage
               ? "bg-blue-600 text-white shadow-md"
               : "border border-slate-200 text-slate-700 hover:bg-slate-50"
-          }`}
+            }`}
         >
           {i}
         </button>
@@ -130,11 +129,10 @@ export default function TodayAppointments({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold ${
-                      appt.status === "checked_in" ? "bg-green-500" :
-                      appt.status === "in_progress" ? "bg-blue-500" :
-                      "bg-gray-400"
-                    }`}>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold ${appt.status === "checked_in" ? "bg-green-500" :
+                        appt.status === "in_progress" ? "bg-blue-500" :
+                          "bg-gray-400"
+                      }`}>
                       {appt.patientName?.charAt(0) || "?"}
                     </div>
 
@@ -146,18 +144,18 @@ export default function TodayAppointments({
                         {appt.patientAge || 0} tuổi • {appt.patientPhone || "Chưa có SĐT"}
                       </p>
                       <p className="text-sm text-slate-500 mt-1">
-                        Giờ hẹn: {appt.appointmentTime ? 
+                        Giờ hẹn: {appt.appointmentTime ?
                           (() => {
-      try {
-        const date = new Date(appt.appointmentTime);
-        if (isNaN(date.getTime())) return "Giờ không hợp lệ";
-        return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-      } catch {
-        return "Giờ không hợp lệ";
-      }
-    })()
-    : "Chưa có giờ hẹn"}
-</p>
+                            try {
+                              const date = new Date(appt.appointmentTime);
+                              if (isNaN(date.getTime())) return "Giờ không hợp lệ";
+                              return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                            } catch {
+                              return "Giờ không hợp lệ";
+                            }
+                          })()
+                          : "Chưa có giờ hẹn"}
+                      </p>
                     </div>
                   </div>
 

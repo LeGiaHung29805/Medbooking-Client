@@ -16,7 +16,6 @@ export default function ScheduleManagementPage() {
   const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
   const [slots, setSlots] = useState<Model.AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(false);
-
   // Filter State
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
@@ -32,12 +31,11 @@ export default function ScheduleManagementPage() {
     end_time: "08:30",
   });
 
-  // --- 1. LOAD DANH SÁCH BÁC SĨ ---
+  //LOAD DANH SÁCH BÁC SĨ
   useEffect(() => {
     const loadDoctors = async () => {
       try {
         const data = await Api.getDoctors();
-        // data đã là array từ ApiClient
         setDoctors(data || []);
       } catch (error) {
         console.error("Error loading doctors:", error);
@@ -47,7 +45,7 @@ export default function ScheduleManagementPage() {
     loadDoctors();
   }, []);
 
-  // --- 2. LOAD LỊCH LÀM VIỆC ---
+  // LOAD LỊCH LÀM VIỆC 
   const loadSlots = useCallback(async () => {
     if (selectedDoctorId === "all") {
       setSlots([]);
@@ -57,7 +55,6 @@ export default function ScheduleManagementPage() {
     setLoading(true);
     try {
       const docId = parseInt(selectedDoctorId);
-      // Sử dụng API lấy lịch đã có sẵn
       const data = await Api.getDoctorAvailability(docId);
       setSlots(data);
     } catch (error) {
@@ -71,8 +68,6 @@ export default function ScheduleManagementPage() {
     loadSlots();
   }, [loadSlots]);
 
-  // --- 3. FILTER LOGIC (Lọc client-side theo ngày) ---
-  // (Vì API trả về tất cả slot tương lai, ta cần lọc lại theo ngày được chọn)
   const filteredSlots = useMemo(() => {
     return slots.filter((slot) => {
       // slot.StartTime format: "2025-11-20 08:00:00"
@@ -81,7 +76,6 @@ export default function ScheduleManagementPage() {
     });
   }, [slots, selectedDate]);
 
-  // --- HANDLERS ---
 
   const handleDeleteSlot = async (slotId: number, status: string) => {
     if (status === "Booked") {
@@ -90,8 +84,6 @@ export default function ScheduleManagementPage() {
     }
     if (confirm("Bạn có chắc muốn xóa khung giờ này?")) {
       try {
-        // Gọi API xóa slot (Admin dùng chung hàm của Staff hoặc tạo riêng adminDeleteSlot)
-        // Ở đây ta dùng adminDeleteSlot (đã thêm vào ApiClient)
         await Api.adminDeleteSlot(slotId);
 
         // Update UI ngay lập tức
@@ -138,7 +130,6 @@ export default function ScheduleManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <section className="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col min-h-[600px]">
-        {/* Header & Filters */}
         <div className="p-6 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -219,7 +210,6 @@ export default function ScheduleManagementPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                        {/* Có thể thay bằng ảnh thật nếu có */}
                         {doc?.user?.FullName?.charAt(0) || "D"}
                       </div>
                       <div>
@@ -267,7 +257,6 @@ export default function ScheduleManagementPage() {
         </div>
       </section>
 
-      {/* MODAL THÊM LỊCH */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">

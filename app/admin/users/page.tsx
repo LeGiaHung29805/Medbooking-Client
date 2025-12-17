@@ -227,7 +227,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (Tài khoản) <span className="text-red-500">*</span>
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   required
@@ -433,7 +433,7 @@ export default function UserManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Model.User | null>(null);
 
-  // --- Load Data ---
+  //Load Data
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -457,7 +457,7 @@ export default function UserManagementPage() {
     return () => clearTimeout(timer);
   }, [loadData]);
 
-  // --- Handlers ---
+  //Handlers
   const handleOpenModal = (user: Model.User | null = null) => {
     setSelectedUser(user);
     setIsModalOpen(true);
@@ -469,7 +469,7 @@ export default function UserManagementPage() {
   };
 
   const handleDelete = async (userId: number) => {
-    // 1. Tìm thông tin người dùng trong danh sách hiện tại
+    //Tìm thông tin người dùng trong danh sách hiện tại
     const userToDelete = users.find((u) => u.UserID === userId);
     if (!userToDelete) return;
 
@@ -479,20 +479,17 @@ export default function UserManagementPage() {
       )
     ) {
       try {
-        // 2. Chuẩn bị FormData để gọi API Update (UserManagementController)
         const data = new FormData();
         data.append("Status", "Khoa"); // Chuyển trạng thái sang Khóa
 
-        // 3. QUAN TRỌNG: Phải gửi kèm các trường bắt buộc khác để Backend không báo lỗi 422
         data.append("FullName", userToDelete.FullName);
         data.append("Username", userToDelete.Username);
         data.append("PhoneNumber", userToDelete.PhoneNumber);
         data.append("Role", userToDelete.Role);
 
-        // 4. Gọi API Update
         await Api.adminUpdateUser(userId, data);
 
-        // 5. Cập nhật giao diện
+        //Cập nhật giao diện
         setUsers((prev) =>
           prev.map((u) => (u.UserID === userId ? { ...u, Status: "Khoa" } : u))
         );
@@ -529,7 +526,7 @@ export default function UserManagementPage() {
     }
   };
 
-  // Pagination Logic
+  // Pagination
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE);
   const currentUsers = useMemo(() => {
     const start = (currentPage - 1) * USERS_PER_PAGE;
