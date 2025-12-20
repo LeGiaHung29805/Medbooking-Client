@@ -7,11 +7,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
-<<<<<<< HEAD
     Accept: "application/json",
-=======
-    "Accept": "application/json",
->>>>>>> main
     "Content-Type": "application/json",
   },
 });
@@ -221,14 +217,18 @@ export const deleteMyNotification = async (
 };
 
 export const sendOtp = async (email: string) => {
-    const response = await apiClient.post(`/forgot-password/send-otp`, { 
-        email: email 
-    });
-    return response.data;
+  const response = await apiClient.post(`/forgot-password/send-otp`, {
+    email: email,
+  });
+  return response.data;
 };
-export const resetPassword = async (data: { email: string, otp: string, password: string }) => {
-    const response = await apiClient.post(`/forgot-password/reset`, data);
-    return response.data;
+export const resetPassword = async (data: {
+  email: string;
+  otp: string;
+  password: string;
+}) => {
+  const response = await apiClient.post(`/forgot-password/reset`, data);
+  return response.data;
 };
 // ==================== NHÓM BÁC SĨ ====================
 
