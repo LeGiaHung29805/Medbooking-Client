@@ -20,7 +20,7 @@ import {
   Time03Icon,
   CallIcon,
 } from "hugeicons-react";
-
+import { FaCalendarAlt } from "react-icons/fa";
 export default function HomePage() {
   const [banners] = useState<string[]>([
     "/image/banner1.jpg",
@@ -1038,7 +1038,9 @@ export default function HomePage() {
                 </div>
                 <div className="p-5">
                   <p className="text-sm text-gray-500 mb-2 flex items-center gap-2">
-                    <span>📅</span> {news.date}
+                    <FaCalendarAlt className="text-green-600 text-base" />
+
+                    <span>{news.date}</span>
                   </p>
                   <h3 className="font-bold text-lg mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
                     {news.title}
@@ -1047,7 +1049,7 @@ export default function HomePage() {
                     {news.excerpt}
                   </p>
                   <button className="text-blue-600 font-semibold hover:underline flex items-center gap-2">
-                    Đọc thêm <span>→</span>
+                    Đọc thêm <span>+</span>
                   </button>
                 </div>
               </div>
@@ -1130,7 +1132,7 @@ export default function HomePage() {
                       <span>🚌</span> Xe buýt: Tuyến 03, 23, 45
                     </div>
                     <div className="flex items-center gap-2 text-gray-700">
-                      <span>🚕</span> Grab/Taxi: "Bệnh viện Hữu Nghị"
+                      <span>🚕</span> Grab/Taxi: Bệnh viên HUNRE
                     </div>
                     <div className="flex items-center gap-2 text-gray-700">
                       <span>🅿️</span> Bãi đỗ xe miễn phí

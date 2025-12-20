@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
-
+import { handleError } from "@/lib/utils";
+import { Save, Trash } from "lucide-react";
 // Định nghĩa Interface cho UI (Map từ Model Backend sang)
 interface TimeSlotUI {
   id: number;
@@ -28,9 +29,7 @@ export default function DoctorSchedule() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlotUI | null>(null);
 
-  // --- 1. LOAD BÁC SĨ ---
-
-  // --- 2. LOAD SLOT (Khi chọn Bác sĩ) ---
+  //LOAD SLOT (Khi chọn Bác sĩ)
   // Gọi API lấy lịch trống
   const loadSlots = useCallback(async () => {
     if (!selectedDoctor) return;
@@ -39,7 +38,7 @@ export default function DoctorSchedule() {
     try {
       const data = await Api.getDoctorAvailability(Number(selectedDoctor));
 
-      // 🛡️ Guard array
+      //Guard array
       const safeData = Array.isArray(data) ? data : [];
 
       const mappedSlots: TimeSlotUI[] = safeData.map((slot) => {
@@ -65,14 +64,14 @@ export default function DoctorSchedule() {
       setTimeSlots(mappedSlots);
     } catch (error) {
       console.error("Lỗi tải lịch:", error);
-      setTimeSlots([]); // 👈 fallback để không dính .length
+      setTimeSlots([]);
     } finally {
       setLoading(false);
     }
   }, [selectedDoctor]);
 
 
-  // --- 1. LOAD BÁC SĨ ---
+  //LOAD BÁC SĨ
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -93,22 +92,21 @@ export default function DoctorSchedule() {
 
 
 
-  // --- 3. XỬ LÝ CẬP NHẬT / XÓA ---
+  //XỬ LÝ CẬP NHẬT / XÓA
   const updateSlotStatus = async (
     slotId: number,
     newStatus: "available" | "booked" | "unavailable"
   ) => {
     try {
       if (newStatus === "unavailable") {
-        // === TRƯỜNG HỢP XÓA SLOT ===
+        // TRƯỜNG HỢP XÓA SLOT
         if (confirm("Bạn có chắc chắn muốn XÓA slot này không?")) {
           await Api.staffDeleteSlot(slotId);
-          alert("✅ Đã xóa slot thành công.");
+          alert("Đã xóa slot thành công.");
           setShowEditModal(false);
           loadSlots(); // Reload lại list
         }
       } else {
-        // === TRƯỜNG HỢP GIỮ NGUYÊN (Hoặc cập nhật giờ - Logic ở nút Save) ===
         // Ở UI này nút bấm đang là chuyển status.
         // Nếu backend không hỗ trợ chuyển 'booked', ta chỉ đóng modal.
         alert(
@@ -116,10 +114,8 @@ export default function DoctorSchedule() {
         );
         setShowEditModal(false);
       }
-    } catch (error: any) {
-      alert(
-        "❌ Lỗi: " + (error.response?.data?.message || "Thao tác thất bại")
-      );
+    } catch (error) {
+      handleError(error, "Thao tác thất bại");
     }
   };
 
@@ -137,13 +133,11 @@ export default function DoctorSchedule() {
         fullStart,
         fullEnd
       );
-      alert("✅ Cập nhật giờ thành công!");
+      alert("Cập nhật giờ thành công!");
       setShowEditModal(false);
       loadSlots();
-    } catch (error: any) {
-      alert(
-        "❌ Lỗi cập nhật: " + (error.response?.data?.message || "Lỗi server")
-      );
+    } catch (error) {
+      handleError(error, "Lỗi server!");
     }
   };
 
@@ -152,7 +146,7 @@ export default function DoctorSchedule() {
     setShowEditModal(true);
   };
 
-  // --- LỌC THEO NGÀY ---
+  //LỌC THEO NGÀY
   const filteredSlots = timeSlots.filter((slot) => slot.date === selectedDate);
 
   const availableCount = filteredSlots.filter(
@@ -356,14 +350,14 @@ function EditSlotModal({
                 onClick={() => onSave(start, end)}
                 className="w-full px-4 py-3 text-left rounded-lg border-2 border-blue-200 hover:border-blue-500 bg-blue-50 flex items-center"
               >
-                <span className="mr-2">💾</span> Lưu thay đổi giờ
+                <Save className="mr-2"></Save> Lưu thay đổi giờ
               </button>
 
               <button
                 onClick={onDelete}
                 className="w-full px-4 py-3 text-left rounded-lg border-2 border-red-200 hover:border-red-500 bg-red-50 flex items-center"
               >
-                <span className="mr-2">🗑️</span> Xóa (Không khả dụng)
+                <Trash className="mr-2"> </Trash> Xóa (Không khả dụng)
               </button>
             </div>
           </div>

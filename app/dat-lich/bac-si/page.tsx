@@ -95,7 +95,7 @@ export default function DoctorBookingPage() {
         localStorage.setItem("booking_for_person", value);
     };
     // Mở sheet chọn bác sĩ
-    // Khi bấm vào 1 bác sĩ trong list, ta gọi API lấy lịch ngay
+    // Gọi API lấy lịch ngay
     const handleViewDoctor = async (doctor: Model.Doctor) => {
         setViewingDoctor(doctor);
         setSelectedDate(""); // Reset ngày đã chọn
@@ -170,7 +170,6 @@ export default function DoctorBookingPage() {
 
         setBookingLoading(true);
         try {
-            // GỌI API ĐẶT LỊCH
             await Api.bookAppointment(selectedSlotId, reason, file || undefined);
 
             alert("Đặt lịch khám thành công!");
@@ -204,7 +203,7 @@ export default function DoctorBookingPage() {
                                 <>
                                     <option value={currentUser.FullName}>{currentUser.FullName}</option>
 
-                                    {/* Render danh sách người thân */}
+                                    {/* danh sách người thân */}
                                     {familyMembers.length > 0 && (
                                         <optgroup label="Người thân">
                                             {familyMembers.map((mem) => (
@@ -298,10 +297,9 @@ export default function DoctorBookingPage() {
                 </form>
             </div>
 
-            {/* Sheet (Modal) chọn bác sĩ */}
+            {/* Sheet chọn bác sĩ */}
             {showDoctorSheet && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-                    {/* Nếu chưa chọn bác sĩ chi tiết để xem lịch -> Hiện danh sách bác sĩ */}
                     {!viewingDoctor ? (
                         <div className="bg-white w-[600px] max-h-[85%] rounded-t-2xl p-4 overflow-y-auto rounded-b-2xl">
                             <div className="flex justify-between items-center mb-4">
@@ -343,7 +341,6 @@ export default function DoctorBookingPage() {
                                             onClick={() => handleViewDoctor(doc)}
                                             className="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-100 transition"
                                         >
-                                            {/* Dùng DataThumbnail thay cho Image */}
                                             <div className="w-[60px] h-[60px]">
                                                 <DataThumbnail
                                                     src={doc.imageURL || doc.user?.avatar_url}
@@ -388,7 +385,6 @@ export default function DoctorBookingPage() {
                         <div className="bg-white w-[50%] max-h-[90%] rounded-2xl p-6 overflow-y-auto">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-lg font-semibold text-green-700">Lịch bác sĩ</h2>
-                                {/* Bấm X thì quay lại danh sách bác sĩ, không đóng hẳn */}
                                 <button onClick={() => setViewingDoctor(null)} className="text-gray-500 hover:text-gray-800"> Quay lại danh sách</button>
                             </div>
 

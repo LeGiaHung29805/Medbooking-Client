@@ -64,7 +64,7 @@ export default function DoctorDashboardPage() {
     setLoading(true);
     setLoadingMessage("Đang tải lại dữ liệu...");
     try {
-      await loadDashboardData(); // gọi hàm load chính
+      await loadDashboardData();
     } catch (err) {
       alert("Không thể làm mới dữ liệu. Vui lòng thử lại!");
     } finally {
@@ -76,10 +76,14 @@ export default function DoctorDashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      setLoadingMessage("Đang tải thông tin tổng quan...");
 
-      // Load dashboard stats
+      // --- DEBUG LOG START ---
+      console.log("🚀 [DEBUG] Bắt đầu loadDashboardData...");
+
+      // 1. Gọi Service lấy thống kê
       const dashboardData = await doctorService.getDashboard();
+      console.log("📊 [DEBUG] Thống kê nhận được:", dashboardData);
+
       setDashboardStats({
         totalAppointments: dashboardData.total_appointments || 0,
         completedAppointments: dashboardData.completed_appointments || 0,
@@ -88,28 +92,46 @@ export default function DoctorDashboardPage() {
         todayAppointments: dashboardData.today_appointments || 0
       });
 
-      // Load queue
+      // 2. Gọi Service lấy danh sách hàng đợi (Queue)
+      console.log("[DEBUG] Đang gọi API getQueue...");
       const queueResponse = await doctorService.getQueue();
+
+      console.log("[DEBUG] Kết quả queueResponse:", queueResponse);
+
       if (queueResponse.success && queueResponse.data.length > 0) {
         const patients = queueResponse.data;
+        console.log("[DEBUG] Tìm thấy", patients.length, "bệnh nhân. Dữ liệu chi tiết:", patients);
+
         setWaitingPatients(patients);
 
-        const appointmentsList = patients.map(p => ({
-          id: p.id,
-          patientName: p.name,
-          patientAge: p.age,
-          patientPhone: p.phone,
-          symptoms: p.symptoms,
-          appointmentTime: p.appointmentTime || new Date().toISOString(),
-          status: p.status || "waiting",
-          checkInTime: p.checkInTime || ""
-        }));
+        // Map dữ liệu
+        const appointmentsList = patients.map(p => {
+          // Log từng item để xem status có bị sai không
+          console.log(`[DEBUG] Bệnh nhân: ${p.name}, Status: '${p.status}'`);
+
+          return {
+            id: p.id,
+            patientName: p.name,
+            patientAge: p.age,
+            patientPhone: p.phone,
+            symptoms: p.symptoms,
+            appointmentTime: p.appointmentTime || new Date().toISOString(),
+            status: p.status || "waiting",
+            checkInTime: p.checkInTime || ""
+          };
+        });
+
+        console.log("[DEBUG] Danh sách Appointments sau khi map:", appointmentsList);
         setAppointments(appointmentsList);
+      } else {
+        console.warn("[DEBUG] Danh sách khám RỖNG hoặc API thất bại!");
+        setAppointments([]);
+        setWaitingPatients([]);
       }
 
       setError(null);
     } catch (err: any) {
-      console.error("Lỗi khi tải dữ liệu:", err);
+      console.error("[DEBUG] Lỗi Exception:", err);
       setError("Không thể kết nối đến server");
       useFallbackData();
     } finally {
@@ -119,6 +141,7 @@ export default function DoctorDashboardPage() {
 
   // Fallback data
   const useFallbackData = () => {
+    console.log("[DEBUG] Đang dùng dữ liệu giả (Fallback Data)");
     const mockPatients: Patient[] = [
       {
         id: 1,
@@ -164,62 +187,52 @@ export default function DoctorDashboardPage() {
 
   const handleStartExam = async (patient: PatientDetail) => {
     try {
-      //  Tìm appointment thật trong danh sách appointments
-      const appointment = appointments.find(a =>
-        a.id === patient.id ||
-        a.patientName === patient.name ||
-        a.id === patient.appointmentId
-      );
+      // 1. Tìm cuộc hẹn tương ứng
+      const appointment = appointments.find(a => a.id === patient.id)
 
       if (!appointment || !appointment.id) {
-        alert("Không tìm thấy lịch hẹn hợp lệ! Vui lòng chọn bệnh nhân từ 'Bệnh nhân đang chờ' hoặc 'Đang khám'");
+        alert("Không tìm thấy ID cuộc hẹn!");
         return;
       }
 
-      // Cập nhật trạng thái thành in_progress trên server
       const success = await doctorService.startExam(appointment.id);
+
       if (!success) {
-        alert("Không thể bắt đầu khám. Vui lòng thử lại!");
+        alert("Lỗi kết nối! Không thể bắt đầu khám.");
         return;
       }
 
-      //  Gán appointmentId vào patient để lưu bệnh án
-      const patientWithAppointment: PatientDetail = {
-        ...patient,
-        appointmentId: appointment.id,
-      };
-
-      //  Mở form khám
-      setCurrentExamPatient(patientWithAppointment);
-      setShowExamForm(true);
-      setShowPatientModal(false);
-
-      // Cập nhật UI
+      // Frontend dùng 'in_progress', Backend dùng 'InProcess'
       setAppointments(prev => prev.map(a =>
         a.id === appointment.id ? { ...a, status: 'in_progress' } : a
       ));
 
-      console.log('Bắt đầu khám thành công - AppointmentID:', appointment.id);
+      // 4. Mở Form khám
+      const patientWithAppointment = { ...patient, appointmentId: appointment.id };
+      setCurrentExamPatient(patientWithAppointment);
+      setShowExamForm(true);
+      setShowPatientModal(false);
 
     } catch (error) {
-      console.error('Lỗi bắt đầu khám:', error);
-      alert("Hệ thống lỗi khi bắt đầu khám");
+      console.error(error);
+      alert("Có lỗi xảy ra khi bắt đầu khám.");
     }
   };
 
   const handleCompleteExam = async (formData: MedicalExamFormData) => {
-    if (!currentExamPatient) return;
+    if (!currentExamPatient || !currentExamPatient.appointmentId) {
+      alert("Lỗi: Không tìm thấy ID cuộc hẹn để hoàn tất!");
+      return;
+    }
 
     try {
       setLoading(true);
 
       const payload = {
-        patient_id: currentExamPatient.id,
-        ...(currentExamPatient.appointmentId && {
-          appointment_id: currentExamPatient.appointmentId
-        }),
-        diagnosis: formData.diagnosis,
-        treatment: formData.clinicalNotes || "",
+        PatientID: currentExamPatient.id,
+        AppointmentID: currentExamPatient.appointmentId,
+        Diagnosis: formData.diagnosis,
+        Treatment: formData.clinicalNotes || "",
         prescriptions: formData.prescriptions.filter(p => p.medicine?.trim()),
         tests: formData.tests.filter(t => t?.trim()),
         vital_signs: {
@@ -234,19 +247,33 @@ export default function DoctorDashboardPage() {
         notes: formData.clinicalNotes,
       };
 
-      const response = await doctorService.createMedicalRecord(payload);
+      const recordResponse = await doctorService.createMedicalRecord(payload);
 
-      if (response.success) {
-        alert("Hoàn tất khám và lưu bệnh án thành công!");
+      if (!recordResponse.success) {
+        alert("Lưu bệnh án thất bại: " + recordResponse.message);
+        setLoading(false);
+        return;
+      }
+
+      //đổi trạng thái cuộc hẹn sang 'Completed'
+      const completeSuccess = await doctorService.completeExam(currentExamPatient.appointmentId);
+
+      if (completeSuccess) {
+        alert("Đã lưu bệnh án và kết thúc ca khám!");
+
+        // Đóng form
         setShowExamForm(false);
         setCurrentExamPatient(null);
-        await loadDashboardData(); // refresh lại dữ liệu
+
+        //Tải lại dữ liệu Dashboard để cập nhật số liệu
+        await loadDashboardData();
       } else {
-        alert("Lưu bệnh án thất bại: " + (response.message || "Lỗi không xác định"));
+        alert("Đã lưu bệnh án nhưng LỖI cập nhật trạng thái 'Đã khám xong'. Vui lòng kiểm tra lại.");
       }
+
     } catch (err: any) {
       console.error(err);
-      alert("Lỗi hệ thống: " + (err.response?.data?.message || err.message));
+      alert("Lỗi hệ thống: " + (err.message));
     } finally {
       setLoading(false);
     }
@@ -256,7 +283,6 @@ export default function DoctorDashboardPage() {
     alert("Chức năng xuất dữ liệu đang phát triển...");
   };
 
-  // ==================== RENDER ====================
   if (loading) return <LoadingState message={loadingMessage} />;
   if (error) return <ErrorState message={error} onRetry={handleRefreshData} />;
 

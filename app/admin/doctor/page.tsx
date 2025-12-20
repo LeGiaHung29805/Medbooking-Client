@@ -7,6 +7,7 @@ import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
+import { Plus, Search } from "lucide-react";
 
 interface DoctorFormProps {
   doctor: Model.Doctor | null;
@@ -533,6 +534,9 @@ export default function DoctorManagementPage() {
         <div className="flex flex-wrap items-center justify-between space-y-3 md:space-y-0">
           <div className="flex space-x-3 items-center w-full md:w-auto">
             <div className="relative flex-grow">
+              <div className="absolute left-0 inset-y-0 pl-4 flex items-center ">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
               <input
                 type="text"
                 placeholder="Tìm kiếm theo tên, email, chuyên khoa..."
@@ -564,8 +568,10 @@ export default function DoctorManagementPage() {
             onClick={() => handleOpenModal()}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md w-full md:w-auto"
           >
-            <span></span>
-            <span>Thêm Bác sĩ Mới</span>
+            <Plus className="w-4 h-4" />
+            <span>
+              Thêm Bác sĩ Mới
+            </span>
           </button>
         </div>
       </div>
@@ -618,7 +624,6 @@ export default function DoctorManagementPage() {
                     className="hover:bg-gray-50 transition"
                   >
                     <td className="py-3 px-4 text-sm text-gray-700">
-                      {/* SỬ DỤNG COMPONENT DataThumbnail CHUNG */}
                       <DataThumbnail
                         src={avatar}
                         alt={fullName}

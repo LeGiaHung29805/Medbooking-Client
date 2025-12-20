@@ -49,8 +49,8 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
       ...prev,
       [name]:
         name === "EstimatedDuration" ||
-        name === "Price" ||
-        name === "SpecialtyID"
+          name === "Price" ||
+          name === "SpecialtyID"
           ? Number(value)
           : value,
     }));
@@ -361,11 +361,11 @@ export default function ServiceManagementPage() {
           onClick={() => handleOpenModal(null)}
           className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 shadow-lg flex items-center font-bold transition"
         >
-          <span className="mr-2 text-xl">+</span> Thêm Dịch vụ
+          <span className="mr-2 text-xl"></span> Thêm Dịch vụ
         </button>
       </div>
 
-      {/* Search Bar */}
+      {/*Tìm kiếm*/}
       <div className="bg-white p-5 rounded-2xl shadow-sm mb-6 border border-gray-100">
         <div className="relative max-w-md">
           <input
@@ -382,7 +382,7 @@ export default function ServiceManagementPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Bảng */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
         {loading ? (
           <div className="p-16 text-center">
@@ -421,7 +421,6 @@ export default function ServiceManagementPage() {
                     className="hover:bg-blue-50 transition group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {/* SỬ DỤNG DATA THUMBNAIL DÙNG CHUNG */}
                       <DataThumbnail
                         src={service.imageURL}
                         alt={service.ServiceName}

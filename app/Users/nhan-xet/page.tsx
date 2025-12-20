@@ -71,8 +71,6 @@ export default function FeedbackPage() {
         try {
             if (activeTab === 'doctor') {
                 if (!selectedAppt) return alert("Vui lòng chọn lịch khám để đánh giá.");
-
-                // Gọi API gửi đánh giá Bác sĩ (kèm AppointmentID)
                 await Api.submitFeedback({
                     AppointmentID: selectedAppt.AppointmentID,
                     TargetType: 'Doctor',
@@ -89,20 +87,19 @@ export default function FeedbackPage() {
                 });
             }
 
-            alert("✅ Cảm ơn bạn đã gửi đánh giá!");
+            alert("Cảm ơn bạn đã gửi đánh giá!");
 
             // Reset form
             setComment("");
             setRating(5);
             setSelectedAppt(null);
 
-            // Reload nếu ở tab bác sĩ
             if (activeTab === 'doctor') loadData();
 
         } catch (error: unknown) {
             console.error(error);
 
-            let msg = "Lỗi hệ thống"; // Giá trị mặc định
+            let msg = "Lỗi hệ thống";
 
             if (error instanceof AxiosError) {
                 msg = error.response?.data?.message || msg;
@@ -129,7 +126,7 @@ export default function FeedbackPage() {
                     <MessageSquare className="w-7 h-7" /> Góp ý & Đánh giá
                 </h1>
 
-                {/* TABS NAVIGATION */}
+                {/* navigation*/}
                 <div className="flex gap-4 mb-6 border-b border-gray-200">
                     <button
                         onClick={() => { setActiveTab('doctor'); setSelectedAppt(null); }}
@@ -153,7 +150,7 @@ export default function FeedbackPage() {
 
                 <div className="max-w-3xl mx-auto">
 
-                    {/* === TAB 1: ĐÁNH GIÁ BÁC SĨ === */}
+                    {/*ĐÁNH GIÁ BÁC SĨ*/}
                     {activeTab === 'doctor' && (
                         <div className="space-y-6 animate-in fade-in">
                             <p className="text-gray-600">Chọn một lượt khám gần đây để gửi đánh giá về Bác sĩ:</p>
@@ -195,7 +192,7 @@ export default function FeedbackPage() {
                                 </div>
                             )}
 
-                            {/* Form nhập đánh giá (Chỉ hiện khi đã chọn bác sĩ) */}
+                            {/* Form nhập đánh giá bác sĩ khi đã chọn bác sĩ */}
                             {selectedAppt && (
                                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-6 animate-in slide-in-from-bottom-2">
                                     <h3 className="font-bold text-lg text-gray-800 mb-4">

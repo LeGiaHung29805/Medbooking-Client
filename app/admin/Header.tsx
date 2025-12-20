@@ -22,7 +22,6 @@ export default function Header() {
     // TODO: Redirect hoặc lọc sản phẩm
   };
 
-  // --- HÀM ĐĂNG XUẤT ---
   const handleLogout = async () => {
     if (!confirm("Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị?"))
       return;
@@ -30,24 +29,18 @@ export default function Header() {
     setIsLoggingOut(true);
 
     try {
-      // 1. Gọi API để Server hủy token (nếu có)
       await logout();
     } catch (error) {
       console.error("Lỗi khi gọi API logout:", error);
     }
-
-    // 2. XÓA SẠCH TOKEN (QUAN TRỌNG)
-    // Xóa LocalStorage
     localStorage.removeItem("api_token");
     localStorage.removeItem("token");
     localStorage.removeItem("user_role");
     localStorage.removeItem("username");
 
-    // Xóa Cookies (nếu Middleware dùng cookie)
     document.cookie = "token=; path=/; max-age=0";
     document.cookie = "api_token=; path=/; max-age=0";
 
-    // 3. Điều hướng về trang login
     router.push("/login");
 
     // window.location.href = "/login";
@@ -63,7 +56,7 @@ export default function Header() {
 
         {/* Các nút hành động bên phải */}
         <div className="flex items-center space-x-6">
-          {/* Link ra trang chủ Website (phía bệnh nhân) */}
+          {/* Link ra trang chủ Website*/}
           <Link
             href="/admin"
             className="flex items-center gap-2 hover:bg-white/20 px-3 py-1.5 rounded-md transition text-sm font-medium"

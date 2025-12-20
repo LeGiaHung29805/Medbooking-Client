@@ -21,7 +21,7 @@ export default function BookingPage() {
     const [featuredDoctors, setFeaturedDoctors] = useState<Model.Doctor[]>([]);
 
     const [selectedPerson, setSelectedPerson] = useState("");
-
+    // const [selectedMemberID, setSelectedMemberID] = useState<number | string>("");
     useEffect(() => {
         const checkAuthAndLoadData = async () => {
             const token = localStorage.getItem("api_token");
@@ -38,7 +38,7 @@ export default function BookingPage() {
                     Api.getDoctors(),
                     Api.getFamilyMembers() // Lấy danh sách người thân
                 ]);
-
+                console.log("Check kỹ userData:", userData);
                 // Set User
                 setUser(userData);
                 setSelectedPerson(userData.FullName); // Mặc định chọn chính mình (lưu tên hoặc ID tùy logic)
@@ -117,9 +117,11 @@ export default function BookingPage() {
                             className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 bg-white cursor-pointer"
                         >
                             {/* Mặc định là chọn chính mình*/}
-                            <option value={user?.FullName} className="font-bold">
-                                {user?.FullName}
-                            </option>
+                            {user && user.FullName && (
+                                <option value={user.FullName} className="font-bold text-green-700">
+                                    Tôi - {user.FullName}
+                                </option>
+                            )}
 
                             {/*Lấy danh sách người thân */}
                             {familyMembers.length > 0 && (
@@ -200,13 +202,13 @@ export default function BookingPage() {
                                     onClick={() => router.push(`/dat-lich/bac-si`)}
                                     className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition overflow-hidden bg-white group flex flex-col"
                                 >
-                                    <div className="relative w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
+                                    <div className="relative w-full h-80 bg-gray-50 flex items-center justify-center overflow-hidden">
                                         <div className="w-full h-full relative">
                                             <DataThumbnail
                                                 src={doc.imageURL || doc.user?.avatar_url}
                                                 alt={doc.user?.FullName}
                                                 fallbackType="doctor"
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                                             />
                                         </div>
                                     </div>

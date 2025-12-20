@@ -1,10 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Layout from "@/components/layout";
+import { FaClipboardList, FaLightbulb, FaSearch, FaStar, FaUserMd } from "react-icons/fa";
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
+const SERVICES_PER_PAGE = 6;
+const PRICE_RANGES = {
+  LOW: 200000,
+  MEDIUM_MIN: 200000,
+  MEDIUM_MAX: 500000,
+  HIGH: 500000,
+};
 
+// Dữ liệu từ Laravel API
 interface ServiceFromApi {
   ServiceID: number;
   ServiceName: string;
@@ -18,6 +27,7 @@ interface ServiceFromApi {
   } | null;
 }
 
+// Dữ liệu dùng cho UI 
 interface Service {
   id: number;
   name: string;
@@ -32,6 +42,13 @@ interface Service {
   rating: number;
   reviews: number;
   related: number[];
+}
+
+// Giao diện cho mục filter danh mục
+interface CategoryFilter {
+  id: string; // Sử dụng Tên chuyên khoa làm ID để khớp với service.category
+  name: string;
+  count: number;
 }
 
 export default function ServicesPage() {
@@ -53,22 +70,28 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const servicesPerPage = 6;
+  // Danh mục hiển thị trong select (Tính toán động từ dữ liệu API)
+  const categories: CategoryFilter[] = useMemo(() => {
+    const categoryCounts: { [key: string]: number } = {};
+    services.forEach((s) => {
+      const categoryName = s.category;
+      categoryCounts[categoryName] = (categoryCounts[categoryName] || 0) + 1;
+    });
 
-  // Danh mục hiển thị trong select
-  const categories = [
-    { id: "all", name: "Tất cả", count: 40 },
-    { id: "Khám tổng quát", name: "Khám tổng quát", count: 5 },
-    { id: "Chuyên khoa", name: "Chuyên khoa", count: 10 },
-    { id: "Cận lâm sàng", name: "Cận lâm sàng", count: 10 },
-    { id: "Điều trị", name: "Điều trị", count: 5 },
-    { id: "Gói dịch vụ", name: "Gói dịch vụ", count: 5 },
-    { id: "Phẫu thuật", name: "Phẫu thuật", count: 3 },
-    { id: "Thẩm mỹ", name: "Thẩm mỹ", count: 1 },
-    { id: "Tâm lý", name: "Tâm lý", count: 1 },
-  ];
+    const categoriesList: CategoryFilter[] = Object.entries(categoryCounts).map(
+      ([name, count]) => ({
+        id: name,
+        name: name,
+        count: count,
+      })
+    );
 
-  // ===== 1. Load dịch vụ từ backend =====
+    categoriesList.sort((a, b) => a.name.localeCompare(b.name)); // Sắp xếp theo tên
+
+    return [{ id: "all", name: "Tất cả", count: services.length }, ...categoriesList];
+  }, [services]);
+
+  // Hàm tải dịch vụ từ backend
   useEffect(() => {
     async function loadServices() {
       try {
@@ -81,7 +104,14 @@ export default function ServicesPage() {
         const data: ServiceFromApi[] = await res.json();
 
         const mapped: Service[] = data.map((s, index) => {
-          const priceNumber = Number(s.Price);
+          // Xử lý giá
+          let priceNumber = 0;
+          let displayPrice = "Liên hệ";
+          if (s.Price !== null && !isNaN(Number(s.Price))) {
+            priceNumber = Number(s.Price);
+            displayPrice = `${priceNumber.toLocaleString("vi-VN")} đ`;
+          }
+
           const categoryName = s.specialty?.SpecialtyName || "Khác";
 
           return {
@@ -89,9 +119,7 @@ export default function ServicesPage() {
             name: s.ServiceName,
             category: categoryName,
             price: priceNumber,
-            displayPrice: isNaN(priceNumber)
-              ? "Liên hệ"
-              : `${priceNumber.toLocaleString("vi-VN")} đ`,
+            displayPrice: displayPrice,
             desc: s.Description || "Chưa có mô tả cho dịch vụ này.",
             duration:
               s.EstimatedDuration && s.EstimatedDuration > 0
@@ -102,8 +130,8 @@ export default function ServicesPage() {
               "Vui lòng làm theo hướng dẫn của bác sĩ khi đến khám.",
             rating: 4.7,
             reviews: 100 + index * 3,
-            popular: index < 5,
-            related: [],
+            popular: index < 5, // 5 dịch vụ đầu tiên là phổ biến
+            related: [], // Cần bổ sung logic related nếu có
           };
         });
 
@@ -119,67 +147,83 @@ export default function ServicesPage() {
     loadServices();
   }, []);
 
-  //Lọc dịch vụ
-  const filteredServices = services.filter((service) => {
-    const keyword = searchTerm.toLowerCase();
+  // Lọc dịch vụ (Sử dụng useMemo để tối ưu hiệu năng)
+  const filteredServices = useMemo(() => {
+    const keyword = searchTerm.toLowerCase().trim();
 
-    const matchesSearch =
-      service.name.toLowerCase().includes(keyword) ||
-      service.desc.toLowerCase().includes(keyword) ||
-      service.doctor.toLowerCase().includes(keyword);
+    return services.filter((service) => {
+      // Lọc theo tìm kiếm
+      const matchesSearch =
+        service.name.toLowerCase().includes(keyword) ||
+        service.desc.toLowerCase().includes(keyword) ||
+        service.doctor.toLowerCase().includes(keyword);
 
-    const matchesCategory =
-      selectedCategory === "all" || service.category === selectedCategory;
+      // Lọc theo danh mục
+      const matchesCategory =
+        selectedCategory === "all" || service.category === selectedCategory;
 
-    let matchesPrice = true;
-    if (priceRange !== "all") {
-      if (priceRange === "low") matchesPrice = service.price < 200000;
-      else if (priceRange === "medium")
-        matchesPrice = service.price >= 200000 && service.price <= 500000;
-      else if (priceRange === "high") matchesPrice = service.price > 500000;
-    }
+      // Lọc theo giá
+      let matchesPrice = true;
+      if (service.price <= 0) {
+        matchesPrice = true;
+      } else if (priceRange !== "all") {
+        if (priceRange === "low") matchesPrice = service.price < PRICE_RANGES.LOW;
+        else if (priceRange === "medium")
+          matchesPrice =
+            service.price >= PRICE_RANGES.MEDIUM_MIN &&
+            service.price <= PRICE_RANGES.MEDIUM_MAX;
+        else if (priceRange === "high") matchesPrice = service.price > PRICE_RANGES.HIGH;
+      }
 
-    return matchesSearch && matchesCategory && matchesPrice;
-  });
+      return matchesSearch && matchesCategory && matchesPrice;
+    });
+  }, [services, selectedCategory, searchTerm, priceRange]);
 
-  //Phân trang
+  // Phân trang
   const totalPages =
-    Math.ceil(filteredServices.length / servicesPerPage) || 1;
-  const startIndex = (currentPage - 1) * servicesPerPage;
+    Math.ceil(filteredServices.length / SERVICES_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
   const paginatedServices = filteredServices.slice(
     startIndex,
-    startIndex + servicesPerPage
+    startIndex + SERVICES_PER_PAGE
   );
 
+  // Đặt lại trang khi bộ lọc thay đổi
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory, searchTerm, priceRange]);
 
-  //Modal đặt lịch
-  const openModal = (service: Service) => {
+  // Modal đặt lịch
+  const openModal = useCallback((service: Service) => {
     setSelectedService(service);
     setIsModalOpen(true);
     setFormData({ name: "", phone: "", date: "", time: "" });
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedService(null);
-  };
+  }, []);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value,
+      });
+    },
+    [formData]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name.trim() || !formData.phone || !formData.date || !formData.time) {
+    if (
+      !formData.name.trim() ||
+      !formData.phone ||
+      !formData.date ||
+      !formData.time
+    ) {
       alert("Vui lòng điền đầy đủ thông tin!");
       return;
     }
@@ -190,19 +234,17 @@ export default function ServicesPage() {
     }
 
     alert(
-      `Đặt lịch thành công!\n\nDịch vụ: ${selectedService?.name}\nHọ tên: ${formData.name
-      }\nSĐT: ${formData.phone}\nNgày: ${formData.date}\nGiờ: ${formData.time
-      }\n\nCảm ơn bạn đã đặt lịch!`
+      `Đặt lịch thành công!\n\nDịch vụ: ${selectedService?.name}\nHọ tên: ${formData.name}\nSĐT: ${formData.phone}\nNgày: ${formData.date}\nGiờ: ${formData.time}\n\nCảm ơn bạn đã đặt lịch!`
     );
     closeModal();
   };
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSelectedCategory("all");
     setSearchTerm("");
     setPriceRange("all");
     setCurrentPage(1);
-  };
+  }, []);
 
   const getRelatedServiceNames = (relatedIds: number[]) => {
     return relatedIds
@@ -217,7 +259,7 @@ export default function ServicesPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
-
+        {/* Hero Section */}
         <section className="relative py-20 overflow-hidden min-h-[500px] flex items-center">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -225,6 +267,7 @@ export default function ServicesPage() {
           ></div>
 
           <div className="absolute inset-0 bg-black/40"></div>
+          {/*  */}
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 text-center text-white w-full">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
@@ -235,6 +278,7 @@ export default function ServicesPage() {
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+              {/* Stats */}
               <div className="text-center group">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-2xl shadow-green-500/20 hover:shadow-green-500/40 transition-all duration-300 group-hover:scale-105">
                   <div className="text-4xl font-bold bg-gradient-to-r from-green-300 to-emerald-400 bg-clip-text text-transparent drop-shadow-lg">
@@ -286,10 +330,10 @@ export default function ServicesPage() {
         <section className="max-w-7xl mx-auto px-4 py-8">
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-              {/* Search Input */}
+              {/* Search Input*/}
               <div className="relative flex-1 max-w-md">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  🔍
+                  <FaSearch className="text-gray-400 text-lg" />
                 </div>
                 <input
                   type="text"
@@ -300,32 +344,29 @@ export default function ServicesPage() {
                 />
               </div>
 
-              {/* Category Filter */}
+              {/* Sử dụng danh mục đã tính toán */}
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               >
-                <option value="all">Tất cả danh mục</option>
-                {categories
-                  .filter((cat) => cat.id !== "all")
-                  .map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name} ({category.count})
+                  </option>
+                ))}
               </select>
 
-              {/* Price Filter */}
+              {/* Price Filter*/}
               <select
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
                 className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               >
                 <option value="all">Tất cả giá</option>
-                <option value="low">Dưới 200k</option>
-                <option value="medium">200k - 500k</option>
-                <option value="high">Trên 500k</option>
+                <option value="low">Dưới {PRICE_RANGES.LOW.toLocaleString("vi-VN")} đ</option>
+                <option value="medium">{PRICE_RANGES.MEDIUM_MIN.toLocaleString("vi-VN")} đ - {PRICE_RANGES.MEDIUM_MAX.toLocaleString("vi-VN")} đ</option>
+                <option value="high">Trên {PRICE_RANGES.HIGH.toLocaleString("vi-VN")} đ</option>
               </select>
 
               {/* Reset Button */}
@@ -338,7 +379,7 @@ export default function ServicesPage() {
             </div>
           </div>
 
-          {/* Kết quả / trạng thái */}
+          {/* Kết quả / trạng thái*/}
           {loading && (
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 text-center text-gray-500">
               Đang tải danh sách dịch vụ...
@@ -366,7 +407,7 @@ export default function ServicesPage() {
                       }`}
                   </h2>
 
-                  <div className="flex items-center gap-3">
+                  {/* <div className="flex items-center gap-3">
                     <span className="text-gray-600">Sắp xếp:</span>
                     <select className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                       <option>Phổ biến nhất</option>
@@ -374,7 +415,7 @@ export default function ServicesPage() {
                       <option>Giá cao đến thấp</option>
                       <option>Đánh giá cao nhất</option>
                     </select>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -396,8 +437,9 @@ export default function ServicesPage() {
                             <h3 className="text-xl font-bold text-gray-800 mb-1">
                               {service.name}
                             </h3>
+                            <FaUserMd className="text-green-600 text-lg" />
                             <p className="text-gray-600 text-sm flex items-center gap-1">
-                              👨‍⚕️ {service.doctor}
+                              {service.doctor}
                             </p>
                           </div>
                           <div className="text-right">
@@ -419,9 +461,11 @@ export default function ServicesPage() {
 
                         {/* Rating */}
                         <div className="flex items-center gap-2 mb-4">
+
                           <span className="flex items-center gap-1 text-yellow-500">
-                            ⭐ {service.rating.toFixed(1)}
+                            {service.rating.toFixed(1)}
                           </span>
+                          <FaStar className="mb-0.5" />
                           <span className="text-gray-500 text-sm">
                             ({service.reviews} lượt đánh giá)
                           </span>
@@ -430,7 +474,7 @@ export default function ServicesPage() {
                         {/* Preparation */}
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
                           <p className="text-sm text-green-800 flex items-start gap-2">
-                            <span>📋</span>
+                            <FaClipboardList className="mt- text-green-600 shrink-0" />
                             <span>{service.preparation}</span>
                           </p>
                         </div>
@@ -438,8 +482,8 @@ export default function ServicesPage() {
                         {/* Related Services */}
                         {service.related.length > 0 && (
                           <div className="text-sm text-gray-600 mb-4">
+                            <FaLightbulb className="mt-1 text-yellow-500 shrink-0 text-base" />
                             <p className="flex items-start gap-2">
-                              <span>💡</span>
                               <span>
                                 <strong>Gợi ý kết hợp:</strong>{" "}
                                 {getRelatedServiceNames(service.related)}
@@ -472,7 +516,9 @@ export default function ServicesPage() {
                 </div>
               ) : (
                 <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
-                  <div className="text-6xl mb-4">🔍</div>
+                  <div className="text-6xl mb-4">
+                    <FaSearch className="text-gray-400 text-lg" />
+                  </div>
                   <h3 className="text-2xl font-semibold text-gray-600 mb-2">
                     Không tìm thấy dịch vụ
                   </h3>
@@ -534,14 +580,14 @@ export default function ServicesPage() {
         </section>
       </div>
 
-      {/* Booking Modal */}
+      {/* Đặt lịch*/}
       {isModalOpen && selectedService && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-slideUp">
             <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-8 rounded-t-2xl relative">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
               <h3 className="text-2xl font-bold mb-2 flex items-center gap-3">
-                <span>📅</span>
+                <FaClipboardList className="mt- text-green-600 shrink-0" />
                 Đặt lịch: {selectedService.name}
               </h3>
               <p className="text-green-100 opacity-90">
@@ -553,7 +599,16 @@ export default function ServicesPage() {
             <div className="p-8">
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                 <p className="text-green-800 flex items-start gap-3">
-                  <span className="text-lg">💡</span>
+                  <span className="text-lg">
+                    <FaLightbulb className="mt-1 text-yellow-500 shrink-0 text-base" />
+                  </span>
+                  <span>
+                    <strong>Chi tiết:</strong>{" "}
+                    {selectedService.desc.length > 150 ? selectedService.desc.substring(0, 150) + "..." : selectedService.desc}
+                  </span>
+                </p>
+                <p className="text-green-800 flex items-start gap-3 mt-3">
+                  <FaClipboardList className="mt- text-green-600 shrink-0" />
                   <span>
                     <strong>Chuẩn bị:</strong>{" "}
                     {selectedService.preparation}
@@ -562,9 +617,10 @@ export default function ServicesPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Form điền thông tin*/}
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <span>👤</span>
+                    <span></span>
                     Họ & tên
                   </label>
                   <input
@@ -580,7 +636,7 @@ export default function ServicesPage() {
 
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <span>📱</span>
+                    <span></span>
                     Số điện thoại
                   </label>
                   <input
@@ -597,7 +653,7 @@ export default function ServicesPage() {
 
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <span>📅</span>
+                    <FaClipboardList className="mt- text-green-600 shrink-0" />
                     Ngày hẹn
                   </label>
                   <input
@@ -613,7 +669,7 @@ export default function ServicesPage() {
 
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <span>⏰</span>
+                    <FaClipboardList className="mt- text-green-600 shrink-0" />
                     Khung giờ
                   </label>
                   <select
@@ -624,12 +680,12 @@ export default function ServicesPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all appearance-none bg-white"
                   >
                     <option value="">Chọn khung giờ phù hợp</option>
-                    <option value="08:00">🕗 08:00 - 09:00</option>
-                    <option value="09:00">🕘 09:00 - 10:00</option>
-                    <option value="10:00">🕙 10:00 - 11:00</option>
-                    <option value="13:00">🕐 13:00 - 14:00</option>
-                    <option value="14:00">🕑 14:00 - 15:00</option>
-                    <option value="15:00">🕒 15:00 - 16:00</option>
+                    <option value="08:00">08:00 - 09:00</option>
+                    <option value="09:00">09:00 - 10:00</option>
+                    <option value="10:00">10:00 - 11:00</option>
+                    <option value="13:00">13:00 - 14:00</option>
+                    <option value="14:00">14:00 - 15:00</option>
+                    <option value="15:00">15:00 - 16:00</option>
                   </select>
                 </div>
 
@@ -639,13 +695,13 @@ export default function ServicesPage() {
                     onClick={closeModal}
                     className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-red-500 hover:text-red-600 transition-colors"
                   >
-                    ❌ Hủy
+                    Hủy
                   </button>
                   <button
                     type="submit"
                     className="flex-1 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
                   >
-                    ✅ Xác nhận đặt lịch
+                    Xác nhận đặt lịch
                   </button>
                 </div>
               </form>

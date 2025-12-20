@@ -7,11 +7,22 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
+<<<<<<< HEAD
     Accept: "application/json",
+=======
+    "Accept": "application/json",
+>>>>>>> main
     "Content-Type": "application/json",
   },
 });
-
+export interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message: string;
+}
 apiClient.interceptors.response.use(
   (response) => {
     console.log("API Response Success:", {
@@ -209,6 +220,16 @@ export const deleteMyNotification = async (
   return response.data;
 };
 
+export const sendOtp = async (email: string) => {
+    const response = await apiClient.post(`/forgot-password/send-otp`, { 
+        email: email 
+    });
+    return response.data;
+};
+export const resetPassword = async (data: { email: string, otp: string, password: string }) => {
+    const response = await apiClient.post(`/forgot-password/reset`, data);
+    return response.data;
+};
 // ==================== NHÓM BÁC SĨ ====================
 
 export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {

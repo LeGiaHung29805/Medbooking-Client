@@ -15,7 +15,7 @@ export default function LichHenKhamLai() {
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Model.Appointment[]>([]);
 
-  // --- STATE CHO MODAL TÁI KHÁM ---
+  //State lịch tía khám
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOldAppt, setSelectedOldAppt] = useState<Model.Appointment | null>(null);
 
@@ -35,7 +35,6 @@ export default function LichHenKhamLai() {
       try {
         const data = await Api.getMyAppointments();
         // Chỉ lấy các lịch ĐÃ HOÀN THÀNH (Completed) để tái khám
-        // Sắp xếp mới nhất lên đầu
         const completed = data
           .filter(a => a.Status === 'Completed')
           .sort((a, b) => new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime());
@@ -102,15 +101,14 @@ export default function LichHenKhamLai() {
 
     setBookingLoading(true);
     try {
-      // Gọi API đặt lịch mới
-      // Truyền ServiceID cũ để hệ thống biết khám dịch vụ gì
+
       await Api.bookAppointment(
         selectedSlotId,
         reason,
         undefined, // Không có file
       );
 
-      alert("✅ Đặt lịch tái khám thành công!");
+      alert("Đặt lịch tái khám thành công!");
       setIsModalOpen(false);
       router.push("/dat-lich");
     } catch (error) {
@@ -207,7 +205,7 @@ export default function LichHenKhamLai() {
           </div>
         )}
 
-        {/* --- MODAL CHỌN LỊCH TÁI KHÁM --- */}
+        {/*MODAL CHỌN LỊCH TÁI KHÁM*/}
         {isModalOpen && selectedOldAppt && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, FileChartColumn, CalendarDays, Users } from "lucide-react";
 import * as Api from "@/lib/ApiClient";
 import Link from "next/link";
-
+import Image from "next/image";
 import Dashboard from "./components/Dashboard";
 import AppointmentManagement from "./components/AppointmentManagement";
 import PatientManagement from "./components/PatientManagement";
@@ -68,8 +68,8 @@ export default function StaffPage() {
             <button
               onClick={() => setActiveTab("dashboard")}
               className={`flex text-center gap-2  py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "dashboard"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               <FileChartColumn /> Bảng điều khiển
@@ -77,8 +77,8 @@ export default function StaffPage() {
             <button
               onClick={() => setActiveTab("appointments")}
               className={`flex text-center gap-2  py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "appointments"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               <CalendarDays />
@@ -87,8 +87,8 @@ export default function StaffPage() {
             <button
               onClick={() => setActiveTab("patients")}
               className={`flex text-center gap-2 py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "patients"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               <Users /> Quản lý bệnh nhân
@@ -96,8 +96,8 @@ export default function StaffPage() {
             <button
               onClick={() => setActiveTab("schedule")}
               className={` flex text-center gap-2 py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${activeTab === "schedule"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               <CalendarDays /> Lịch làm việc bác sĩ

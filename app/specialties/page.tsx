@@ -53,7 +53,7 @@ export default function HospitalPage() {
   const prevImage = () =>
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
 
-  // Lọc dữ liệu client-side (giữ nguyên logic cũ nhưng áp dụng lên field API)
+  // Lọc dữ liệu client-side 
   const filtered = specialties.filter((sp) =>
     (sp.SpecialtyName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -109,9 +109,8 @@ export default function HospitalPage() {
           )}
         </section>
 
-        {/* ================= CÁC PHẦN TĨNH BÊN DƯỚI GIỮ NGUYÊN 100% ================= */}
 
-        {/* ================= GIỚI THIỆU VỀ CÁC KHOA ================= */}
+        {/*GIỚI THIỆU VỀ CÁC KHOA*/}
         <section>
           <Card className="border-0 shadow-md">
             <CardContent className="flex flex-col md:flex-row gap-8 p-6 md:p-10">
@@ -158,7 +157,7 @@ export default function HospitalPage() {
           </Card>
         </section>
 
-        {/* ================= THƯ VIỆN ================= */}
+        {/*THƯ VIỆN */}
         <section className="library bg-[#15664D] text-white rounded-lg p-8">
           <div className="flex flex-col md:flex-row gap-8 items-center">
             {/* Ảnh chính */}
@@ -213,7 +212,7 @@ export default function HospitalPage() {
           </div>
         </section>
 
-        {/* ================= VÌ SAO CHỌN ================= */}
+        {/*VÌ SAO CHỌN */}
         <section>
           <h2 className="text-3xl font-bold text-center mb-12">
             Vì sao chọn chúng tôi
@@ -256,7 +255,7 @@ export default function HospitalPage() {
           </div>
         </section>
 
-        {/* ================= SỐ LIỆU ================= */}
+        {/*SỐ LIỆU */}
         <section className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-4 flex-1">
             <h2 className="text-2xl font-bold">Những con số nổi bật</h2>

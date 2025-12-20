@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { logout } from "@/lib/ApiClient"; // Import hàm logout từ API
+import { logout } from "@/lib/ApiClient";
 
 export default function Header() {
   const router = useRouter();
@@ -20,20 +20,18 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // SỬA ĐỔI: Kiểm tra 'api_token' thay vì 'token' để khớp với ApiClient
     const token = localStorage.getItem("api_token");
     setIsLoggedIn(!!token);
   }, [pathname]);
 
   const handleBookingClick = () => {
-    const token = localStorage.getItem("api_token"); // Kiểm tra api_token
+    const token = localStorage.getItem("api_token");
     if (!token) router.push("/login");
     else router.push("/dat-lich");
   };
 
   const handleLogout = async () => {
     try {
-      // Gọi API logout để server hủy token (nếu cần)
       await logout();
     } catch (error) {
       console.error("Lỗi khi gọi API logout:", error);
@@ -42,7 +40,7 @@ export default function Header() {
     // Xóa sạch các key liên quan đến phiên đăng nhập
     localStorage.removeItem("api_token");
     localStorage.removeItem("user_role");
-    localStorage.removeItem("token"); // Xóa cả key cũ nếu có
+    localStorage.removeItem("token");
 
     setIsLoggedIn(false);
 
@@ -65,7 +63,6 @@ export default function Header() {
             />
           </Link>
 
-          {/* Banner */}
           <div className="flex justify-center">
             <Image
               src="/image/vi-suc-khoe-toan-dan.jpg"
@@ -76,7 +73,6 @@ export default function Header() {
             />
           </div>
 
-          {/* Liên hệ + login/logout */}
           <div className="flex flex-col items-end text-sm space-y-2">
             <div className="flex items-center space-x-6">
               <Phone className="w-5 h-5 text-green-700" />
@@ -91,7 +87,6 @@ export default function Header() {
                   <span>Đăng nhập</span>
                 </Link>
               ) : (
-                // SỬA ĐỔI: Nút Đăng xuất gọi hàm handleLogout mới
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-1 text-gray-800 hover:text-green-700"
@@ -123,7 +118,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Menu */}
       <nav className="bg-green-700 text-white">
         <div className="max-w-7xl mx-auto flex justify-center space-x-10 px-6 py-3 font-medium">
           <Link href="/" className="hover:underline">
@@ -149,10 +143,9 @@ export default function Header() {
                   type="button"
                   className="flex items-center space-x-1 hover:underline focus:outline-none"
                 >
-                  {/*click sẽ đi tới /Users/profile cho đồng bộ */}
                   <span
                     onClick={(e) => {
-                      e.stopPropagation(); // Ngăn DropdownMenuTrigger bắt sự kiện
+                      e.stopPropagation();
                       router.push("/Users/profile");
                     }}
                     className="hover:underline cursor-pointer"
@@ -160,7 +153,6 @@ export default function Header() {
                     Cá nhân
                   </span>
 
-                  {/* Mũi tên: mở menu */}
                   <ChevronDown className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
@@ -175,7 +167,7 @@ export default function Header() {
                   <Link href="/Users/ket-qua-benh-kham">Kết quả bệnh khám</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/Users/lich-su-kham">Lịch hẹn khám lại</Link>
+                  <Link href="/Users/lich-hen-kham-lai">Lịch hẹn khám lại</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/Users/bac-si-cua-toi">Bác sĩ của tôi</Link>
@@ -185,9 +177,6 @@ export default function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/Users/thong-bao">Thông báo</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/Users/thay-doi-mat-khau">Thay đổi mật khẩu</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>

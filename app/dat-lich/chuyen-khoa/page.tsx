@@ -32,9 +32,9 @@ export default function SpecialtyBookingPage() {
     const [file, setFile] = useState<File | null>(null);
     const [bookingLoading, setBookingLoading] = useState(false);
 
-    // STATE UI (Sheet, Pagination, Search)
+    // state ui (Sheet, Pagination, Search)
     const [showSpecialtySheet, setShowSpecialtySheet] = useState(false);
-    // Biến này dùng để xem chi tiết trong Sheet (chưa chọn vào form chính)
+    // XEM SHEET
     const [viewingSpecialty, setViewingSpecialty] = useState<Model.Specialty | null>(null);
 
     const [search, setSearch] = useState("");
@@ -89,7 +89,6 @@ export default function SpecialtyBookingPage() {
         setAvailabilities([]);
 
         try {
-            // Gọi API lấy lịch trống của chuyên khoa này
             const slots = await Api.getSpecialtyAvailability(spec.SpecialtyID);
 
             // Lọc slot tương lai & Available

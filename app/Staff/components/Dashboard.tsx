@@ -48,7 +48,7 @@ export default function Dashboard() {
     if (confirm(`Bạn có chắc muốn xác nhận lịch hẹn #${id}?`)) {
       try {
         await Api.confirmAppointment(id);
-        alert(`✅ Đã xác nhận lịch hẹn #${id}`);
+        alert(`Đã xác nhận lịch hẹn #${id}`);
         // Cập nhật lại danh sách (bỏ item đã duyệt)
         setPendingAppointments((prev) =>
           prev.filter((apt) => apt.AppointmentID !== id)
@@ -57,7 +57,7 @@ export default function Dashboard() {
         const newStats = await Api.getStaffDashboard();
         setStats(newStats);
       } catch (error) {
-        alert("❌ Xác nhận thất bại. Vui lòng thử lại.");
+        alert("Xác nhận thất bại. Vui lòng thử lại.");
       }
     }
   };

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { adminUpdatePatient } from "@/lib/ApiClient";
+import { adminUpdatePatient, ApiError } from "@/lib/ApiClient";
+import { FaStickyNote } from "react-icons/fa";
+import { Search } from "lucide-react";
 
 interface Patient {
   UserID: number;
@@ -23,11 +25,11 @@ interface MedicalRecord {
 }
 
 export default function PatientManagement() {
-  // --- State dữ liệu ---
+  //State dữ liệu
   const [patients, setPatients] = useState<Patient[]>([]);
   const [medicalHistory, setMedicalHistory] = useState<MedicalRecord[]>([]);
 
-  // --- State giao diện ---
+  //State giao diện
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,8 +43,15 @@ export default function PatientManagement() {
   const fetchPatients = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem("api_token");
       const res = await fetch("http://localhost:8000/api/admin/patients", {
-        credentials: "include", //Quan trọng: dùng cookie auth (Sanctum)
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+
+          "Authorization": `Bearer ${token}`
+        },
       });
 
       if (!res.ok) {
@@ -61,7 +70,7 @@ export default function PatientManagement() {
     }
   };
 
-  // 2. TÌM KIẾM (Search Logic)
+  //TÌM KIẾM (Search Logic)
   const filteredPatients = patients.filter((p) => {
     const term = searchTerm.toLowerCase();
     const name = p.FullName ? p.FullName.toLowerCase() : "";
@@ -71,19 +80,24 @@ export default function PatientManagement() {
     return name.includes(term) || email.includes(term) || phone.includes(term);
   });
 
-  // =============================
-  // 3. XEM CHI TIẾT & LỊCH SỬ
-  // =============================
+  //XEM CHI TIẾT & LỊCH SỬ
   const viewPatient = async (patient: Patient) => {
     setSelectedPatient(patient);
     setShowDetailModal(true);
     setMedicalHistory([]);
 
     try {
+      const token = localStorage.getItem("api_token");
       const res = await fetch(
         `http://localhost:8000/api/admin/patients/${patient.UserID}/history`,
         {
-          credentials: "include", // <-- Thêm để dùng cookie
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+
+            "Authorization": `Bearer ${token}`
+          },
         }
       );
       if (res.ok) {
@@ -94,15 +108,12 @@ export default function PatientManagement() {
       console.error("Lỗi tải lịch sử khám:", error);
     }
   };
-  // =============================
-  // 4. THÊM BỆNH NHÂN MỚI (ĐÃ SỬA LỖI 422)
-  // =============================
+  //THÊM BỆNH NHÂN MỚI
   const handleAddPatient = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const token = localStorage.getItem("api_token");
 
-    // Gộp Họ đệm và Tên thành FullName
     const lastName = formData.get("LastName") as string;
     const firstName = formData.get("FirstName") as string;
     const fullName = `${lastName} ${firstName}`.trim();
@@ -110,9 +121,6 @@ export default function PatientManagement() {
     // Tạo object dữ liệu để gửi JSON
     const payload = {
       Username: formData.get("Username"),
-
-      // 👇 SỬA QUAN TRỌNG: Đổi 'Password' thành 'password' (chữ thường)
-      // để khớp với validate của Laravel
       password: formData.get("Password"),
 
       FullName: fullName,
@@ -127,14 +135,14 @@ export default function PatientManagement() {
       const res = await fetch("http://127.0.0.1:8000/api/admin/patients", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
-          Accept: "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify(payload),
       });
 
-      // 👇 NÂNG CẤP: Đọc lỗi chi tiết từ Server
+      //Đọc lỗi chi tiết từ Server
       if (!res.ok) {
         const errorData = await res.json();
 
@@ -150,16 +158,15 @@ export default function PatientManagement() {
       alert("Thêm bệnh nhân thành công!");
       setShowAddModal(false);
       fetchPatients(); // Tải lại danh sách
-    } catch (error: any) {
+    } catch (error) {
       // Hiển thị thông báo lỗi cụ thể
-      alert(`Lỗi: \n${error.message}`);
-      console.error(error);
+      const err = error as ApiError;
+      const msg = err.response?.data?.message || err.message || "Lỗi không xác định"
+      alert(`Lỗi" \n${msg}`);
     }
   };
 
-  // =============================
-  // 5. CẬP NHẬT THÔNG TIN (Dùng ApiClient)
-  // =============================
+  //CẬP NHẬT THÔNG TIN (Dùng ApiClient)
   const handleUpdatePatient = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
@@ -170,6 +177,7 @@ export default function PatientManagement() {
     const usernameToSend = selectedPatient.Username;
     // Tạo payload JSON
     const payload = {
+      Username: selectedPatient.Username,
       FullName: (formData.get("FullName") as string) || "",
       Email: (formData.get("Email") as string) || "",
       PhoneNumber: (formData.get("PhoneNumber") as string) || "",
@@ -179,16 +187,15 @@ export default function PatientManagement() {
     };
 
     try {
-      // Gọi API qua hàm adminUpdatePatient đã viết trong ApiClient.ts
       await adminUpdatePatient(selectedPatient.UserID, payload);
 
-      alert("✅ Cập nhật thông tin thành công!");
+      alert("Cập nhật thông tin thành công!");
       setShowDetailModal(false);
       fetchPatients(); // Tải lại danh sách
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message;
-      alert(`❌ Lỗi cập nhật: ${message}`);
-      console.error(error);
+    } catch (error) {
+      const err = error as ApiError;
+      const message = err.response?.data?.message || err.message || "Lỗi không xác định";
+      alert(`Lỗi cập nhật: ${message}`);
     }
   };
 
@@ -220,13 +227,16 @@ export default function PatientManagement() {
 
       {/* --- Tìm kiếm --- */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="relative">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
           <input
             type="text"
-            placeholder="🔍 Tìm kiếm theo tên, email, số điện thoại..."
+            placeholder="Tìm kiếm theo tên, email, số điện thoại..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
           />
         </div>
       </div>
@@ -313,9 +323,7 @@ export default function PatientManagement() {
         )}
       </div>
 
-      {/* ============================== */}
       {/* MODAL THÊM BỆNH NHÂN */}
-      {/* ============================== */}
       {showAddModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -457,9 +465,7 @@ export default function PatientManagement() {
         </div>
       )}
 
-      {/* ============================== */}
       {/* MODAL CHI TIẾT & SỬA */}
-      {/* ============================== */}
       {showDetailModal && selectedPatient && (
         <div className="fixed inset-0 flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -603,14 +609,15 @@ export default function PatientManagement() {
                             {r.Diagnosis}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            📅 {formatDateForInput(r.created_at)}
+                            {formatDateForInput(r.created_at)}
                           </p>
                           <p className="text-xs text-gray-500">
-                            👨‍⚕️ BS: {r.DoctorName}
+                            BS: {r.DoctorName}
                           </p>
                           {r.Notes && (
                             <p className="text-xs text-gray-600 mt-2 bg-gray-100 p-2 rounded">
-                              📝 {r.Notes}
+                              <FaStickyNote className="mt-0.5 text-gray-500 shrink-0" />
+                              <span>{r.Notes}</span>
                             </p>
                           )}
                         </div>

@@ -5,7 +5,7 @@ import { Bell, Send, History, Loader, Megaphone, CalendarClock, CheckCircle2, Tr
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { AxiosError } from "axios";
-
+import { handleError } from "@/lib/utils";
 
 export default function NotificationManagerPage() {
   const [activeTab, setActiveTab] = useState<"broadcast" | "logs">("broadcast");
@@ -27,11 +27,8 @@ export default function NotificationManagerPage() {
       alert("" + res.message);
       setActiveTab("logs");
       loadData();
-    } catch (error: any) {
-      console.error(error);
-      alert("Lỗi: " + (error.response?.data?.message || "Không thể chạy lệnh"));
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      handleError(error, "Quét lịch thất bại!")
     }
   };
   const loadData = useCallback(async () => {

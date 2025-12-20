@@ -227,7 +227,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (Tài khoản) <span className="text-red-500">*</span>
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   required
@@ -433,7 +433,7 @@ export default function UserManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Model.User | null>(null);
 
-  // --- Load Data ---
+  //Load Data
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -457,7 +457,7 @@ export default function UserManagementPage() {
     return () => clearTimeout(timer);
   }, [loadData]);
 
-  // --- Handlers ---
+  //Handlers
   const handleOpenModal = (user: Model.User | null = null) => {
     setSelectedUser(user);
     setIsModalOpen(true);
@@ -469,7 +469,7 @@ export default function UserManagementPage() {
   };
 
   const handleDelete = async (userId: number) => {
-    // 1. Tìm thông tin người dùng trong danh sách hiện tại
+    //Tìm thông tin người dùng trong danh sách hiện tại
     const userToDelete = users.find((u) => u.UserID === userId);
     if (!userToDelete) return;
 
@@ -479,27 +479,24 @@ export default function UserManagementPage() {
       )
     ) {
       try {
-        // 2. Chuẩn bị FormData để gọi API Update (UserManagementController)
         const data = new FormData();
         data.append("Status", "Khoa"); // Chuyển trạng thái sang Khóa
 
-        // 3. QUAN TRỌNG: Phải gửi kèm các trường bắt buộc khác để Backend không báo lỗi 422
         data.append("FullName", userToDelete.FullName);
         data.append("Username", userToDelete.Username);
         data.append("PhoneNumber", userToDelete.PhoneNumber);
         data.append("Role", userToDelete.Role);
 
-        // 4. Gọi API Update
         await Api.adminUpdateUser(userId, data);
 
-        // 5. Cập nhật giao diện
+        //Cập nhật giao diện
         setUsers((prev) =>
           prev.map((u) => (u.UserID === userId ? { ...u, Status: "Khoa" } : u))
         );
-        alert("🔒 Đã khóa tài khoản thành công.");
+        alert("Đã khóa tài khoản thành công.");
       } catch (error) {
         console.error(error);
-        alert("❌ Thao tác thất bại.");
+        alert("Thao tác thất bại.");
       }
     }
   };
@@ -529,7 +526,7 @@ export default function UserManagementPage() {
     }
   };
 
-  // Pagination Logic
+  // Pagination
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE);
   const currentUsers = useMemo(() => {
     const start = (currentPage - 1) * USERS_PER_PAGE;
@@ -643,15 +640,14 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold
-                        ${
-                          u.Role === "QuanTriVien"
+                        ${u.Role === "QuanTriVien"
                             ? "bg-purple-100 text-purple-800"
                             : u.Role === "BacSi"
-                            ? "bg-blue-100 text-blue-800"
-                            : u.Role === "NhanVien"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }
+                              ? "bg-blue-100 text-blue-800"
+                              : u.Role === "NhanVien"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                          }
                       `}
                       >
                         {ROLE_LABELS[u.Role] || u.Role}
@@ -660,11 +656,10 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80
-                        ${
-                          u.Status === "HoatDong"
+                        ${u.Status === "HoatDong"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                        }
+                          }
                       `}
                         onClick={() => handleToggleStatus(u)}
                         title="Bấm để đổi trạng thái"
