@@ -544,7 +544,7 @@ export default function UserManagementPage() {
         </h1>
         <button
           onClick={() => handleOpenModal()}
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 shadow-lg font-bold transition flex items-center"
+          className="bg-blue-600 text-white text-xl px-6 py-3 rounded-xl hover:bg-blue-700 shadow-lg font-bold transition flex items-center"
         >
           <span className="mr-2 text-xl">+</span> Thêm Người Dùng
         </button>

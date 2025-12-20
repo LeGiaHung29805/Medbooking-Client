@@ -3,68 +3,90 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
+import { Doctor } from "@/lib/model";
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "Pending":
-      return (
-        <span className="px-2 py-1 text-xs font-bold text-yellow-700 bg-yellow-100 rounded-full">
-          Chờ duyệt
-        </span>
-      );
-    case "Confirmed":
-      return (
-        <span className="px-2 py-1 text-xs font-bold text-blue-700 bg-blue-100 rounded-full">
-          Đã xác nhận
-        </span>
-      );
-    case "Completed":
-      return (
-        <span className="px-2 py-1 text-xs font-bold text-green-700 bg-green-100 rounded-full">
-          Hoàn thành
-        </span>
-      );
-    case "Cancelled":
-      return (
-        <span className="px-2 py-1 text-xs font-bold text-red-700 bg-red-100 rounded-full">
-          Đã hủy
-        </span>
-      );
-    case "CheckedIn":
-      return (
-        <span className="px-2 py-1 text-xs font-bold text-purple-700 bg-purple-100 rounded-full">
-          Đã Check-in
-        </span>
-      );
-    default:
-      return (
-        <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
-          {status}
-        </span>
-      );
+// 1. Hàm format giờ chung (xử lý an toàn hơn)
+const formatTime = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ""; // Check ngày không hợp lệ
+    return date.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  } catch (e) {
+    return "";
   }
 };
 
+// 2. Hàm Badge chung (Gộp logic cả 2 tab)
+const getStatusBadge = (status: string) => {
+  const configs: Record<string, { label: string; className: string }> = {
+    Pending: { label: "Chờ duyệt", className: "text-yellow-700 bg-yellow-100" },
+    Confirmed: { label: "Đã xác nhận", className: "text-blue-700 bg-blue-100" },
+    Completed: {
+      label: "Hoàn thành",
+      className: "text-green-700 bg-green-100",
+    },
+    Cancelled: { label: "Đã hủy", className: "text-red-700 bg-red-100" },
+    CheckedIn: {
+      label: "Đã Check-in",
+      className: "text-purple-700 bg-purple-100",
+    },
+    // Thêm trạng thái cho Tab 2
+    available: { label: "Còn trống", className: "text-green-700 bg-green-100" },
+  };
+
+  const config = configs[status];
+
+  if (!config) {
+    return (
+      <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
+        {status}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`px-2 py-1 text-xs font-bold rounded-full ${config.className}`}
+    >
+      {config.label}
+    </span>
+  );
+};
+
 export default function AppointmentsPage() {
+  // --- STATE MỚI: QUẢN LÝ TAB ---
+  const [viewMode, setViewMode] = useState<"list" | "schedule">("list");
+
+  // --- STATE GỐC CỦA BẠN (GIỮ NGUYÊN) ---
   const [appointments, setAppointments] = useState<Model.Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
-
   const [selectedAppt, setSelectedAppt] = useState<Model.Appointment | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [cancelReason, setCancelReason] = useState<string>("");
 
-  // Sử dụng useCallback để tránh warning trong useEffect
+  // --- STATE CHO TAB 2 (MỚI THÊM) ---
+  const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [doctorSchedule, setDoctorSchedule] = useState<any[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
+  // Logic gốc của Tab 1
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Gọi API lấy tất cả lịch hẹn (qua Api Staff)
       const data = await Api.getAllAppointments();
-      // Sắp xếp giảm dần theo thời gian (Mới nhất lên đầu)
       const sortedData = data.sort(
         (a, b) =>
           new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime()
@@ -77,8 +99,50 @@ export default function AppointmentsPage() {
     }
   }, []);
 
+  // Logic lấy danh sách bác sĩ cho Tab 2
+  const fetchDoctors = async () => {
+    try {
+      const res = await Api.getDoctors(); // Dùng hàm lấy tất cả bác sĩ
+      setDoctorsList(res);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách bác sĩ", error);
+    }
+  };
+
+  // Logic xem lịch cho Tab 2
+  const handleViewSchedule = async () => {
+    if (!selectedDoctorId) return;
+    setScheduleLoading(true); // Bắt đầu load
+    try {
+      const res = await Api.getDoctorScheduleAdmin(
+        selectedDoctorId,
+        selectedDate
+      );
+      setDoctorSchedule(res);
+    } catch (error) {
+      alert("Không tải được lịch làm việc");
+    } finally {
+      setScheduleLoading(false); // Kết thúc load
+    }
+  };
+  /// tôi sẽ dùng cái này thay cho load lại cả 2 tab, sử  dụng trong comfirm, checkin, cancel nhé
+  const refreshCurrentView = () => {
+    if (viewMode === "list") {
+      loadData();
+    } else {
+      handleViewSchedule();
+    }
+  };
+
+  // [PERFORMANCE - USEMEMO] Tính toán bác sĩ được chọn 1 lần duy nhất
+  // Thay vì tìm trong vòng lặp map, ta tìm ở đây
+  const currentSelectedDoctor = useMemo(() => {
+    return doctorsList.find((d) => d.DoctorID === selectedDoctorId);
+  }, [doctorsList, selectedDoctorId]);
+
   useEffect(() => {
     loadData();
+    fetchDoctors(); // Tải sẵn danh sách bác sĩ
   }, [loadData]);
 
   const openModal = (appt: Model.Appointment) => {
@@ -93,9 +157,9 @@ export default function AppointmentsPage() {
       await Api.confirmAppointment(selectedAppt.AppointmentID);
       alert(`Đã duyệt lịch hẹn #${selectedAppt.AppointmentID}`);
       setIsModalOpen(false);
-      loadData();
+      refreshCurrentView();
     } catch (error) {
-      alert("Duyệt thất bại. Vui lòng thử lại.");
+      alert("Duyệt thất bại.");
     }
   };
 
@@ -105,9 +169,9 @@ export default function AppointmentsPage() {
       await Api.checkInAppointment(selectedAppt.AppointmentID);
       alert(`Đã check-in cho lịch hẹn #${selectedAppt.AppointmentID}`);
       setIsModalOpen(false);
-      loadData();
+      refreshCurrentView();
     } catch (error) {
-      alert("Check-in thất bại. Vui lòng thử lại.");
+      alert("Check-in thất bại.");
     }
   };
 
@@ -124,9 +188,9 @@ export default function AppointmentsPage() {
       );
       alert(`Đã hủy lịch hẹn #${selectedAppt.AppointmentID}`);
       setIsModalOpen(false);
-      loadData();
+      refreshCurrentView();
     } catch (error) {
-      alert("Hủy thất bại. Vui lòng thử lại.");
+      alert("Hủy thất bại.");
     }
   };
 
@@ -135,7 +199,6 @@ export default function AppointmentsPage() {
       const statusMatch =
         filterStatus === "all" || item.Status === filterStatus;
 
-      // Map field an toàn với dấu ? để tránh lỗi nếu dữ liệu null
       const pName = item.patient?.FullName?.toLowerCase() || "";
       const dName = item.doctor?.user?.FullName?.toLowerCase() || "";
       const idStr = item.AppointmentID.toString();
@@ -153,6 +216,7 @@ export default function AppointmentsPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <section className="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6 min-h-[80vh]">
+          {/* HEADER CÓ TAB SWITCHER */}
           <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -162,139 +226,355 @@ export default function AppointmentsPage() {
                 Xem và xử lý các yêu cầu đặt khám.
               </p>
             </div>
-            <button
-              onClick={loadData}
-              className="text-blue-600 hover:underline text-sm flex items-center gap-1"
-            >
-              Làm mới dữ liệu
-            </button>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 flex flex-wrap gap-4 items-center">
-            <div className="relative flex-grow max-w-md">
-              <input
-                type="text"
-                placeholder="Tìm theo mã, tên bệnh nhân, bác sĩ..."
-                className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            {/* NÚT CHUYỂN TAB */}
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${
+                  viewMode === "list"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Danh sách
+              </button>
+              <button
+                onClick={() => setViewMode("schedule")}
+                className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${
+                  viewMode === "schedule"
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Tra cứu lịch
+              </button>
             </div>
-
-            <select
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="Pending">Chờ duyệt</option>
-              <option value="Confirmed">Đã xác nhận</option>
-              <option value="CheckedIn">Đã Check-in</option>
-              <option value="Completed">Hoàn thành</option>
-              <option value="Cancelled">Đã hủy</option>
-            </select>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-            {loading ? (
-              <div className="p-12 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                Đang tải lịch hẹn...
+          {/* ==================== TAB 1: CODE GỐC CỦA BẠN (GIỮ NGUYÊN) ==================== */}
+          {viewMode === "list" && (
+            <>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 flex flex-wrap gap-4 items-center">
+                <div className="relative flex-grow max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Tìm theo mã, tên bệnh nhân, bác sĩ..."
+                    className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <span className="absolute left-3 top-2.5 text-gray-400"></span>
+                </div>
+
+                <select
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="Pending">Chờ duyệt</option>
+                  <option value="Confirmed">Đã xác nhận</option>
+                  <option value="CheckedIn">Đã Check-in</option>
+                  <option value="Completed">Hoàn thành</option>
+                  <option value="Cancelled">Đã hủy</option>
+                </select>
+
+                <button
+                  onClick={loadData}
+                  className="text-blue-600 hover:underline text-sm flex items-center gap-1 ml-auto"
+                >
+                  Làm mới dữ liệu
+                </button>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase w-20">
-                        Mã
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
-                        Bệnh nhân
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
-                        Bác sĩ
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
-                        Thời gian
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
-                        Trạng thái
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">
-                        Thao tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredAppointments.map((item) => (
-                      <tr
-                        key={item.AppointmentID}
-                        className="hover:bg-blue-50 transition duration-150"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                          #{item.AppointmentID}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-bold text-gray-900">
-                            {item.patient?.FullName || "---"}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {item.patient?.PhoneNumber}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-blue-700">
-                            BS. {item.doctor?.user?.FullName || "Chưa xếp"}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {item.doctor?.specialty?.SpecialtyName}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {new Date(item.StartTime).toLocaleDateString(
-                              "vi-VN"
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(item.StartTime).toLocaleTimeString(
-                              "vi-VN",
-                              { hour: "2-digit", minute: "2-digit" }
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(item.Status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => openModal(item)}
-                            className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
+
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                {loading ? (
+                  <div className="p-12 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    Đang tải lịch hẹn...
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase w-20">
+                            Mã
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Bệnh nhân
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Bác sĩ
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Thời gian
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Trạng thái
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                            Thao tác
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredAppointments.map((item) => (
+                          <tr
+                            key={item.AppointmentID}
+                            className="hover:bg-blue-50 transition duration-150"
                           >
-                            Chi tiết
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredAppointments.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-6 py-12 text-center text-gray-500"
-                        >
-                          <span className="text-2xl block mb-2"></span>
-                          Không tìm thấy dữ liệu.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                              #{item.AppointmentID}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm font-bold text-gray-900">
+                                {item.patient?.FullName || "---"}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {item.patient?.PhoneNumber}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm font-medium text-blue-700">
+                                BS. {item.doctor?.user?.FullName || "Chưa xếp"}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {item.doctor?.specialty?.SpecialtyName}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {new Date(item.StartTime).toLocaleDateString(
+                                  "vi-VN"
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(item.StartTime).toLocaleTimeString(
+                                  "vi-VN",
+                                  { hour: "2-digit", minute: "2-digit" }
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {getStatusBadge(item.Status)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button
+                                onClick={() => openModal(item)}
+                                className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
+                              >
+                                Chi tiết
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {filteredAppointments.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-6 py-12 text-center text-gray-500"
+                            >
+                              <span className="text-2xl block mb-2"></span>
+                              Không tìm thấy dữ liệu.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
 
+          {/* ==================== TAB 2: TRA CỨU LỊCH (DẠNG BẢNG GIỐNG TAB 1) ==================== */}
+          {viewMode === "schedule" && (
+            <div className="animate-fade-in h-full flex flex-col">
+              <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-end">
+                <div className="flex-1 w-full">
+                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                    Chọn Bác sĩ
+                  </label>
+                  <select
+                    className="w-full border rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={selectedDoctorId || ""}
+                    onChange={(e) => {
+                      setSelectedDoctorId(Number(e.target.value));
+                      setDoctorSchedule([]);
+                    }}
+                  >
+                    <option value="">-- Chọn bác sĩ --</option>
+                    {/* Đã xóa ":any" và "|| d.id" vì model Doctor chuẩn chỉ có DoctorID */}
+                    {doctorsList.map((d) => (
+                      <option key={d.DoctorID} value={d.DoctorID}>
+                        BS. {d.user?.FullName}{" "}
+                        {d.specialty
+                          ? `- Khoa ${d.specialty.SpecialtyName}`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-full md:w-56">
+                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                    Chọn Ngày
+                  </label>
+                  <input
+                    type="date"
+                    className="border rounded-lg px-3 py-2.5 w-full outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={selectedDate}
+                    // SỬA LỖI CÚ PHÁP Ở ĐÂY
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setDoctorSchedule([]);
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={handleViewSchedule}
+                  disabled={!selectedDoctorId}
+                  className={`px-6 py-2.5 rounded-lg font-bold text-white shadow-md transition ${
+                    !selectedDoctorId
+                      ? "bg-gray-400"
+                      : "bg-indigo-600 hover:bg-indigo-700"
+                  }`}
+                >
+                  Xem lịch
+                </button>
+              </div>
+
+              {/* BẢNG KẾT QUẢ TAB 2 (CẤU TRÚC Y HỆT TAB 1) */}
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 flex-1">
+                {/* [UX] Hiển thị Loading */}
+                {scheduleLoading ? (
+                  <div className="p-12 text-center text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    Đang tải lịch trình...
+                  </div>
+                ) : doctorSchedule.length === 0 ? (
+                  <div className="p-12 text-center text-gray-500">
+                    <span className="text-2xl block mb-2"></span>Vui lòng chọn
+                    Bác sĩ và Ngày để xem dữ liệu.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        {/* ... (Phần Header Table giữ nguyên) ... */}
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase w-20">
+                            Mã
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Bệnh nhân
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Bác sĩ
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Thời gian
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                            Trạng thái
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                            Thao tác
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {doctorSchedule.map((slot) => {
+                          const appt = slot.appointment;
+                          const patient = appt?.patient;
+
+                          // [PERFORMANCE] ĐÃ XÓA đoạn .find() ở đây
+                          // Dùng trực tiếp currentSelectedDoctor đã tính ở trên
+
+                          return (
+                            <tr
+                              key={slot.SlotID}
+                              className={`transition ${
+                                slot.Status === "available"
+                                  ? "hover:bg-green-50"
+                                  : "hover:bg-blue-50"
+                              }`}
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                #{appt ? appt.AppointmentID : slot.SlotID}
+                              </td>
+                              <td className="px-6 py-4">
+                                {patient ? (
+                                  <>
+                                    <div className="text-sm font-bold text-gray-900">
+                                      {patient.FullName}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {patient.PhoneNumber}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <span className="text-sm text-gray-400 italic">
+                                    -- Chưa đặt --
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-blue-700">
+                                  {/* Dùng biến memo, không tìm lại */}
+                                  BS. {currentSelectedDoctor?.user?.FullName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {
+                                    currentSelectedDoctor?.specialty
+                                      ?.SpecialtyName
+                                  }
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {new Date(slot.StartTime).toLocaleDateString(
+                                    "vi-VN"
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {/* Dùng hàm formatTime chung đã sửa ở bước 1 */}
+                                  {formatTime(slot.StartTime)} -{" "}
+                                  {formatTime(slot.EndTime)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {/* Dùng hàm getStatusBadge chung đã sửa ở bước 1 */}
+                                {slot.Status === "available"
+                                  ? getStatusBadge("available")
+                                  : getStatusBadge(appt?.Status || slot.Status)}
+                              </td>
+                              <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                                {appt ? (
+                                  <button
+                                    onClick={() => openModal(appt)}
+                                    className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
+                                  >
+                                    Chi tiết
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-300 cursor-not-allowed">
+                                    ---
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* MODAL CHI TIẾT (Giữ nguyên của Tab 1) */}
           {isModalOpen && selectedAppt && (
             <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100">
@@ -344,7 +624,6 @@ export default function AppointmentsPage() {
                     </p>
                   </div>
 
-                  {/* Hiển thị link file đính kèm nếu có */}
                   {selectedAppt.file_path && (
                     <div className="col-span-1 md:col-span-2">
                       <p className="text-xs text-gray-500 uppercase font-bold mb-1">
@@ -356,7 +635,7 @@ export default function AppointmentsPage() {
                         rel="noreferrer"
                         className="text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        📎 Xem tài liệu đính kèm
+                        Xem tài liệu đính kèm
                       </a>
                     </div>
                   )}
