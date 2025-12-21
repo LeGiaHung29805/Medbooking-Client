@@ -7,7 +7,12 @@ import type {
 
 // --- ENUM (Nên import từ model, nhưng khai báo tạm ở đây để tránh lỗi) ---
 // import { AppointmentStatus } from "@/lib/model"; 
-
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T; 
+  record?: T; 
+}
 export interface DashboardStats {
   total_appointments: number;
   completed_appointments: number;
@@ -57,9 +62,16 @@ export interface DoctorProfile {
 const calculateAge = (dob: string | null | undefined): number => {
   if (!dob) return 0;
   const birthDate = new Date(dob);
-  const ageDifMs = Date.now() - birthDate.getTime();
-  const ageDate = new Date(ageDifMs);
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
+  if (isNaN(birthDate.getTime())) return 0;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
 };
 
 class DoctorService {
@@ -89,12 +101,11 @@ class DoctorService {
       const mappedPatients: Patient[] = appointmentList.map((appt: any) => {
         // Lấy object bệnh nhân
         const p = appt.patient || {};
-
         return {
           id: appt.id || appt.AppointmentID,
-
+          patientId: appt.PatientID || p.UserID || p.id || 0,
           name: p.FullName || p.name || "Không tên",
-          phone: p.Phone || p.phone || "",
+          phone: p.PhoneNumber || p.phone || "",
 
           age: calculateAge(p.Birthday || p.DoB),
 
@@ -104,7 +115,7 @@ class DoctorService {
           checkInTime: appt.updated_at,
 
           status: this.normalizeStatus(appt.Status),
-
+          initialSymptoms: appt.InitialSymptoms || "Bệnh nhân không nhập triệu chứng",
           symptoms: appt.Reason || appt.Description || "",
           priority: appt.Priority || "medium",
           allergies: [],
@@ -130,6 +141,7 @@ class DoctorService {
 
   // ==================== SCHEDULE ====================
   async getSchedule(): Promise<ScheduleResponse> {
+    
     const res = await apiClient.get("/doctor/schedule");
     return {
       success: true,
@@ -169,25 +181,40 @@ class DoctorService {
   }
 
   // ==================== MEDICAL RECORDS ====================
-  async createMedicalRecord(data: any): Promise<any> {
-    try {
-      console.log('🚀 [API] Đang gọi POST /doctor/medical-records...', data);
-      
-      const response = await apiClient.post("/doctor/medical-records", data);
-      
-      if (response.data && response.data.success) {
-         return response.data;
-      }
-      return { success: false, message: "Server trả về lỗi" };
-
-    } catch (error: any) {
-      console.error('❌ [API] Lỗi tạo bệnh án:', error);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || "Lỗi kết nối server" 
+  async createMedicalRecord(data: FormData): Promise<ApiResponse<MedicalRecord>> {
+  try {
+    console.log('🚀 [API] Đang gọi POST /doctor/medical-records...', data);
+    
+    const response = await apiClient.post("/doctor/medical-records", data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (response.data) {
+      return {
+        success: true,
+        message: response.data.message,
+        record: response.data.record 
       };
     }
+    
+    return { success: false, message: "Server không trả về dữ liệu" };
+
+  } catch (error: any) {
+    // Log chi tiết lỗi từ response để biết tại sao tab Response bị trắng
+    if (error.response) {
+      console.error('Data lỗi từ Server:', error.response.data);
+      console.error('Status lỗi:', error.response.status);
+    }
+    
+    return { 
+      success: false, 
+      message: error.response?.data?.message || "Lỗi kết nối server" 
+    };
   }
+}
 
   async uploadExamResult(recordId: number, file: File, description: string = ''): Promise<any> {
     try {

@@ -5,8 +5,8 @@ import type { Patient, PatientDetail, MedicalRecord } from "@/lib/model"
 
 interface WaitingPatientsProps {
   waitingPatients: Patient[]
-  medicalRecords: MedicalRecord[] 
-  getStatusInfo: (status: string) => any 
+  medicalRecords: MedicalRecord[]
+  getStatusInfo: (status: string) => any
   getPriorityColor: (priority: string) => string
   getPriorityText: (priority: string) => string
   handleViewPatientDetail: (id: number) => void
@@ -36,26 +36,23 @@ export default function WaitingPatients({
             return (
               <div
                 key={patient.id}
-                className={`flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-all duration-200 ${
-                  patient.priority === 'emergency' ? 'border-red-200 bg-red-50' :
+                className={`flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-all duration-200 ${patient.priority === 'emergency' ? 'border-red-200 bg-red-50' :
                   patient.priority === 'high' ? 'border-orange-200 bg-orange-50' :
-                  'border-slate-200'
-                }`}
+                    'border-slate-200'
+                  }`}
               >
                 <div
                   className="flex items-center gap-4 flex-1 cursor-pointer"
                   onClick={() => handleViewPatientDetail(patient.id)}
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    patient.priority === 'emergency' ? 'bg-red-100' :
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${patient.priority === 'emergency' ? 'bg-red-100' :
                     patient.priority === 'high' ? 'bg-orange-100' :
-                    'bg-blue-100'
-                  }`}>
-                    <User className={`w-6 h-6 ${
-                      patient.priority === 'emergency' ? 'text-red-600' :
+                      'bg-blue-100'
+                    }`}>
+                    <User className={`w-6 h-6 ${patient.priority === 'emergency' ? 'text-red-600' :
                       patient.priority === 'high' ? 'text-orange-600' :
-                      'text-blue-600'
-                    }`} />
+                        'text-blue-600'
+                      }`} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
@@ -79,27 +76,27 @@ export default function WaitingPatients({
                 </div>
 
                 <button
-  onClick={(e) => {
-    e.stopPropagation();
-    const patientDetail: PatientDetail = {
-      id: patient.id,
-      name: patient.name,
-      age: patient.age,
-      gender: patient.gender,
-      phone: patient.phone,
-      symptoms: patient.symptoms,
-      appointmentId: patient.appointmentId || patient.id,
-      allergies: patient.allergies,
-      medicalHistory: patient.medicalHistory,
-      priority: patient.priority,
-      medicalRecords: medicalRecords.filter(r => r.patientName === patient.name)
-    };
-    handleStartExam(patientDetail);
-  }}
-  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
->
-  Bắt đầu khám
-</button>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const patientDetail: PatientDetail = {
+                      id: patient.id,
+                      name: patient.name,
+                      age: patient.age,
+                      gender: patient.gender,
+                      phone: patient.phone,
+                      symptoms: patient.symptoms,
+                      appointmentId: patient.appointmentId || patient.id,
+                      allergies: patient.allergies,
+                      medicalHistory: patient.medicalHistory,
+                      priority: patient.priority,
+                      medicalRecords: medicalRecords.filter(r => r.patientName === patient.name)
+                    };
+                    handleStartExam(patientDetail);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Bắt đầu khám
+                </button>
               </div>
             )
           })

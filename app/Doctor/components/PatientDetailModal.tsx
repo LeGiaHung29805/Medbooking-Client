@@ -135,8 +135,7 @@ const PatientDetailModal = ({
               <div>
                 <label className="text-sm text-gray-600">Giới tính</label>
                 <p className="font-semibold">
-                  {patient.gender === 'male' ? 'Nam' :
-                    patient.gender === 'female' ? 'Nữ' : 'Khác'}
+                  {patient.gender}
                 </p>
               </div>
               <div>
@@ -156,7 +155,7 @@ const PatientDetailModal = ({
             </div>
             <div>
               <label className="text-sm text-gray-600">Triệu chứng chính</label>
-              <p className="font-semibold">{patient.symptoms}</p>
+              <p className="font-semibold">{patient.initialSymptoms}</p>
             </div>
           </div>
         )}

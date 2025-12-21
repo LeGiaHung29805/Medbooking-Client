@@ -212,12 +212,13 @@ export interface VitalSigns {
 
 export interface MedicalExamFormData {
   diagnosis: string
-  clinicalNotes: string
+  clinicalNotes?: string
+  notes: string
   currentSymptoms: string
-  prescriptions: Prescription[]
-  tests: string[]
+  prescriptions?: Prescription[]
+  tests?: string[]
   attachments: File[]
-  vitalSigns: VitalSigns
+  vitalSigns?: VitalSigns
 }
 
 export interface Prescription {
@@ -261,6 +262,7 @@ export interface ApiResponse<T> {
 // Enum cho status
 export enum AppointmentStatus {
   WAITING = "waiting",
+  CONFIRMED = "confirmed",
   CHECKED_IN = "checked_in",
   IN_PROGRESS = "in_progress",
   COMPLETED = "completed",
@@ -274,11 +276,11 @@ export enum PriorityLevel {
   EMERGENCY = "emergency"
 }
 
-export enum Gender {
-  MALE = "male",
-  FEMALE = "female",
-  OTHER = "other"
-}
+// export enum Gender {
+//   MALE = "male",
+//   FEMALE = "female",
+//   OTHER = "other"
+// }
 
 // existing interfaces
 export interface Appointment {
@@ -297,14 +299,15 @@ export interface Appointment {
 
 export interface Patient {
   id: number
-  patientId?: number  
+  patientId: number  
   name: string
   age: number
-  gender: 'male' | 'female' | 'other'
+  gender: string
   phone: string
   symptoms: string
   appointmentTime: string
   status: AppointmentStatus  
+  initialSymptoms: string
   checkInTime: string
   priority: PriorityLevel 
   allergies: string[]
@@ -345,6 +348,7 @@ export interface AppointmentFilter {
   };
 }
 export interface PatientDetail extends Patient {
+  appointmentId?: number;
   medicalRecords: MedicalRecord[]
   vitalSigns?: VitalSigns
 }
