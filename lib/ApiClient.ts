@@ -7,7 +7,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
-    "Accept": "application/json",
+    Accept: "application/json",
     "Content-Type": "application/json",
   },
 });
@@ -49,18 +49,19 @@ apiClient.interceptors.request.use((config) => {
     !config.url?.includes("/register")
   ) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log('Authorization header added with token');
+    console.log("Authorization header added with token");
   } else {
-    console.log('No token found or excluded route:', config.url);
+    console.log("No token found or excluded route:", config.url);
   }
 
   return config;
 });
 
-
 //NHÓM XÁC THỰC
 
-export const register = async (data: FormData): Promise<Model.MessageResponse> => {
+export const register = async (
+  data: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/register", data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -75,15 +76,15 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
   const token = response.data.access_token || response.data.token;
   if (token && typeof window !== "undefined") {
     localStorage.setItem("api_token", token);
-    localStorage.setItem("user_role", response.data.user.Role || response.data.user.role);
+    localStorage.setItem(
+      "user_role",
+      response.data.user.Role || response.data.user.role
+    );
     console.log("Đã lưu token:", token);
   }
 
   return response.data;
 };
-
-
-
 
 export const logout = async () => {
   await apiClient.post("/logout");
@@ -91,16 +92,19 @@ export const logout = async () => {
   localStorage.removeItem("user_role");
 };
 
-
 // ==================== NHÓM CÔNG KHAI (PUBLIC) ====================
 
-export const getAllServices = async (search?: string): Promise<Model.Service[]> => {
+export const getAllServices = async (
+  search?: string
+): Promise<Model.Service[]> => {
   const params = search ? { search } : {};
   const response = await apiClient.get("/services", { params });
   return response.data;
 };
 
-export const getSpecialties = async (search?: string): Promise<Model.Specialty[]> => {
+export const getSpecialties = async (
+  search?: string
+): Promise<Model.Specialty[]> => {
   const params = search ? { search } : {};
   const response = await apiClient.get("/specialties", { params });
   return response.data;
@@ -126,13 +130,19 @@ export const getDoctors = async (
   return response.data;
 };
 
-export const getDoctorAvailability = async (doctorId: number): Promise<Model.AvailabilitySlot[]> => {
+export const getDoctorAvailability = async (
+  doctorId: number
+): Promise<Model.AvailabilitySlot[]> => {
   const response = await apiClient.get(`/doctors/${doctorId}/availability`);
   return response.data;
 };
 
-export const getSpecialtyAvailability = async (specialtyId: number): Promise<Model.AvailabilitySlot[]> => {
-  const response = await apiClient.get(`/specialties/${specialtyId}/availability`);
+export const getSpecialtyAvailability = async (
+  specialtyId: number
+): Promise<Model.AvailabilitySlot[]> => {
+  const response = await apiClient.get(
+    `/specialties/${specialtyId}/availability`
+  );
   return response.data;
 };
 
@@ -183,7 +193,9 @@ export const bookAppointment = async (
   return response.data;
 };
 
-export const cancelAppointment = async (id: number): Promise<Model.MessageResponse> => {
+export const cancelAppointment = async (
+  id: number
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(`/appointments/${id}/cancel`, {});
   return response.data;
 };
@@ -197,20 +209,26 @@ export const markNotificationAsRead = async (id: number): Promise<void> => {
   await apiClient.put(`/notifications/${id}/read`, {});
 };
 
-export const deleteMyNotification = async (id: number | string): Promise<Model.MessageResponse> => {
+export const deleteMyNotification = async (
+  id: number | string
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.delete(`/notifications/${id}`);
   return response.data;
 };
 
 export const sendOtp = async (email: string) => {
-    const response = await apiClient.post(`/forgot-password/send-otp`, { 
-        email: email 
-    });
-    return response.data;
+  const response = await apiClient.post(`/forgot-password/send-otp`, {
+    email: email,
+  });
+  return response.data;
 };
-export const resetPassword = async (data: { email: string, otp: string, password: string }) => {
-    const response = await apiClient.post(`/forgot-password/reset`, data);
-    return response.data;
+export const resetPassword = async (data: {
+  email: string;
+  otp: string;
+  password: string;
+}) => {
+  const response = await apiClient.post(`/forgot-password/reset`, data);
+  return response.data;
 };
 // ==================== NHÓM BÁC SĨ ====================
 
@@ -219,7 +237,10 @@ export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
   return response.data;
 };
 
-export const doctorCreateSlot = async (start: string, end: string): Promise<Model.MessageResponse> => {
+export const doctorCreateSlot = async (
+  start: string,
+  end: string
+): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("StartTime", start);
   formData.append("EndTime", end);
@@ -233,7 +254,9 @@ export const doctorDeleteSlot = async (id: number): Promise<void> => {
   await apiClient.delete(`/doctor/availability/${id}`);
 };
 
-export const doctorCreateMedicalRecord = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const doctorCreateMedicalRecord = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/doctor/medical-records", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -248,9 +271,13 @@ export const doctorUploadResult = async (
   const formData = new FormData();
   formData.append("file", file);
   formData.append("description", desc);
-  const response = await apiClient.post(`/doctor/medical-records/${recordId}/upload-result`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const response = await apiClient.post(
+    `/doctor/medical-records/${recordId}/upload-result`,
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
   return response.data;
 };
 
@@ -258,36 +285,45 @@ export const updateAppointmentStatus = async (
   appointmentId: number,
   status: "InProgress" | "Completed" | "Cancelled"
 ): Promise<Model.MessageResponse> => {
-  const response = await apiClient.put(`/doctor/appointments/${appointmentId}/status`, { Status: status });
+  const response = await apiClient.put(
+    `/doctor/appointments/${appointmentId}/status`,
+    { Status: status }
+  );
   return response.data;
 };
 
-export const getMySlots = async (date?: string): Promise<Model.AvailabilitySlot[]> => {
+export const getMySlots = async (
+  date?: string
+): Promise<Model.AvailabilitySlot[]> => {
   const url = date ? `/doctor/my-slots?date=${date}` : "/doctor/my-slots";
   const response = await apiClient.get(url);
   return response.data;
 };
 
-export const getAppointmentDetail = async (id: number): Promise<Model.Appointment> => {
+export const getAppointmentDetail = async (
+  id: number
+): Promise<Model.Appointment> => {
   const response = await apiClient.get(`/doctor/appointments/${id}`);
   return response.data;
 };
 
-export const getPatientHistory = async (patientId: number): Promise<Model.MedicalRecord[]> => {
+export const getPatientHistory = async (
+  patientId: number
+): Promise<Model.MedicalRecord[]> => {
   const response = await apiClient.get(`/doctor/patient-history/${patientId}`);
   return response.data;
 };
 
 export const getDoctorDashboard = async (): Promise<any> => {
   try {
-    console.log('Getting doctor dashboard...');
-    console.log('Current token:', localStorage.getItem('api_token'));
-    
+    console.log("Getting doctor dashboard...");
+    console.log("Current token:", localStorage.getItem("api_token"));
+
     const response = await apiClient.get("/doctor/dashboard-stats");
-    console.log('Dashboard response:', response.data);
+    console.log("Dashboard response:", response.data);
     return response.data;
   } catch (error) {
-    console.error('Error in getDoctorDashboard:', error);
+    console.error("Error in getDoctorDashboard:", error);
     throw error;
   }
 };
@@ -298,47 +334,71 @@ export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
   return response.data;
 };
 
-export const confirmAppointment = async (id: number): Promise<Model.MessageResponse> => {
-  const response = await apiClient.patch(`/staff/appointments/${id}/confirm`, {});
+export const confirmAppointment = async (
+  id: number
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.patch(
+    `/staff/appointments/${id}/confirm`,
+    {}
+  );
   return response.data;
 };
 
-export const checkInAppointment = async (id: number): Promise<Model.MessageResponse> => {
-  const response = await apiClient.patch(`/staff/appointments/${id}/check-in`, {});
+export const checkInAppointment = async (
+  id: number
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.patch(
+    `/staff/appointments/${id}/check-in`,
+    {}
+  );
   return response.data;
 };
 
 export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
   try {
     const response = await apiClient.get("/admin/all-appointments");
-    
+
     // API trả về { success: true, data: [...] }
     if (response.data && Array.isArray(response.data.data)) {
-  return response.data.data
-}
+      return response.data.data;
+    }
 
-    console.warn('Unexpected response format:', response.data);
+    console.error("Unexpected response format:", response.data);
     return [];
-    
+
+    console.warn("Unexpected response format:", response.data);
+    return [];
   } catch (error) {
     console.log("All appointments endpoint error");
     return [];
   }
 };
 
-export const getPendingAppointments = async (): Promise<Model.Appointment[]> => {
+export const getDoctorScheduleAdmin = async (
+  doctorId: number,
+  date: string
+) => {
+  // Gọi vào endpoint mới chúng ta vừa tạo
+  const response = await apiClient.get(
+    `/admin/check-schedule?DoctorID=${doctorId}&Date=${date}`
+  );
+  return response.data;
+};
+
+export const getPendingAppointments = async (): Promise<
+  Model.Appointment[]
+> => {
   try {
     const response = await apiClient.get("/staff/pending-appointments");
-    
+
     // API trả về { success: true, data: [...] }
     if (response.data.success && Array.isArray(response.data.data)) {
-      console.log('Pending appointments:', response.data.count);
+      console.log("Pending appointments:", response.data.count);
       return response.data.data; // Trả về mảng data
     }
-    
-    console.warn('Unexpected response format:', response.data);
+
+    console.warn("Unexpected response format:", response.data);
     return [];
-    
   } catch (error) {
     console.log("Pending appointments endpoint error");
     return [];
@@ -346,14 +406,19 @@ export const getPendingAppointments = async (): Promise<Model.Appointment[]> => 
 };
 
 // Các hàm Admin & Staff dùng FormData (giữ override Content-Type)
-export const adminCreateDoctor = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const adminCreateDoctor = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/doctors", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
 
-export const adminUpdateDoctor = async (id: number, formData: FormData): Promise<Model.MessageResponse> => {
+export const adminUpdateDoctor = async (
+  id: number,
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/doctors/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -361,12 +426,19 @@ export const adminUpdateDoctor = async (id: number, formData: FormData): Promise
   return response.data;
 };
 
-export const adminUploadDoctorImage = async (id: number, file: File): Promise<Model.MessageResponse> => {
+export const adminUploadDoctorImage = async (
+  id: number,
+  file: File
+): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("imageURL", file);
-  const response = await apiClient.post(`/admin/doctors/${id}/upload-image`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const response = await apiClient.post(
+    `/admin/doctors/${id}/upload-image`,
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
   return response.data;
 };
 
@@ -374,13 +446,19 @@ export const adminDeleteDoctor = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/doctors/${id}`);
 };
 
-export const adminGetUsers = async (role?: string, search?: string): Promise<Model.User[]> => {
+export const adminGetUsers = async (
+  role?: string,
+  search?: string
+): Promise<Model.User[]> => {
   const params = { role, search };
   const response = await apiClient.get("/admin/users", { params });
   return response.data;
 };
 
-export const adminUpdateUser = async (id: number, formData: FormData): Promise<Model.MessageResponse> => {
+export const adminUpdateUser = async (
+  id: number,
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/users/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -388,14 +466,19 @@ export const adminUpdateUser = async (id: number, formData: FormData): Promise<M
   return response.data;
 };
 
-export const adminCreateSpecialty = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const adminCreateSpecialty = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/specialties", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
 
-export const adminUpdateSpecialty = async (id: number, formData: FormData): Promise<Model.MessageResponse> => {
+export const adminUpdateSpecialty = async (
+  id: number,
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/specialties/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -407,13 +490,17 @@ export const adminDeleteSpecialty = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/specialties/${id}`);
 };
 
-export const adminGetAllServices = async (search?: string): Promise<Model.Service[]> => {
+export const adminGetAllServices = async (
+  search?: string
+): Promise<Model.Service[]> => {
   const params = search ? { search } : {};
   const response = await apiClient.get("/admin/services", { params });
   return response.data;
 };
 
-export const adminCreateService = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const adminCreateService = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/services", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -424,7 +511,9 @@ export const adminDeleteService = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/services/${id}`);
 };
 
-export const getDoctorMyMedicalRecords = async (): Promise<Model.MedicalRecord[]> => {
+export const getDoctorMyMedicalRecords = async (): Promise<
+  Model.MedicalRecord[]
+> => {
   const response = await apiClient.get("/doctor/my-medical-records-test");
   return response.data;
 };
@@ -439,13 +528,17 @@ export const adminGetFeedbacks = async (): Promise<Model.AdminFeedback[]> => {
   return response.data;
 };
 
-export const getAllMedicalRecords = async (patientId?: number): Promise<Model.MedicalRecord[]> => {
+export const getAllMedicalRecords = async (
+  patientId?: number
+): Promise<Model.MedicalRecord[]> => {
   const params = patientId ? { patient_id: patientId } : {};
   const response = await apiClient.get("/admin/medical-records", { params });
   return response.data;
 };
 
-export const getMedicalRecordDetail = async (id: number): Promise<Model.MedicalRecord> => {
+export const getMedicalRecordDetail = async (
+  id: number
+): Promise<Model.MedicalRecord> => {
   const response = await apiClient.get(`/admin/medical-records/${id}`);
   return response.data;
 };
@@ -454,7 +547,10 @@ export const adminDeleteMedicalRecord = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/medical-records/${id}`);
 };
 
-export const adminUpdateService = async (id: number, formData: FormData): Promise<Model.MessageResponse> => {
+export const adminUpdateService = async (
+  id: number,
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/services/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -462,7 +558,9 @@ export const adminUpdateService = async (id: number, formData: FormData): Promis
   return response.data;
 };
 
-export const updateProfile = async (data: Model.UpdateProfileRequest): Promise<Model.MessageResponse> => {
+export const updateProfile = async (
+  data: Model.UpdateProfileRequest
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.put("/user/profile", data);
   return response.data;
 };
@@ -474,10 +572,13 @@ export const submitFeedback = async (data: {
   Comment: string;
 }): Promise<Model.MessageResponse> => {
   if (data.TargetType === "Doctor" && data.AppointmentID) {
-    const response = await apiClient.post(`/appointments/${data.AppointmentID}/feedback`, {
-      Rating: data.Rating,
-      Comment: data.Comment,
-    });
+    const response = await apiClient.post(
+      `/appointments/${data.AppointmentID}/feedback`,
+      {
+        Rating: data.Rating,
+        Comment: data.Comment,
+      }
+    );
     return response.data;
   } else if (data.TargetType === "System") {
     const response = await apiClient.post("/system-feedback", {
@@ -495,7 +596,9 @@ export const adminGetUserDetail = async (id: number): Promise<Model.User> => {
   return response.data;
 };
 
-export const adminCreatePatient = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const adminCreatePatient = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/patients", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -506,19 +609,30 @@ export const adminDeleteUser = async (id: number): Promise<void> => {
   await apiClient.delete(`/admin/patients/${id}`);
 };
 
-export const adminCreateUser = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const adminCreateUser = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/users", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
 
-export const adminCancelAppointment = async (id: number, reason: string): Promise<Model.MessageResponse> => {
-  const response = await apiClient.patch(`/staff/appointments/${id}/cancel`, { reason });
+export const adminCancelAppointment = async (
+  id: number,
+  reason: string
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.patch(`/staff/appointments/${id}/cancel`, {
+    reason,
+  });
   return response.data;
 };
 
-export const adminCreateSlot = async (doctorId: number, start: string, end: string): Promise<Model.AvailabilitySlot> => {
+export const adminCreateSlot = async (
+  doctorId: number,
+  start: string,
+  end: string
+): Promise<Model.AvailabilitySlot> => {
   const formData = new FormData();
   formData.append("DoctorID", doctorId.toString());
   formData.append("StartTime", start);
@@ -534,7 +648,10 @@ export const adminDeleteSlot = async (slotId: number): Promise<void> => {
   await apiClient.delete(`/staff/availability/${slotId}`);
 };
 
-export const adminUpdatePatient = async (id: number, data: Model.AdminUpdatePatientRequest): Promise<Model.MessageResponse> => {
+export const adminUpdatePatient = async (
+  id: number,
+  data: Model.AdminUpdatePatientRequest
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.put(`/admin/patients/${id}`, data);
   return response.data;
 };
@@ -544,27 +661,37 @@ export const getNotificationLogs = async (): Promise<Model.Notification[]> => {
   return response.data;
 };
 
-export const sendNotification = async (data: Model.SendNotificationRequest): Promise<Model.MessageResponse> => {
+export const sendNotification = async (
+  data: Model.SendNotificationRequest
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/notifications/send", data);
   return response.data;
 };
 
-export const deleteNotification = async (id: number | string): Promise<Model.MessageResponse> => {
+export const deleteNotification = async (
+  id: number | string
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.delete(`/admin/notifications/${id}`);
   return response.data;
 };
 
-export const deleteAllNotifications = async (): Promise<Model.MessageResponse> => {
-  const response = await apiClient.delete(`/admin/notifications/delete-all`);
-  return response.data;
-};
+export const deleteAllNotifications =
+  async (): Promise<Model.MessageResponse> => {
+    const response = await apiClient.delete(`/admin/notifications/delete-all`);
+    return response.data;
+  };
 
 export const triggerReminders = async (): Promise<Model.MessageResponse> => {
-  const response = await apiClient.post(`/admin/notifications/trigger-reminders`, {});
+  const response = await apiClient.post(
+    `/admin/notifications/trigger-reminders`,
+    {}
+  );
   return response.data;
 };
 
-export const staffCreateAppointment = async (formData: FormData): Promise<Model.MessageResponse> => {
+export const staffCreateAppointment = async (
+  formData: FormData
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/staff/appointments", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -594,7 +721,10 @@ export const getFamilyMembers = async (): Promise<Model.FamilyMember[]> => {
   return response.data;
 };
 
-export const addFamilyMember = async (relativeUserId: number, relationType: string): Promise<Model.MessageResponse> => {
+export const addFamilyMember = async (
+  relativeUserId: number,
+  relationType: string
+): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/user/family-members", {
     RelativeUserID: relativeUserId,
     RelationType: relationType,
@@ -602,12 +732,18 @@ export const addFamilyMember = async (relativeUserId: number, relationType: stri
   return response.data;
 };
 
-export const removeFamilyMember = async (relativeUserId: number): Promise<Model.MessageResponse> => {
-  const response = await apiClient.delete(`/user/family-members/${relativeUserId}`);
+export const removeFamilyMember = async (
+  relativeUserId: number
+): Promise<Model.MessageResponse> => {
+  const response = await apiClient.delete(
+    `/user/family-members/${relativeUserId}`
+  );
   return response.data;
 };
 
-export const searchUserPublic = async (query: string): Promise<Model.User[]> => {
+export const searchUserPublic = async (
+  query: string
+): Promise<Model.User[]> => {
   const response = await apiClient.get(`/users/search-public?query=${query}`);
   return response.data;
 };

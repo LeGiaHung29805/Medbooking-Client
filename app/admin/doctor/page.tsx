@@ -439,7 +439,6 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
 
 //MAIN COMPONENT
 export default function DoctorManagementPage() {
-
   const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
   const [specialties, setSpecialties] = useState<Model.Specialty[]>([]);
   const [loading, setLoading] = useState(true);
@@ -652,10 +651,11 @@ export default function DoctorManagementPage() {
                     </td>
                     <td className="py-3 px-4 text-sm">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${status === "HoatDong"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
-                          }`}
+                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                          status === "HoatDong"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}
                       >
                         {status === "HoatDong" ? "Active" : "Inactive"}
                       </span>
