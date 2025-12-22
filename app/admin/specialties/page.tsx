@@ -8,6 +8,8 @@ import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
+const SPECIALTIES_PER_PAGE = 10;
+
 interface SpecialtyFormProps {
   specialty: Model.Specialty | null;
   onClose: () => void;
@@ -127,7 +129,8 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
               <div className="w-16 h-16 relative rounded-full border bg-gray-50 flex-shrink-0 overflow-hidden">
                 <Image
                   src={
-                    previewUrl || "https://placehold.co/64x64/E0E0E0/000?text=CK"
+                    previewUrl ||
+                    "https://placehold.co/64x64/E0E0E0/000?text=CK"
                   }
                   alt="Preview"
                   fill
@@ -200,6 +203,7 @@ export default function SpecialtyManagementPage() {
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSpecialty, setSelectedSpecialty] =
     useState<Model.Specialty | null>(null);
@@ -220,6 +224,10 @@ export default function SpecialtyManagementPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   const filteredSpecialties = useMemo(() => {
     if (!searchQuery) return specialties;
     const query = searchQuery.toLowerCase();
@@ -229,6 +237,16 @@ export default function SpecialtyManagementPage() {
         (s.Description || "").toLowerCase().includes(query)
     );
   }, [specialties, searchQuery]);
+
+  // Tính toán dữ liệu cho trang hiện tại
+  const totalPages = Math.ceil(
+    filteredSpecialties.length / SPECIALTIES_PER_PAGE
+  );
+
+  const currentSpecialties = useMemo(() => {
+    const start = (currentPage - 1) * SPECIALTIES_PER_PAGE;
+    return filteredSpecialties.slice(start, start + SPECIALTIES_PER_PAGE);
+  }, [filteredSpecialties, currentPage]);
 
   const handleSuccess = () => {
     setIsModalOpen(false);
@@ -277,8 +295,7 @@ export default function SpecialtyManagementPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            </span>
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
           </div>
 
           {/* Nút Thêm mới */}
@@ -330,7 +347,7 @@ export default function SpecialtyManagementPage() {
                   </td>
                 </tr>
               ) : (
-                filteredSpecialties.map((specialty) => (
+                currentSpecialties.map((specialty) => (
                   <tr
                     key={specialty.SpecialtyID}
                     className="hover:bg-blue-50 transition duration-150"
@@ -377,7 +394,27 @@ export default function SpecialtyManagementPage() {
           </table>
         </div>
       </div>
-
+      {!loading && filteredSpecialties.length > 0 && (
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+            className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50 hover:bg-gray-100 transition"
+          >
+            Trước
+          </button>
+          <span className="px-3 py-1 font-bold text-gray-600 bg-white border rounded-lg flex items-center">
+            Trang {currentPage} / {totalPages || 1}
+          </span>
+          <button
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+            className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50 hover:bg-gray-100 transition"
+          >
+            Sau
+          </button>
+        </div>
+      )}
       {isModalOpen && (
         <SpecialtyFormModal
           specialty={selectedSpecialty}
