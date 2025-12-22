@@ -133,41 +133,41 @@ export default function DoctorDashboardPage() {
     } catch (err: any) {
       console.error("[DEBUG] Lỗi Exception:", err);
       setError("Không thể kết nối đến server");
-      useFallbackData();
+      // useFallbackData();
     } finally {
       setLoading(false);
     }
   };
 
   // Fallback data
-  const useFallbackData = () => {
-    console.log("[DEBUG] Đang dùng dữ liệu giả (Fallback Data)");
-    const mockPatients: Patient[] = [
-      {
-        id: 1,
-        name: "Trần Thị Lan",
-        age: 34,
-        gender: 'female',
-        phone: "0901234567",
-        symptoms: "Ho, sốt 3 ngày, đau họng",
-        appointmentTime: "09:00",
-        status: "checked_in",
-        checkInTime: "08:50",
-        priority: 'high',
-        allergies: ["Penicillin"],
-        medicalHistory: ["Tiểu đường"],
-      },
-    ];
-    setWaitingPatients(mockPatients);
-    setAppointments(mockPatients.map(p => ({ id: p.id, patientName: p.name, status: p.status || "waiting" } as Appointment)));
-    setDashboardStats({
-      totalAppointments: 10,
-      completedAppointments: 5,
-      waitingAppointments: 3,
-      inProgressAppointments: 1,
-      todayAppointments: 7
-    });
-  };
+  // const useFallbackData = () => {
+  //   console.log("[DEBUG] Đang dùng dữ liệu giả (Fallback Data)");
+  //   const mockPatients: Patient[] = [
+  //     {
+  //       id: 1,
+  //       name: "Trần Thị Lan",
+  //       age: 34,
+  //       gender: 'female',
+  //       phone: "0901234567",
+  //       symptoms: "Ho, sốt 3 ngày, đau họng",
+  //       appointmentTime: "09:00",
+  //       status: "checked_in",
+  //       checkInTime: "08:50",
+  //       priority: 'high',
+  //       allergies: ["Penicillin"],
+  //       medicalHistory: ["Tiểu đường"],
+  //     },
+  //   ];
+  //   setWaitingPatients(mockPatients);
+  //   setAppointments(mockPatients.map(p => ({ id: p.id, patientName: p.name, status: p.status || "waiting" } as Appointment)));
+  //   setDashboardStats({
+  //     totalAppointments: 10,
+  //     completedAppointments: 5,
+  //     waitingAppointments: 3,
+  //     inProgressAppointments: 1,
+  //     todayAppointments: 7
+  //   });
+  // };
 
   // ==================== LOAD BAN ĐẦU ====================
   useEffect(() => {
@@ -206,7 +206,6 @@ export default function DoctorDashboardPage() {
       setAppointments(prev => prev.map(a =>
         a.id === appointment.id ? { ...a, status: 'in_progress' } : a
       ));
-
       // 4. Mở Form khám
       const patientWithAppointment = { ...patient, appointmentId: appointment.id };
       setCurrentExamPatient(patientWithAppointment);
@@ -219,8 +218,9 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  const handleCompleteExam = async (formData: MedicalExamFormData) => {
-    if (!currentExamPatient || !currentExamPatient.appointmentId) {
+  const handleCompleteExam = async (formDataFromChild: FormData) => {
+    // 1. Kiểm tra ID cuộc hẹn (Lúc này lấy từ currentExamPatient đang chọn)
+    if (!currentExamPatient || (!currentExamPatient.appointmentId && !currentExamPatient.id)) {
       alert("Lỗi: Không tìm thấy ID cuộc hẹn để hoàn tất!");
       return;
     }
@@ -228,52 +228,41 @@ export default function DoctorDashboardPage() {
     try {
       setLoading(true);
 
-      const payload = {
-        PatientID: currentExamPatient.id,
-        AppointmentID: currentExamPatient.appointmentId,
-        Diagnosis: formData.diagnosis,
-        Treatment: formData.clinicalNotes || "",
-        prescriptions: formData.prescriptions.filter(p => p.medicine?.trim()),
-        tests: formData.tests.filter(t => t?.trim()),
-        vital_signs: {
-          blood_pressure: formData.vitalSigns.bloodPressure || "",
-          heart_rate: Number(formData.vitalSigns.heartRate) || 0,
-          temperature: Number(formData.vitalSigns.temperature) || 36.5,
-          respiratory_rate: Number(formData.vitalSigns.respiratoryRate) || 16,
-          sp_o2: Number(formData.vitalSigns.spO2) || 98,
-          weight: Number(formData.vitalSigns.weight) || 0,
-          height: Number(formData.vitalSigns.height) || 0,
-        },
-        notes: formData.clinicalNotes,
-      };
 
-      const recordResponse = await doctorService.createMedicalRecord(payload);
+      // Gọi service tạo bệnh án (Gửi trực tiếp FormData)
+      const recordResponse = await doctorService.createMedicalRecord(formDataFromChild);
 
       if (!recordResponse.success) {
+        // Nếu Server trả về lỗi 422, nó sẽ hiển thị ở đây
         alert("Lưu bệnh án thất bại: " + recordResponse.message);
         setLoading(false);
         return;
       }
 
-      //đổi trạng thái cuộc hẹn sang 'Completed'
-      const completeSuccess = await doctorService.completeExam(currentExamPatient.appointmentId);
+      // Đổi trạng thái cuộc hẹn sang 'Completed'
+      // Sử dụng ID cuộc hẹn (trong interface của bạn là appointmentId hoặc id)
+      const appointmentId = currentExamPatient.appointmentId || currentExamPatient.id;
+      const completeSuccess = await doctorService.completeExam(appointmentId);
 
       if (completeSuccess) {
         alert("Đã lưu bệnh án và kết thúc ca khám!");
 
-        // Đóng form
+        // Dọn dẹp giao diện
         setShowExamForm(false);
         setCurrentExamPatient(null);
 
-        //Tải lại dữ liệu Dashboard để cập nhật số liệu
+        // Tải lại dữ liệu Dashboard để cập nhật số liệu mới nhất
         await loadDashboardData();
+
+        // hàm tải lại danh sách hàng đợi
+        // await fetchQueue(); 
       } else {
-        alert("Đã lưu bệnh án nhưng LỖI cập nhật trạng thái 'Đã khám xong'. Vui lòng kiểm tra lại.");
+        alert("Đã lưu bệnh án nhưng LỖI cập nhật trạng thái 'Đã khám xong'.");
       }
 
     } catch (err: any) {
-      console.error(err);
-      alert("Lỗi hệ thống: " + (err.message));
+      console.error("❌ Lỗi hệ thống tại file Cha:", err);
+      alert("Lỗi hệ thống: " + (err.message || "Không xác định"));
     } finally {
       setLoading(false);
     }

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react"
-import { 
-  Calendar, 
-  Download, 
-  Printer, 
-  Filter, 
-  RefreshCw, 
-  Eye, 
-  ChevronLeft, 
+import {
+  Calendar,
+  Download,
+  Printer,
+  Filter,
+  RefreshCw,
+  Eye,
+  ChevronLeft,
   ChevronRight,
   Clock,
   User,
@@ -19,178 +19,13 @@ import {
   Search,
   Users
 } from "lucide-react"
-import { 
-  format, 
-  startOfWeek, 
-  endOfWeek, 
-  addWeeks, 
-  subWeeks, 
-  startOfDay, 
-  endOfDay,
-  addDays,
-  isToday,
-  isSameDay,
-  parseISO,
-  isWeekend,
-  getDay,
-  getWeek,
-  getMonth,
-  getYear
+import {
+  format, startOfWeek, endOfWeek, addWeeks, subWeeks, startOfDay, endOfDay, addDays, isToday, isSameDay, parseISO, isWeekend, getDay, getWeek, getMonth, getYear
 } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import type { Appointment, Patient } from "@/lib/model"
+import { doctorService } from "@/app/services/doctorService";
 
-// ==================== MOCK DATA GENERATORS ====================
-const generateMockPatients = (): Patient[] => {
-  const patients: Patient[] = [
-    {
-      id: 1,
-      name: "Nguyễn Văn An",
-      age: 35,
-      gender: "male",
-      phone: "0912345678",
-      symptoms: "Sốt cao, đau đầu, ho khan 3 ngày",
-      appointmentTime: "2025-12-10T08:30:00",
-      status: "checked_in",
-      checkInTime: "08:15",
-      priority: "high",
-      allergies: ["Penicillin", "Aspirin"],
-      medicalHistory: ["Tiểu đường type 2", "Cao huyết áp"]
-    },
-    {
-      id: 2,
-      name: "Trần Thị Bình",
-      age: 42,
-      gender: "female",
-      phone: "0923456789",
-      symptoms: "Đau bụng, buồn nôn, chóng mặt",
-      appointmentTime: "2025-12-10T09:15:00",
-      status: "waiting",
-      checkInTime: "09:00",
-      priority: "medium",
-      allergies: ["Cephalosporin"],
-      medicalHistory: ["Viêm dạ dày mãn tính"]
-    },
-    {
-      id: 3,
-      name: "Lê Văn Cường",
-      age: 28,
-      gender: "male",
-      phone: "0934567890",
-      symptoms: "Đau ngực trái, khó thở khi vận động",
-      appointmentTime: "2025-12-10T10:00:00",
-      status: "checked_in",
-      checkInTime: "09:45",
-      priority: "emergency",
-      allergies: ["Không có"],
-      medicalHistory: ["Viêm phế quản cấp"]
-    },
-    {
-      id: 4,
-      name: "Phạm Thị Dung",
-      age: 55,
-      gender: "female",
-      phone: "0945678901",
-      symptoms: "Đau khớp gối, sưng đỏ 1 tuần",
-      appointmentTime: "2025-12-11T08:30:00",
-      status: "waiting",
-      checkInTime: "",
-      priority: "low",
-      allergies: ["Ibuprofen"],
-      medicalHistory: ["Thoái hóa khớp", "Loãng xương"]
-    },
-    {
-      id: 5,
-      name: "Hoàng Văn Đức",
-      age: 50,
-      gender: "male",
-      phone: "0956789012",
-      symptoms: "Mệt mỏi, chán ăn, vàng da nhẹ",
-      appointmentTime: "2025-12-11T09:30:00",
-      status: "waiting",
-      checkInTime: "",
-      priority: "medium",
-      allergies: ["Không có"],
-      medicalHistory: ["Viêm gan B", "Rối loạn mỡ máu"]
-    },
-    {
-      id: 6,
-      name: "Vũ Thị Hương",
-      age: 33,
-      gender: "female",
-      phone: "0967890123",
-      symptoms: "Đau họng, nuốt vướng, sốt nhẹ",
-      appointmentTime: "2025-12-12T10:15:00",
-      status: "waiting",
-      checkInTime: "",
-      priority: "low",
-      allergies: ["Amoxicillin"],
-      medicalHistory: ["Viêm họng mãn tính"]
-    },
-    {
-      id: 7,
-      name: "Bùi Thị Kim",
-      age: 25,
-      gender: "female",
-      phone: "0989012345",
-      symptoms: "Đau bụng kinh dữ dội",
-      appointmentTime: "2025-12-13T08:45:00",
-      status: "cancelled",
-      checkInTime: "",
-      priority: "medium",
-      allergies: ["Không có"],
-      medicalHistory: ["Rối loạn kinh nguyệt"]
-    },
-    {
-      id: 8,
-      name: "Nguyễn Quốc Bảo",
-      age: 45,
-      gender: "male",
-      phone: "0990123456",
-      symptoms: "Đau lưng, tê chân trái",
-      appointmentTime: "2025-12-13T14:30:00",
-      status: "waiting",
-      checkInTime: "",
-      priority: "low",
-      allergies: ["Không có"],
-      medicalHistory: ["Thoát vị đĩa đệm"]
-    },
-    {
-      id: 9,
-      name: "Trần Văn Đạt",
-      age: 38,
-      gender: "male",
-      phone: "0901234567",
-      symptoms: "Mất ngủ, căng thẳng kéo dài",
-      appointmentTime: "2025-12-14T15:00:00",
-      status: "waiting",
-      checkInTime: "",
-      priority: "medium",
-      allergies: ["Không có"],
-      medicalHistory: ["Rối loạn lo âu"]
-    }
-  ];
-  
-  return patients;
-};
-
-const generateMockAppointments = (patients: Patient[]): Appointment[] => {
-  return patients.map(patient => ({
-    id: patient.id,
-    patientId: patient.id,
-    patientName: patient.name,
-    patientAge: patient.age,
-    patientPhone: patient.phone,
-    patientGender: patient.gender,
-    symptoms: patient.symptoms,
-    appointmentTime: patient.appointmentTime,
-    status: patient.status,
-    checkInTime: patient.checkInTime,
-    appointmentId: patient.id,
-    priority: patient.priority,
-    serviceName: "Khám tổng quát"
-  }));
-};
 
 // ==================== COMPONENTS ====================
 function LoadingState({ message }: { message: string }) {
@@ -247,34 +82,34 @@ function AppointmentDetailModal({
   const getStatusInfo = (status: string) => {
     switch (status) {
       case "checked_in":
-        return { 
-          cls: "bg-green-100 text-green-800 border-green-200", 
+        return {
+          cls: "bg-green-100 text-green-800 border-green-200",
           icon: <Clock className="w-4 h-4" />,
-          text: "Đã check-in" 
+          text: "Đã check-in"
         }
       case "in_progress":
-        return { 
-          cls: "bg-blue-100 text-blue-800 border-blue-200", 
+        return {
+          cls: "bg-blue-100 text-blue-800 border-blue-200",
           icon: <Loader2 className="w-4 h-4 animate-spin" />,
-          text: "Đang khám" 
+          text: "Đang khám"
         }
       case "completed":
-        return { 
-          cls: "bg-gray-100 text-gray-800 border-gray-200", 
+        return {
+          cls: "bg-gray-100 text-gray-800 border-gray-200",
           icon: <CheckCircle className="w-4 h-4" />,
-          text: "Hoàn thành" 
+          text: "Hoàn thành"
         }
       case "cancelled":
-        return { 
-          cls: "bg-red-100 text-red-800 border-red-200", 
+        return {
+          cls: "bg-red-100 text-red-800 border-red-200",
           icon: <XCircle className="w-4 h-4" />,
-          text: "Đã hủy" 
+          text: "Đã hủy"
         }
       default:
-        return { 
-          cls: "bg-yellow-100 text-yellow-800 border-yellow-200", 
+        return {
+          cls: "bg-yellow-100 text-yellow-800 border-yellow-200",
           icon: <AlertCircle className="w-4 h-4" />,
-          text: "Chờ" 
+          text: "Chờ"
         }
     }
   }
@@ -302,8 +137,8 @@ function AppointmentDetailModal({
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Chi tiết lịch hẹn</h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             ✕
@@ -314,21 +149,19 @@ function AppointmentDetailModal({
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab("info")}
-            className={`flex-1 py-3 text-center font-medium transition-colors ${
-              activeTab === "info" 
-                ? "text-blue-600 border-b-2 border-blue-600" 
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex-1 py-3 text-center font-medium transition-colors ${activeTab === "info"
+              ? "text-blue-600 border-b-2 border-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             Thông tin
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 text-center font-medium transition-colors ${
-              activeTab === "history" 
-                ? "text-blue-600 border-b-2 border-blue-600" 
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex-1 py-3 text-center font-medium transition-colors ${activeTab === "history"
+              ? "text-blue-600 border-b-2 border-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             Lịch sử khám
           </button>
@@ -456,9 +289,9 @@ export default function SchedulePage() {
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week")
   const [filterStatus, setFilterStatus] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
-  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([])
-  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([])
+  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -466,59 +299,77 @@ export default function SchedulePage() {
 
   // ==================== INITIALIZATION ====================
   useEffect(() => {
-    const mockPatients = generateMockPatients()
-    setPatients(mockPatients)
-    
-    const mockAppointments = generateMockAppointments(mockPatients)
-    setAppointments(mockAppointments)
-    setFilteredAppointments(mockAppointments)
-  }, [])
+    const fetchAppointments = async () => {
+      setLoading(true);
+      try {
+        // Gọi API lấy lịch hẹn từ Backend
+        const res = await doctorService.getSchedule();
+
+        if (res.success) {
+          setAppointments(res.data);
+          setFilteredAppointments(res.data);
+        } else {
+          console.error("Không thể lấy dữ liệu từ API");
+        }
+      } catch (error) {
+        console.error("Lỗi kết nối API:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
 
   // ==================== FILTERING ====================
   useEffect(() => {
-    let filtered = [...appointments]
-    
-    // Filter by status
+    if (!Array.isArray(appointments)) {
+      setFilteredAppointments([]);
+      return;
+    }
+
+    let filtered = [...appointments];
+
+    //Lọc theo trạng thái 
     if (filterStatus !== "all") {
-      filtered = filtered.filter(appt => appt.status === filterStatus)
+      filtered = filtered.filter(appt => appt.Status?.toLowerCase() === filterStatus.toLowerCase());
     }
-    
-    // Filter by search term
+
+    // Lọc theo tìm kiếm
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(appt => 
-        appt.patientName.toLowerCase().includes(term) ||
-        appt.patientPhone.includes(term) ||
-        appt.symptoms.toLowerCase().includes(term)
-      )
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(appt =>
+        appt.patient?.FullName?.toLowerCase().includes(term) ||
+        appt.patient?.PhoneNumber?.includes(term) ||
+        appt.InitialSymptoms?.toLowerCase().includes(term)
+      );
     }
-    
-    // Filter by date based on view mode
+
+    // Lọc theo ngày 
     filtered = filtered.filter(appt => {
-      const apptDate = parseISO(appt.appointmentTime)
-      
+      if (!appt.StartTime) return false;
+      const apptDate = new Date(appt.StartTime.replace(' ', 'T'));
+
       if (viewMode === "day") {
-        return isSameDay(apptDate, currentWeek)
+        return isSameDay(apptDate, currentWeek);
       } else if (viewMode === "week") {
-        const weekStart = startOfWeek(currentWeek, { locale: vi })
-        const weekEnd = endOfWeek(currentWeek, { locale: vi })
-        return apptDate >= weekStart && apptDate <= weekEnd
+        const weekStart = startOfWeek(currentWeek, { locale: vi });
+        const weekEnd = endOfWeek(currentWeek, { locale: vi });
+        return apptDate >= weekStart && apptDate <= weekEnd;
       } else {
-        // month view
-        return (
-          getMonth(apptDate) === getMonth(currentWeek) &&
-          getYear(apptDate) === getYear(currentWeek)
-        )
+        return getMonth(apptDate) === getMonth(currentWeek) && getYear(apptDate) === getYear(currentWeek);
       }
-    })
-    
-    // Sort by appointment time
-    filtered.sort((a, b) => 
-      parseISO(a.appointmentTime).getTime() - parseISO(b.appointmentTime).getTime()
-    )
-    
-    setFilteredAppointments(filtered)
-  }, [appointments, filterStatus, searchTerm, viewMode, currentWeek])
+    });
+
+    // Sắp xếp
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.StartTime?.replace(' ', 'T')).getTime();
+      const dateB = new Date(b.StartTime?.replace(' ', 'T')).getTime();
+      return dateA - dateB;
+    });
+
+    setFilteredAppointments(filtered);
+  }, [appointments, filterStatus, searchTerm, viewMode, currentWeek]);
 
   // ==================== EVENT HANDLERS ====================
   const handlePreviousWeek = () => {
@@ -566,33 +417,36 @@ export default function SchedulePage() {
     setShowConfirmation(true)
   }
 
-  const confirmAction = () => {
-    setLoading(true)
-    
-    setTimeout(() => {
+  const confirmAction = async () => {
+    setLoading(true);
+
+    try {
       switch (actionType) {
         case "refresh":
-          // Simulate refresh
-          const refreshedPatients = generateMockPatients()
-          const refreshedAppointments = generateMockAppointments(refreshedPatients)
-          setPatients(refreshedPatients)
-          setAppointments(refreshedAppointments)
-          break
-          
+          // Gọi lại API thay vì dùng generateMockPatients()
+          const res = await doctorService.getSchedule();
+          if (res.success) {
+            setAppointments(res.data);
+            setFilteredAppointments(res.data);
+          }
+          break;
+
         case "print":
-          window.print()
-          break
-          
+          window.print();
+          break;
+
         case "export":
-          exportToJSON()
-          break
+          exportToJSON();
+          break;
       }
-      
-      setLoading(false)
-      setShowConfirmation(false)
-      setActionType("")
-    }, 1000)
-  }
+    } catch (error) {
+      console.error("Lỗi khi thực hiện thao tác:", error);
+    } finally {
+      setLoading(false);
+      setShowConfirmation(false);
+      setActionType("");
+    }
+  };
 
   const handleViewAppointmentDetail = (id: number) => {
     const appointment = appointments.find(a => a.id === id)
@@ -602,50 +456,61 @@ export default function SchedulePage() {
     }
   }
 
-  const handleStartExam = (id: number) => {
-    setAppointments(prev => 
-      prev.map(appt => 
-        appt.id === id 
-          ? { ...appt, status: "in_progress" as const }
-          : appt
-      )
-    )
-  }
+  const handleStartExam = async (id: number) => {
+    try {
+      // Gọi API cập nhật trạng thái lên server
+      const success = await doctorService.startExam(id);
+
+      if (success) {
+        setAppointments(prev =>
+          prev.map(appt =>
+            appt.id === id
+              ? { ...appt, status: "in_progress" as const }
+              : appt
+          )
+        );
+      } else {
+        alert("Không thể cập nhật trạng thái khám!");
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật:", error);
+    }
+  };
 
   // ==================== HELPER FUNCTIONS ====================
   const getStatusInfo = (status: string) => {
     switch (status) {
       case "checked_in":
-        return { 
-          cls: "bg-green-100 text-green-800 border-green-200", 
+        return {
+          cls: "bg-green-100 text-green-800 border-green-200",
           icon: <Clock className="w-4 h-4" />,
           text: "Đã check-in",
           bg: "bg-green-50"
         }
       case "in_progress":
-        return { 
-          cls: "bg-blue-100 text-blue-800 border-blue-200", 
+        return {
+          cls: "bg-blue-100 text-blue-800 border-blue-200",
           icon: <Loader2 className="w-4 h-4 animate-spin" />,
           text: "Đang khám",
           bg: "bg-blue-50"
         }
       case "completed":
-        return { 
-          cls: "bg-gray-100 text-gray-800 border-gray-200", 
+        return {
+          cls: "bg-gray-100 text-gray-800 border-gray-200",
           icon: <CheckCircle className="w-4 h-4" />,
           text: "Hoàn thành",
           bg: "bg-gray-50"
         }
       case "cancelled":
-        return { 
-          cls: "bg-red-100 text-red-800 border-red-200", 
+        return {
+          cls: "bg-red-100 text-red-800 border-red-200",
           icon: <XCircle className="w-4 h-4" />,
           text: "Đã hủy",
           bg: "bg-red-50"
         }
       default:
-        return { 
-          cls: "bg-yellow-100 text-yellow-800 border-yellow-200", 
+        return {
+          cls: "bg-yellow-100 text-yellow-800 border-yellow-200",
           icon: <AlertCircle className="w-4 h-4" />,
           text: "Chờ",
           bg: "bg-yellow-50"
@@ -685,7 +550,7 @@ export default function SchedulePage() {
         service: appt.serviceName
       }))
     }
-    
+
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -715,12 +580,12 @@ export default function SchedulePage() {
   }
 
   const stats = {
-    total: filteredAppointments.length,
-    checkedIn: filteredAppointments.filter(a => a.status === "checked_in").length,
-    inProgress: filteredAppointments.filter(a => a.status === "in_progress").length,
-    waiting: filteredAppointments.filter(a => a.status === "waiting").length,
-    completed: filteredAppointments.filter(a => a.status === "completed").length,
-    cancelled: filteredAppointments.filter(a => a.status === "cancelled").length
+    total: filteredAppointments?.length || 0,
+    checkedIn: filteredAppointments?.filter(a => a.status === "checked_in").length || 0,
+    inProgress: filteredAppointments?.filter(a => a.status === "in_progress").length || 0,
+    waiting: filteredAppointments?.filter(a => a.status === "waiting").length || 0,
+    completed: filteredAppointments?.filter(a => a.status === "completed").length || 0,
+    cancelled: filteredAppointments?.filter(a => a.status === "cancelled").length || 0
   }
 
   return (
@@ -743,7 +608,7 @@ export default function SchedulePage() {
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Users className="w-4 h-4" />
-                <span>{filteredAppointments.length} lịch hẹn</span>
+                <span>{filteredAppointments?.length} lịch hẹn</span>
               </div>
             </div>
           </div>
@@ -789,11 +654,10 @@ export default function SchedulePage() {
                   setViewMode(mode as any)
                   if (mode === "day") setCurrentWeek(new Date())
                 }}
-                className={`px-4 py-2 transition-colors ${
-                  viewMode === mode 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`px-4 py-2 transition-colors ${viewMode === mode
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
               >
                 {label}
               </button>
@@ -869,27 +733,27 @@ export default function SchedulePage() {
 
       {/* Schedule Content */}
       <div className="bg-white rounded-2xl shadow-sm border p-6">
-        {filteredAppointments.length === 0 ? (
+        {filteredAppointments?.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
             <p className="text-lg font-medium text-gray-600">Không có lịch hẹn nào</p>
             <p className="text-sm text-gray-500 mt-1">
-              {searchTerm ? "Thử tìm kiếm với từ khóa khác" : 
-               viewMode === "day" ? "Hôm nay" : viewMode === "week" ? "Tuần này" : "Tháng này"} chưa có lịch hẹn
+              {searchTerm ? "Thử tìm kiếm với từ khóa khác" :
+                viewMode === "day" ? "Hôm nay" : viewMode === "week" ? "Tuần này" : "Tháng này"} chưa có lịch hẹn
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredAppointments.map((appointment) => {
+            {filteredAppointments?.map((appointment) => {
               const statusInfo = getStatusInfo(appointment.status)
               const priorityInfo = getPriorityInfo(appointment.priority)
               const apptDate = parseISO(appointment.appointmentTime)
-              
+
               return (
                 <div
                   key={`appointment-${appointment.id}`}
                   className="flex items-center justify-between p-4 rounded-lg hover:shadow-md transition-all cursor-pointer border"
-                  style={{ 
+                  style={{
                     background: statusInfo.bg,
                     borderColor: statusInfo.cls.split(' ')[1].replace('border-', '')
                   }}
@@ -905,12 +769,12 @@ export default function SchedulePage() {
                         {format(apptDate, 'dd/MM')}
                       </div>
                     </div>
-                    
+
                     {/* Patient Avatar */}
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg">
                       {appointment.patientName.charAt(0)}
                     </div>
-                    
+
                     {/* Patient Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
@@ -926,24 +790,24 @@ export default function SchedulePage() {
                           </span>
                         )}
                       </div>
-                      
+
                       <p className="text-gray-600 text-sm mb-2">
                         📞 {appointment.patientPhone}
                       </p>
-                      
+
                       <p className="text-gray-700 text-sm">
                         <span className="font-medium">Triệu chứng:</span> {appointment.symptoms}
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Status & Actions */}
                   <div className="flex flex-col items-end gap-3">
                     <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${statusInfo.cls}`}>
                       {statusInfo.icon}
                       <span className="font-medium">{statusInfo.text}</span>
                     </div>
-                    
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -991,13 +855,13 @@ export default function SchedulePage() {
               {actionType === "print" && "In lịch làm việc"}
               {actionType === "export" && "Xuất file dữ liệu"}
             </h3>
-            
+
             <p className="text-gray-600 mb-6">
               {actionType === "refresh" && "Bạn có chắc muốn làm mới dữ liệu? Dữ liệu hiện tại sẽ được cập nhật."}
               {actionType === "print" && "Bạn có chắc muốn in lịch làm việc hiện tại?"}
-              {actionType === "export" && `Bạn có chắc muốn xuất ${filteredAppointments.length} lịch hẹn ra file JSON?`}
+              {actionType === "export" && `Bạn có chắc muốn xuất ${filteredAppointments?.length} lịch hẹn ra file JSON?`}
             </p>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => {
