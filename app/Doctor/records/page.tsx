@@ -4,22 +4,22 @@ import { useState, useEffect, useMemo } from "react";
 import MedicalRecordsTab from "../components/MedicalRecordsTab";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
-import { 
-  Search, 
-  Download, 
-  Printer, 
-  FileText, 
-  BarChart3, 
+import {
+  Search,
+  Download,
+  Printer,
+  FileText,
+  BarChart3,
   Plus,
   User,
   Stethoscope
 } from "lucide-react";
 
-import type { 
-  MedicalRecord, 
+import type {
+  MedicalRecord,
   Prescription
-} from  "@/lib/model";
-
+} from "@/lib/model";
+import { doctorService } from "@/app/services/doctorService";
 export default function RecordsPage() {
   // ==================== STATES ====================
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function RecordsPage() {
   const [selectedPatient, setSelectedPatient] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "name" | "status">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  
+
   const [customDateRange, setCustomDateRange] = useState({
     start: new Date(new Date().setMonth(new Date().getMonth() - 1)),
     end: new Date()
@@ -48,10 +48,10 @@ export default function RecordsPage() {
       "Ngô Văn Bình", "Phan Thị Linh", "Hồ Văn Cường", "Đặng Thị Dung",
       "Nguyễn Quốc Bảo", "Trần Văn Đạt", "Lê Thị Kim"
     ];
-    
+
     const diagnoses = [
       "Viêm họng cấp do virus",
-      "Tăng huyết áp độ 2", 
+      "Tăng huyết áp độ 2",
       "Tiểu đường type 2",
       "Viêm phế quản cấp",
       "Rối loạn tiêu hóa",
@@ -72,7 +72,7 @@ export default function RecordsPage() {
       "Đau dạ dày",
       "Viêm ruột thừa cấp"
     ];
-    
+
     const treatments = [
       "Kháng sinh 7 ngày, nghỉ ngơi, uống nhiều nước",
       "Thuốc hạ áp, theo dõi huyết áp hàng ngày, ăn kiêng muối",
@@ -91,7 +91,7 @@ export default function RecordsPage() {
       "Colchicine, thuốc chống viêm, chế độ ăn kiêng purin",
       "Thuốc kháng virus, theo dõi chức năng gan định kỳ"
     ];
-    
+
     const medicines = [
       { name: "Amoxicillin", dosage: "500mg", frequency: "3 lần/ngày" },
       { name: "Paracetamol", dosage: "500mg", frequency: "Khi sốt >38.5°C" },
@@ -102,18 +102,18 @@ export default function RecordsPage() {
       { name: "Aspirin", dosage: "81mg", frequency: "1 lần/ngày" },
       { name: "Cetirizine", dosage: "10mg", frequency: "1 lần/ngày" }
     ];
-    
+
     // Generate records for each patient
     patientNames.forEach((patientName, patientIndex) => {
       const recordCount = Math.floor(Math.random() * 3) + 1;
-      
+
       for (let i = 0; i < recordCount; i++) {
         const recordDate = new Date();
         recordDate.setDate(recordDate.getDate() - Math.floor(Math.random() * 90));
-        
+
         const diagnosisIndex = (patientIndex + i) % diagnoses.length;
         const treatmentIndex = (patientIndex + i) % treatments.length;
-        
+
         const prescriptionCount = Math.floor(Math.random() * 3) + 1;
         const prescriptions: Prescription[] = [];
         for (let p = 0; p < prescriptionCount; p++) {
@@ -124,7 +124,7 @@ export default function RecordsPage() {
             frequency: medicines[medIndex].frequency
           });
         }
-        
+
         records.push({
           id: patientIndex * 10 + i + 1,
           patientName,
@@ -138,31 +138,46 @@ export default function RecordsPage() {
         });
       }
     });
-    
+
     return records;
   };
 
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<MedicalRecord[]>([]);
   const [patientList, setPatientList] = useState<string[]>([]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, selectedPatient]);
   // ==================== DATA LOADING ====================
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const mockRecords = generateMockMedicalRecords();
-        setMedicalRecords(mockRecords);
-        setFilteredRecords(mockRecords);
-        
-        const uniquePatients = Array.from(new Set(mockRecords.map(record => record.patientName)));
-        setPatientList(uniquePatients);
-        
+
+        // GỌI API THẬT thay vì dùng mock
+        const data = await doctorService.getMedicalRecords();
+
+        // Kiểm tra nếu data trả về là mảng
+        const records = Array.isArray(data) ? data : (data?.data || []);
+
+        setMedicalRecords(records);
+        setFilteredRecords(records);
+
+        const uniqueNames = Array.from(
+          new Set(records.map((r: any) => r.patient?.FullName).filter(Boolean))
+        ) as string[];
+
+        setPatientList(uniqueNames.sort());
+
         setError(false);
       } catch (err) {
-        console.error("❌ Lỗi khi tải bệnh án:", err);
+        console.error("❌ Lỗi khi tải bệnh án từ API:", err);
         setError(true);
       } finally {
         setLoading(false);
@@ -175,31 +190,33 @@ export default function RecordsPage() {
   // ==================== FILTERING ====================
   useEffect(() => {
     let filtered = [...medicalRecords];
-    
+
     // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(record =>
-        record.patientName.toLowerCase().includes(term) ||
-        record.diagnosis.toLowerCase().includes(term)
+        record.patient?.FullName?.toLowerCase().includes(term) ||
+        record.Diagnosis.toLowerCase().includes(term)
       );
     }
-    
+
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(record => record.status === statusFilter);
+      filtered = filtered.filter(record =>
+        record.appointment?.Status?.toLowerCase() === statusFilter.toLowerCase()
+      );
     }
-    
+
     // Patient filter
     if (selectedPatient !== "all") {
-      filtered = filtered.filter(record => record.patientName === selectedPatient);
+      filtered = filtered.filter(record => record.patient?.FullName === selectedPatient);
     }
-    
+
     // Date filter
     if (dateFilter !== "all") {
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       switch (dateFilter) {
         case "today":
           filtered = filtered.filter(record => {
@@ -207,7 +224,7 @@ export default function RecordsPage() {
             return recordDate >= startOfDay;
           });
           break;
-          
+
         case "week":
           const weekAgo = new Date(startOfDay);
           weekAgo.setDate(weekAgo.getDate() - 7);
@@ -216,7 +233,7 @@ export default function RecordsPage() {
             return recordDate >= weekAgo;
           });
           break;
-          
+
         case "month":
           const monthAgo = new Date(startOfDay);
           monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -225,7 +242,7 @@ export default function RecordsPage() {
             return recordDate >= monthAgo;
           });
           break;
-          
+
         case "custom":
           filtered = filtered.filter(record => {
             const recordDate = new Date(record.date);
@@ -234,48 +251,48 @@ export default function RecordsPage() {
           break;
       }
     }
-    
+
     // Sort records
     filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
         case "date":
           comparison = new Date(b.date).getTime() - new Date(a.date).getTime();
           break;
-          
+
         case "name":
           comparison = a.patientName.localeCompare(b.patientName);
           break;
-          
+
         case "status":
           comparison = a.status.localeCompare(b.status);
           break;
       }
-      
+
       return sortOrder === "asc" ? comparison : -comparison;
     });
-    
+
     setFilteredRecords(filtered);
   }, [searchTerm, statusFilter, dateFilter, selectedPatient, sortBy, sortOrder, medicalRecords, customDateRange]);
 
   // ==================== STATISTICS ====================
   const stats = useMemo(() => {
     const total = medicalRecords.length;
-    const completed = medicalRecords.filter(r => r.status === "completed").length;
-    const pending = medicalRecords.filter(r => r.status === "pending").length;
+    const completed = medicalRecords.filter(r => r.appointment?.Status === "Completed").length;
+    const pending = total - completed;
     const uniquePatients = patientList.length;
-    
+
     const diagnosisCounts = medicalRecords.reduce((acc, record) => {
       acc[record.diagnosis] = (acc[record.diagnosis] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const topDiagnoses = Object.entries(diagnosisCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([diagnosis, count]) => ({ diagnosis, count }));
-    
+
     return {
       total,
       completed,
@@ -288,7 +305,7 @@ export default function RecordsPage() {
 
   // ==================== EVENT HANDLERS ====================
   const handleViewMedicalRecord = (id: number) => {
-    const record = medicalRecords.find(r => r.id === id);
+    const record = medicalRecords.find(r => r.RecordID === id);
     if (record) {
       setSelectedRecord(record);
       setShowDetailModal(true);
@@ -297,34 +314,25 @@ export default function RecordsPage() {
 
   const handleGeneratePrescriptionPDF = (record: MedicalRecord) => {
     const pdfContent = `
-      ĐƠN THUỐC - BỆNH VIỆN ĐA KHOA
+      BỆNH VIỆN ĐA KHOA
       ===============================
-      Bác sĩ: BS. Nguyễn Văn A
+      Bác sĩ: ${record.doctor?.user.FullName}
       Ngày: ${new Date().toLocaleDateString('vi-VN')}
       
       THÔNG TIN BỆNH NHÂN
       -------------------
-      Họ tên: ${record.patientName}
-      Tuổi: ${record.age}
-      Ngày khám: ${record.date}
-      Chẩn đoán: ${record.diagnosis}
+      Họ tên: ${record.patient?.FullName}
+      Ngày sinh: ${record.patient?.DateOfBirth}
+      Ngày khám: ${record.created_at}
+      Chẩn đoán: ${record.Diagnosis}
       
-      ĐƠN THUỐC
-      ---------
-      ${record.prescriptions.map((pres, index) => `
-      ${index + 1}. ${pres.medicine}
-         - Liều lượng: ${pres.dosage}
-         - Cách dùng: ${pres.frequency}
-      `).join('\n')}
       
       HƯỚNG DẪN
       ---------
-      ${record.treatment}
+      ${record.Notes}
       
-      Lưu ý: Tuân thủ đúng liều lượng và thời gian dùng thuốc
-      ===============================
     `;
-    
+
     const blob = new Blob([pdfContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -334,31 +342,29 @@ export default function RecordsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     alert(`📄 Đã tạo đơn thuốc cho ${record.patientName}`);
   };
 
-  const handleAddRecord = () => {
-    const patientName = prompt("Tên bệnh nhân:");
-    const diagnosis = prompt("Chẩn đoán:");
-    
-    if (patientName && diagnosis) {
-      const newRecord: MedicalRecord = {
-        id: Date.now(),
-        patientName,
-        age: 30,
-        diagnosis,
-        treatment: "Đang điều trị",
-        prescriptions: [],
-        tests: [],
-        date: new Date().toISOString().split('T')[0],
-        status: "pending"
-      };
-      
-      setMedicalRecords([newRecord, ...medicalRecords]);
-      alert("✅ Đã thêm bệnh án thành công!");
-    }
-  };
+  // const handleAddRecord = async () => {
+  //   const patientName = prompt("Tên bệnh nhân:");
+  //   const diagnosis = prompt("Chẩn đoán:");
+
+  //   if (patientName && diagnosis) {
+  //     const payload = {
+  //       patientName,
+  //       diagnosis,
+  //       date: new Date().toISOString().split('T')[0],
+  //       status: "pending"
+  //     };
+
+  //     const res = await doctorService.createMedicalRecord(payload);
+  //     if (res.success) {
+  //       handleRefreshData(); // Tải lại danh sách sau khi thêm
+  //       alert("✅ Đã lưu bệnh án vào hệ thống!");
+  //     }
+  //   }
+  // };
 
   const handleExportRecords = () => {
     const exportData = {
@@ -367,17 +373,17 @@ export default function RecordsPage() {
       filters: { searchTerm, statusFilter, dateFilter, patient: selectedPatient },
       records: filteredRecords.map(record => ({
         id: record.id,
-        patient: record.patientName,
-        age: record.age,
-        diagnosis: record.diagnosis,
-        treatment: record.treatment,
+        patient: record.patient?.FullName,
+        age: record.patient?.DateOfBirth,
+        diagnosis: record.Diagnosis,
+        treatment: record.Notes,
         prescriptions: record.prescriptions,
         tests: record.tests,
         date: record.date,
-        status: record.status
+        status: record.appointment?.Status
       }))
     };
-    
+
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -387,7 +393,7 @@ export default function RecordsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     alert(`📥 Đã xuất ${filteredRecords.length} bệnh án thành công!`);
   };
 
@@ -417,7 +423,7 @@ export default function RecordsPage() {
                 <tr>
                   <th>STT</th>
                   <th>Bệnh nhân</th>
-                  <th>Tuổi</th>
+                  <th>Ngày sinh</th>
                   <th>Ngày khám</th>
                   <th>Chẩn đoán</th>
                   <th>Trạng thái</th>
@@ -427,11 +433,11 @@ export default function RecordsPage() {
                 ${filteredRecords.map((record, index) => `
                   <tr>
                     <td>${index + 1}</td>
-                    <td>${record.patientName}</td>
-                    <td>${record.age}</td>
-                    <td>${record.date}</td>
-                    <td>${record.diagnosis}</td>
-                    <td>${record.status === 'completed' ? 'Đã hoàn thành' : 'Đang xử lý'}</td>
+                    <td>${record.patient?.FullName}</td>
+                    <td>${record.patient?.DateOfBirth}</td>
+                    <td>${record.created_at}</td>
+                    <td>${record.Diagnosis}</td>
+                    <td>${record.appointment?.Status === 'Completed' ? 'Đã hoàn thành' : 'Đang xử lý'}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -444,15 +450,16 @@ export default function RecordsPage() {
     }
   };
 
-  const handleRefreshData = () => {
+  const handleRefreshData = async () => {
     setLoading(true);
-    setTimeout(() => {
-      const newRecords = generateMockMedicalRecords();
-      setMedicalRecords(newRecords);
-      const uniquePatients = Array.from(new Set(newRecords.map(record => record.patientName)));
-      setPatientList(uniquePatients);
+    try {
+      const data = await doctorService.getMedicalRecords();
+      setMedicalRecords(Array.isArray(data) ? data : data.data);
+    } catch (err) {
+      alert("Không thể làm mới dữ liệu");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleClearFilters = () => {
@@ -471,8 +478,8 @@ export default function RecordsPage() {
 
   if (error) {
     return (
-      <ErrorState 
-        message="Không thể tải danh sách bệnh án" 
+      <ErrorState
+        message="Không thể tải danh sách bệnh án"
         onRetry={handleRefreshData}
       />
     );
@@ -492,7 +499,7 @@ export default function RecordsPage() {
             <p className="text-gray-600 mt-2">
               Lưu trữ và quản lý thông tin bệnh án bệnh nhân
             </p>
-            
+
             <div className="flex flex-wrap gap-3 mt-4">
               <div className="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm">
                 <span className="font-bold">{stats.total}</span> bệnh án
@@ -505,16 +512,16 @@ export default function RecordsPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-3">
-            <button
+            {/* <button
               onClick={handleAddRecord}
               className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Thêm bệnh án
-            </button>
-            
+            </button> */}
+
             <div className="flex gap-2">
               <button
                 onClick={handlePrintRecords}
@@ -523,7 +530,7 @@ export default function RecordsPage() {
                 <Printer className="w-5 h-5" />
                 In
               </button>
-              
+
               <button
                 onClick={handleExportRecords}
                 className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -555,7 +562,7 @@ export default function RecordsPage() {
               />
             </div>
           </div>
-          
+
           {/* Status filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -571,7 +578,7 @@ export default function RecordsPage() {
               <option value="pending">Đang xử lý</option>
             </select>
           </div>
-          
+
           {/* Patient filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -582,13 +589,17 @@ export default function RecordsPage() {
               onChange={(e) => setSelectedPatient(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="all">Tất cả bệnh nhân</option>
-              {patientList.map(patient => (
-                <option key={patient} value={patient}>{patient}</option>
+              {patientList.map((patient, index) => (
+                <option
+                  key={`patient-${patient}-${index}`}
+                  value={patient}
+                >
+                  {patient}
+                </option>
               ))}
             </select>
           </div>
-          
+
           {/* Date filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -606,7 +617,7 @@ export default function RecordsPage() {
             </select>
           </div>
         </div>
-        
+
         <div className="mt-4 flex justify-between items-center">
           <div className="text-sm text-gray-600">
             Hiển thị <span className="font-semibold">{filteredRecords.length}</span> / {medicalRecords.length} bệnh án
@@ -641,13 +652,13 @@ export default function RecordsPage() {
             </div>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-blue-500 rounded-full"
               style={{ width: `${stats.completionRate}%` }}
             ></div>
           </div>
         </div>
-        
+
         <div className="bg-white p-5 rounded-2xl border border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -659,7 +670,7 @@ export default function RecordsPage() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-5 rounded-2xl border border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -687,28 +698,28 @@ export default function RecordsPage() {
         <div className="text-sm text-gray-500">
           Cập nhật: {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-600">
             <span className="font-semibold">{filteredRecords.length}</span> bệnh án
           </div>
-          <button
+          {/* <button
             onClick={handleAddRecord}
             className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Thêm bệnh án
-          </button>
+          </button> */}
         </div>
       </div>
 
       {/* Detail Modal */}
       {showDetailModal && selectedRecord && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-900">
-                Chi tiết bệnh án - {selectedRecord.patientName}
+                Chi tiết bệnh án - {selectedRecord.patient?.FullName}
               </h3>
               <button
                 onClick={() => setShowDetailModal(false)}
@@ -717,48 +728,60 @@ export default function RecordsPage() {
                 ✕
               </button>
             </div>
-            
+
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-gray-600">Bệnh nhân</div>
-                  <div className="font-semibold">{selectedRecord.patientName}</div>
+                  <div className="font-semibold">{selectedRecord.patient?.FullName}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600">Tuổi</div>
-                  <div className="font-semibold">{selectedRecord.age}</div>
+                  <div className="text-sm text-gray-600">Ngày sinh</div>
+                  <div className="font-semibold">
+                    {selectedRecord.patient?.DateOfBirth ? (
+                      new Date(selectedRecord.patient?.DateOfBirth).toLocaleDateString('vi-VN')
+                    ) : (
+                      "Chưa có ngày sinh"
+                    )}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Ngày khám</div>
-                  <div className="font-semibold">{selectedRecord.date}</div>
+                  <div className="font-semibold">
+
+                    {selectedRecord.appointment?.StartTime ? (
+                      new Date(selectedRecord.appointment.StartTime.replace(' ', 'T')).toLocaleDateString('vi-VN')
+                    ) : (
+                      "Chưa có ngày khám"
+                    )}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Trạng thái</div>
-                  <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedRecord.status === 'completed' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {selectedRecord.status === 'completed' ? 'Đã hoàn thành' : 'Đang xử lý'}
+                  <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${selectedRecord.appointment?.Status === 'Completed'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                    {selectedRecord.appointment?.Status === 'Completed' ? 'Đã hoàn thành' : 'Đang xử lý'}
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-2">Chẩn đoán</div>
-                <div className="p-3 bg-gray-50 rounded-lg">{selectedRecord.diagnosis}</div>
+                <div className="p-3 bg-gray-50 rounded-lg">{selectedRecord.Diagnosis}</div>
               </div>
-              
+
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-2">Điều trị</div>
-                <div className="p-3 bg-gray-50 rounded-lg">{selectedRecord.treatment}</div>
+                <div className="p-3 bg-gray-50 rounded-lg">{selectedRecord.Notes}</div>
               </div>
-              
-              {selectedRecord.prescriptions.length > 0 && (
+
+              {selectedRecord.prescriptions?.length > 0 && (
                 <div>
                   <div className="text-sm font-medium text-gray-700 mb-2">Đơn thuốc</div>
                   <div className="space-y-2">
-                    {selectedRecord.prescriptions.map((pres, index) => (
+                    {selectedRecord.prescriptions?.map((pres, index) => (
                       <div key={index} className="p-3 bg-blue-50 rounded-lg">
                         <div className="font-medium">{pres.medicine}</div>
                         <div className="text-sm text-gray-600">
@@ -769,7 +792,7 @@ export default function RecordsPage() {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex gap-3 pt-4 border-t">
                 <button
                   onClick={() => {
@@ -778,7 +801,7 @@ export default function RecordsPage() {
                   }}
                   className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
                 >
-                  In đơn thuốc
+                  In Bệnh Án
                 </button>
                 <button
                   onClick={() => setShowDetailModal(false)}

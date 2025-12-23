@@ -76,9 +76,11 @@ export interface MedicalRecord {
   Diagnosis: string;
   Notes: string | null;
   created_at: string;
+  appointment?: Appointment;
   exam_results?: ExamResult[]; // Danh sách file đính kèm
   doctor?: Doctor; // Bác sĩ khám
   patient?: User; // Bệnh nhân
+  user?: User;
 }
 
 export interface Appointment {
@@ -197,7 +199,7 @@ export interface MedicalRecord {
   prescriptions: Prescription[]
   tests: string[]
   date: string
-  status: "completed" | "pending"
+  status: "Completed" | "Pending"
 }
 
 export interface VitalSigns {
@@ -261,12 +263,12 @@ export interface ApiResponse<T> {
 
 // Enum cho status
 export enum AppointmentStatus {
-  WAITING = "waiting",
-  CONFIRMED = "confirmed",
-  CHECKED_IN = "checked_in",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled"
+  CONFIRMED = "Confirmed",
+  PENDING = "Pending",
+  CHECKED_IN = "CheckedIn",
+  IN_PROGRESS = "InProcess",
+  COMPLETED = "Completed",
+  CANCELLED = "Cancelled"
 }
 
 export enum PriorityLevel {

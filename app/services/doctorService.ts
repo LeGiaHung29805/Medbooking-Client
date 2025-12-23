@@ -25,7 +25,23 @@ export interface QueueResponse {
   success: boolean;
   data: Patient[];
 }
-
+export interface UserProfileResponse {
+  id: number;
+  FullName: string;
+  Email: string;
+  PhoneNumber: string;
+  Role: string;
+  doctor: { 
+    DoctorID: number;
+    SpecialtyID: number;
+    Degree: string | null;
+    YearsOfExperience: string | number | null;
+    ProfileDescription: string | null;
+    specialty?: {
+      SpecialtyName: string;
+    };
+  };
+}
 export interface ScheduleResponse {
   success: boolean;
   data: Appointment[];
@@ -35,29 +51,51 @@ export interface PatientHistoryResponse {
   success: boolean;
   data: MedicalRecord[];
 }
-
-export interface DoctorProfile {
-  id: number;
-  FullName: string;
-  email: string;
-  phone: string;
+export interface DoctorProfileDetail {
+  DoctorID?: number;
+  SpecialtyID?: number;
+  Degree?: string | null;
+  YearsOfExperience?: string | number | null;
+  ProfileDescription?: string | null;
+  imageURL?: string;
   specialty?: {
-    id: number;
+    SpecialtyID: number;
     SpecialtyName: string;
   };
-  department?: string;
-  licenseNumber?: string;
-  experience?: string;
-  education?: string;
-  bio?: string;
-  address?: string;
-  workingHours?: {
-    morning: string;
-    afternoon: string;
-  };
-  consultationFee?: string;
-  languages?: string[];
 }
+
+// Định nghĩa dữ liệu trả về từ API (UserProfile)
+export interface UserProfileResponse {
+  id: number;
+  FullName: string;
+  Email: string;
+  PhoneNumber: string;
+  Role: string;
+  // Cấu trúc lồng nhau gây ra lỗi ở Hình 1 và 2
+  doctor_profile: DoctorProfileDetail; 
+}
+// export interface DoctorProfile {
+//   id: number;
+//   FullName: string;
+//   email: string;
+//   phone: string;
+//   specialty?: {
+//     SpecialtyID: number;
+//     SpecialtyName: string;
+//   };
+//   department?: string;
+//   licenseNumber?: string;
+//   experience?: string;
+//   education?: string;
+//   bio?: string;
+//   address?: string;
+//   workingHours?: {
+//     morning: string;
+//     afternoon: string;
+//   };
+//   consultationFee?: string;
+//   languages?: string[];
+// }
 
 const calculateAge = (dob: string | null | undefined): number => {
   if (!dob) return 0;
@@ -142,11 +180,8 @@ class DoctorService {
   // ==================== SCHEDULE ====================
   async getSchedule(): Promise<ScheduleResponse> {
     
-    const res = await apiClient.get("/doctor/schedule");
-    return {
-      success: true,
-      data: res.data.data,
-    };
+    const response = await apiClient.get("/doctor/schedule");
+    return response.data;
   }
 
   // ==================== APPOINTMENT STATUS UPDATES ====================
@@ -181,41 +216,41 @@ class DoctorService {
   }
 
   // ==================== MEDICAL RECORDS ====================
-  async createMedicalRecord(data: FormData): Promise<ApiResponse<MedicalRecord>> {
+  async getMedicalRecords(): Promise<ApiResponse<MedicalRecord[]>> {
   try {
-    console.log('🚀 [API] Đang gọi POST /doctor/medical-records...', data);
     
-    const response = await apiClient.post("/doctor/medical-records", data, {
+    const response = await apiClient.get("/doctor/medical-records", {
       headers: {
-        'Content-Type': 'multipart/form-data',
         'Accept': 'application/json',
       },
     });
-    
+
     if (response.data) {
       return {
         success: true,
-        message: response.data.message,
-        record: response.data.record 
+        message: response.data.message || "Tải dữ liệu thành công",
+        data: response.data.data || response.data 
       };
     }
-    
+
     return { success: false, message: "Server không trả về dữ liệu" };
 
   } catch (error: any) {
-    // Log chi tiết lỗi từ response để biết tại sao tab Response bị trắng
+    // Log lỗi chi tiết giống hàm Create để dễ debug
     if (error.response) {
-      console.error('Data lỗi từ Server:', error.response.data);
-      console.error('Status lỗi:', error.response.status);
+      console.error('[API] Server trả về lỗi:', error.response.data);
+      console.error('Status code:', error.response.status);
+    } else {
+      console.error('[API] Lỗi mạng/Kết nối:', error.message);
     }
-    
+
     return { 
       success: false, 
-      message: error.response?.data?.message || "Lỗi kết nối server" 
+      message: error.response?.data?.message || "Lỗi kết nối server khi tải bệnh án" 
     };
   }
 }
-
+  
   async uploadExamResult(recordId: number, file: File, description: string = ''): Promise<any> {
     try {
       console.log('📎 [uploadExamResult] Uploading file:', { recordId, fileName: file.name });
@@ -246,59 +281,61 @@ class DoctorService {
 
   // ==================== PROFILE MANAGEMENT ====================
   async getMyProfile() {
-    try {
-      const response = await apiClient.get("/doctor/profile");
-      const d = response.data.data;
-
-      let specialtyName = "Chưa xác định";
-      let specialtyId = null;
-
-      if (d.doctor_profile?.specialty?.SpecialtyName) {
-        specialtyName = d.doctor_profile.specialty.SpecialtyName;
-        specialtyId = d.doctor_profile.SpecialtyID;
-      }
-
-      return {
+  try {
+    const response = await apiClient.get("/doctor/profile");
+    const d = response.data.data;
+    console.log("Dữ liệu gốc: ",d);
+    const profileSource = d.doctor_profile || d.doctor;
+    return {
+      success: true, 
+      data: {
         FullName: d.FullName,
-        specialty: { SpecialtyName: specialtyName },
-        specialtyId: specialtyId,
-        email: d.Email,
-        phone: d.PhoneNumber
-      };
-    } catch (error) {
-      throw error;
-    }
+        Email: d.Email,
+        PhoneNumber: d.PhoneNumber,
+        doctor_profile: {
+          DoctorID: profileSource?.DoctorID,
+          SpecialtyID: profileSource?.SpecialtyID,
+          Degree: profileSource?.Degree || "Chưa cập nhật",
+          YearsOfExperience: profileSource?.YearsOfExperience || 0,
+          ProfileDescription: profileSource?.ProfileDescription || "Chưa có giới thiệu",
+          imageURL: profileSource?.imageURL,
+          specialty: profileSource?.specialty || { SpecialtyName: "Chưa xác định" }
+        }
+      }
+    };
+  } catch (error) {
+    console.error("Lỗi getMyProfile:", error);
+    return { success: false, data: null }; // Trả về success: false khi có lỗi
   }
+}
 
   async updateProfile(data: {
-    FullName: string;
-    email: string;
-    phone?: string;
-    SpecialtyID?: number;
-  }) {
-    try {
-      const payload = {
-        full_name: data.FullName || "Bác Sĩ",
-        email: data.email || "bacsia@example.com",
-        phone_number: data.phone || "0911111111",
-        specialty_id: data.SpecialtyID || 1,
-        SpecialtyID: data.SpecialtyID || 1,
-      };
+  FullName: string;
+  email: string;
+  phone?: string;
+  SpecialtyID?: number; 
+  Degree?: string;
+  YearsOfExperience?: number | string;
+  ProfileDescription?: string;
+}) {
+  try {
+    const payload = {
+      full_name: data.FullName,
+      email: data.email,
+      phone_number: data.phone,
+      SpecialtyID: data.SpecialtyID || 1, 
+      specialty_id: data.SpecialtyID || 1,
+      Degree: data.Degree,
+      YearsOfExperience: data.YearsOfExperience,
+      ProfileDescription: data.ProfileDescription,
+    };
 
-      console.log('🔄 Update profile payload:', payload);
-      const response = await apiClient.put("/doctor/profile", payload);
-      console.log('✅ Update profile success:', response.data);
-      window.dispatchEvent(new Event("doctorInfoUpdated"));
-      return response.data;
-    } catch (error: any) {
-      console.error('❌ Update profile error:', error);
-      return {
-        success: true,
-        message: 'Cập nhật thành công (mocked)',
-        data: { FullName: data.FullName, Email: data.email, PhoneNumber: data.phone }
-      };
-    }
+    const response = await apiClient.put("/doctor/profile", payload);
+    return response.data;
+  } catch (error: any) {
+    throw error; 
   }
+}
 
   // ==================== SLOT MANAGEMENT ====================
   async getMySlots(date?: string): Promise<{ success: boolean; data: any[] }> {
