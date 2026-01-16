@@ -17,7 +17,7 @@ import type {
 } from "@/lib/model";
 
 export default function DoctorDashboardPage() {
-  // ==================== STATES ====================
+  // STATES 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("Đang tải dữ liệu...");
@@ -40,7 +40,7 @@ export default function DoctorDashboardPage() {
   const [showExamForm, setShowExamForm] = useState(false);
   const [currentExamPatient, setCurrentExamPatient] = useState<PatientDetail | null>(null);
 
-  // ==================== HELPER FUNCTIONS ====================
+  // HELPER FUNCTIONS
   const getPriorityColor = (priority: string): string => {
     switch (priority?.toLowerCase()) {
       case "emergency": return "bg-red-100 text-red-800 border-red-300";
@@ -59,7 +59,7 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  // ==================== THÊM HÀM LÀM MỚI ====================
+  // THÊM HÀM LÀM MỚI
   const handleRefreshData = async () => {
     setLoading(true);
     setLoadingMessage("Đang tải lại dữ liệu...");
@@ -72,17 +72,17 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  // ==================== HÀM LOAD CHÍNH  ====================
+  //HÀM LOAD CHÍNH 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
       // --- DEBUG LOG START ---
-      console.log("🚀 [DEBUG] Bắt đầu loadDashboardData...");
+      console.log("[DEBUG] Bắt đầu loadDashboardData...");
 
-      // 1. Gọi Service lấy thống kê
+      // Gọi Service lấy thống kê
       const dashboardData = await doctorService.getDashboard();
-      console.log("📊 [DEBUG] Thống kê nhận được:", dashboardData);
+      console.log("[DEBUG] Thống kê nhận được:", dashboardData);
 
       setDashboardStats({
         totalAppointments: dashboardData.total_appointments || 0,
@@ -92,7 +92,7 @@ export default function DoctorDashboardPage() {
         todayAppointments: dashboardData.today_appointments || 0
       });
 
-      // 2. Gọi Service lấy danh sách hàng đợi (Queue)
+      // Gọi Service lấy danh sách hàng đợi (Queue)
       console.log("[DEBUG] Đang gọi API getQueue...");
       const queueResponse = await doctorService.getQueue();
 
@@ -169,12 +169,12 @@ export default function DoctorDashboardPage() {
   //   });
   // };
 
-  // ==================== LOAD BAN ĐẦU ====================
+  // LOAD BAN ĐẦU
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  // ==================== XỬ LÝ KHÁM BỆNH ====================
+  //XỬ LÝ KHÁM BỆNH
   const handleViewPatientDetail = (patient: Patient) => {
     const detail: PatientDetail = {
       ...patient,
@@ -261,7 +261,7 @@ export default function DoctorDashboardPage() {
       }
 
     } catch (err: any) {
-      console.error("❌ Lỗi hệ thống tại file Cha:", err);
+      console.error(" Lỗi hệ thống tại file Cha:", err);
       alert("Lỗi hệ thống: " + (err.message || "Không xác định"));
     } finally {
       setLoading(false);

@@ -23,47 +23,55 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     specialty: { SpecialtyName: "Bác sĩ" }
   });
 
-  // Hàm tải thông tin bác sĩ 
   const loadDoctorProfile = async (forceRefresh = false) => {
     try {
-      const cached = localStorage.getItem("doctorInfo");
+      const cached = localStorage.getItem("user");
+
       if (cached && !forceRefresh) {
         const parsed = JSON.parse(cached);
+        console.log("Dữ liệu gốc từ CACHE:", parsed);
 
-        setCurrentDoctor({
+        const formattedData = {
           FullName: parsed.FullName || "Bác sĩ",
           specialty: {
-            SpecialtyName:
-              typeof parsed.specialty === "string"
-                ? parsed.specialty
-                : (parsed.specialty?.SpecialtyName || "Chưa xác định")
+            SpecialtyName: parsed.doctor_profile?.specialty?.SpecialtyName || "Bác sĩ chuyên khoa"
           },
-          email: parsed.email,
-          phone: parsed.phone
-        });
-        return; 
-      }
-
-      const profileData = await doctorService.getMyProfile();
-
-      if (profileData) {
-        const doctorData = {
-          FullName: profileData.FullName || "Bác sĩ",
-          specialty: {
-            SpecialtyName: profileData.specialty?.SpecialtyName || "Chưa xác định"
-          },
-          email: profileData.email,
-          phone: profileData.phone
+          email: parsed.Email || parsed.email,
+          phone: parsed.PhoneNumber || parsed.phone
         };
 
-        // Cập nhật state
+        setCurrentDoctor(formattedData);
+
+        if (formattedData.FullName !== "Bác sĩ" && formattedData.FullName !== "Đang tải...") {
+          return;
+        }
+      }
+
+      console.log("Đang gọi API lấy Profile mới...");
+      const response = await doctorService.getMyProfile();
+
+      if (response.success && response.data) {
+        const d = response.data;
+
+        const doctorData = {
+          FullName: d.FullName || "Bác sĩ",
+          specialty: {
+            SpecialtyName: d.doctor_profile?.specialty?.SpecialtyName || "Chưa xác định"
+          },
+          email: d.Email,
+          phone: d.PhoneNumber
+        };
+
+        console.log("Dữ liệu chuẩn sau khi gọi API:", doctorData);
+
         setCurrentDoctor(doctorData);
-        localStorage.setItem("doctorInfo", JSON.stringify(doctorData));
+        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, ...d }));
       }
     } catch (error) {
       console.error("Không thể tải thông tin bác sĩ:", error);
       setCurrentDoctor({
-        FullName: "Lỗi tải dữ liệu",
+        FullName: "Lỗi dữ liệu",
         specialty: { SpecialtyName: "Bác sĩ" }
       });
     }
@@ -76,16 +84,16 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
   // Lắng nghe sự kiện cập nhật thông tin bác sĩ
   useEffect(() => {
-  const handleDoctorUpdate = () => {
-    loadDoctorProfile(false); 
-  };
+    const handleDoctorUpdate = () => {
+      loadDoctorProfile(false);
+    };
 
-  window.addEventListener("doctorInfoUpdated", handleDoctorUpdate);
+    window.addEventListener("doctorInfoUpdated", handleDoctorUpdate);
 
-  return () => {
-    window.removeEventListener("doctorInfoUpdated", handleDoctorUpdate);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("doctorInfoUpdated", handleDoctorUpdate);
+    };
+  }, []);
 
   // Tự động refresh khi có flag 
   useEffect(() => {
@@ -99,8 +107,8 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   // Xác định tab hiện tại
   const activeTab = pathname === "/Doctor/schedule" ? "schedule"
     : pathname === "/Doctor/records" ? "records"
-    : pathname === "/Doctor/settings" ? "settings"
-    : "dashboard";
+      : pathname === "/Doctor/settings" ? "settings"
+        : "dashboard";
 
   const handleTabChange = (tab: "dashboard" | "schedule" | "records" | "settings") => {
     const routes: Record<string, string> = {

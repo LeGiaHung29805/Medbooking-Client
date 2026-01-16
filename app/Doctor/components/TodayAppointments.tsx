@@ -60,8 +60,8 @@ export default function TodayAppointments({
           key={i}
           onClick={() => setCurrentPage(i)}
           className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${i === currentPage
-              ? "bg-blue-600 text-white shadow-md"
-              : "border border-slate-200 text-slate-700 hover:bg-slate-50"
+            ? "bg-blue-600 text-white shadow-md"
+            : "border border-slate-200 text-slate-700 hover:bg-slate-50"
             }`}
         >
           {i}
@@ -97,10 +97,11 @@ export default function TodayAppointments({
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Tất cả trạng thái</option>
-            <option value="waiting">Đang chờ</option>
-            <option value="checked_in">Đã check-in</option>
-            <option value="in_progress">Đang khám</option>
-            <option value="completed">Đã khám</option>
+            <option value="Pending">Đang chờ</option>
+            <option value="Confirmed">Đã xác nhận</option>
+            <option value="CheckedIn">Đã check-in</option>
+            <option value="InProcess">Đang khám</option>
+            <option value="Completed">Đã khám</option>
           </select>
         </div>
       </div>
@@ -129,9 +130,9 @@ export default function TodayAppointments({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold ${appt.status === "checked_in" ? "bg-green-500" :
-                        appt.status === "in_progress" ? "bg-blue-500" :
-                          "bg-gray-400"
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold ${appt.status === "CheckedIn" ? "bg-green-500" :
+                      appt.status === "InProcess" ? "bg-blue-500" :
+                        "bg-gray-400"
                       }`}>
                       {appt.patientName?.charAt(0) || "?"}
                     </div>
@@ -172,7 +173,7 @@ export default function TodayAppointments({
                       )}
                     </div>
 
-                    {(appt.status === "checked_in" || appt.status === "waiting" || appt.status === "confirmed") && (
+                    {(appt.status === "CheckedIn" || appt.status === "Pending" || appt.status === "Confirmed") && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

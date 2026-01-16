@@ -154,7 +154,7 @@ export default function RecordsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, selectedPatient]);
-  // ==================== DATA LOADING ====================
+  // DATA LOADING 
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -343,7 +343,7 @@ export default function RecordsPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    alert(`📄 Đã tạo đơn thuốc cho ${record.patientName}`);
+    alert(`Đã tạo đơn thuốc cho ${record.patientName}`);
   };
 
   // const handleAddRecord = async () => {
@@ -361,7 +361,7 @@ export default function RecordsPage() {
   //     const res = await doctorService.createMedicalRecord(payload);
   //     if (res.success) {
   //       handleRefreshData(); // Tải lại danh sách sau khi thêm
-  //       alert("✅ Đã lưu bệnh án vào hệ thống!");
+  //       alert("Đã lưu bệnh án vào hệ thống!");
   //     }
   //   }
   // };
@@ -394,7 +394,7 @@ export default function RecordsPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    alert(`📥 Đã xuất ${filteredRecords.length} bệnh án thành công!`);
+    alert(`Đã xuất ${filteredRecords.length} bệnh án thành công!`);
   };
 
   const handlePrintRecords = () => {
@@ -471,7 +471,7 @@ export default function RecordsPage() {
     setSortOrder("desc");
   };
 
-  // ==================== RENDER LOADING/ERROR ====================
+  // RENDER LOADING/ERROR
   if (loading) {
     return <LoadingState message="Đang tải danh sách bệnh án..." />;
   }
@@ -485,7 +485,7 @@ export default function RecordsPage() {
     );
   }
 
-  // ==================== MAIN RENDER ====================
+  // MAIN RENDER
   return (
     <div className="space-y-6">
       {/* Header */}

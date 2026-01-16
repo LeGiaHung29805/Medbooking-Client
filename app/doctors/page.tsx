@@ -85,13 +85,13 @@ export default function DoctorsBookingPage() {
       // Gọi API lấy Slots
       const slots = await Api.getDoctorAvailability(doctorId);
 
-      // Nhóm slot theo ngày: { "2024-05-20": ["08:00", "09:00"] }
+      // Nhóm slot theo ngày: 
       const scheduleMap: { [key: string]: string[] } = {};
 
       slots.forEach((slot) => {
         const dateObj = new Date(slot.StartTime);
-        const dateKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
-        // Lấy giờ phút HH:mm
+        const dateKey = dateObj.toISOString().split('T')[0]; 
+        // Lấy giờ phút 
         const timeStr = dateObj.toTimeString().substring(0, 5);
 
         if (!scheduleMap[dateKey]) {

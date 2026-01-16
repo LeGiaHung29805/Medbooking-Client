@@ -9,12 +9,15 @@ import { AxiosError } from "axios";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export default function LichHenKhamLai() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Model.Appointment[]>([]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPatientId, setSelectedPatientId] = useState<number>(0);
+  const [selectedPatientName, setSelectedPatientName] = useState<string>("");
   //State lịch tía khám
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOldAppt, setSelectedOldAppt] = useState<Model.Appointment | null>(null);
@@ -27,7 +30,11 @@ export default function LichHenKhamLai() {
 
   const [reason, setReason] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
-
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(appointments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = appointments.slice(startIndex, endIndex);
   //LOAD DỮ LIỆU LỊCH SỬ (Để chọn cái nào cần tái khám)
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +65,8 @@ export default function LichHenKhamLai() {
     setSelectedSlotId(null);
     setAvailabilities([]);
     setReason(`Tái khám theo lịch hẹn #${appt.AppointmentID}`); // Gợi ý lý do
-
+    setSelectedPatientId(appt.PatientID);
+    setSelectedPatientName(appt.patientName || "Người bệnh");
     // Tải lịch trống của chính Bác sĩ cũ
     if (appt.DoctorID) {
       try {
@@ -98,12 +106,15 @@ export default function LichHenKhamLai() {
   //GỬI YÊU CẦU ĐẶT LỊCH
   const handleConfirmBooking = async () => {
     if (!selectedSlotId) return alert("Vui lòng chọn giờ khám!");
-
+    if (!selectedPatientId) {
+      return alert("Không tìm thấy thông tin người bệnh để tái khám!");
+    }
     setBookingLoading(true);
     try {
 
       await Api.bookAppointment(
         selectedSlotId,
+        selectedPatientId,
         reason,
         undefined, // Không có file
       );
@@ -145,63 +156,65 @@ export default function LichHenKhamLai() {
           </div>
         ) : (
           <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full border-collapse text-left">
-              <thead className="bg-gray-50 border-b">
-                <tr className="text-sm text-gray-600 uppercase">
-                  <th className="py-3 px-4">Bác sĩ</th>
-                  <th className="py-3 px-4">Chuyên khoa / Dịch vụ</th>
-                  <th className="py-3 px-4">Ngày khám cũ</th>
-                  <th className="py-3 px-4 text-center">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {appointments.map((a) => {
-                  const doctorName = a.doctor?.user?.FullName || "---";
-                  const avatar = a.doctor?.imageURL || a.doctor?.user?.avatar_url;
+            <div className="overflow-x-auto min-h-[560px]">
+              <table className="w-full border-collapse text-left">
+                <thead className="bg-gray-50 border-b">
+                  <tr className="text-sm text-gray-600 uppercase">
+                    <th className="py-3 px-4">Bác sĩ</th>
+                    <th className="py-3 px-4">Chuyên khoa / Dịch vụ</th>
+                    <th className="py-3 px-4">Ngày khám cũ</th>
+                    <th className="py-3 px-4 text-center">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {currentItems.map((a) => {
+                    const doctorName = a.doctor?.user?.FullName || "---";
+                    const avatar = a.doctor?.imageURL || a.doctor?.user?.avatar_url;
 
-                  return (
-                    <tr key={a.AppointmentID} className="hover:bg-blue-50 transition">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10">
-                            <DataThumbnail
-                              src={avatar}
-                              alt={doctorName}
-                              fallbackType="doctor"
-                              className="w-full h-full rounded-full border"
-                            />
+                    return (
+                      <tr key={a.AppointmentID} className="hover:bg-blue-50 transition">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10">
+                              <DataThumbnail
+                                src={avatar}
+                                alt={doctorName}
+                                fallbackType="doctor"
+                                className="w-full h-full rounded-full border"
+                              />
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-800 text-sm">{doctorName}</div>
+                              <div className="text-xs text-gray-500">BS. Điều trị</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-bold text-gray-800 text-sm">{doctorName}</div>
-                            <div className="text-xs text-gray-500">BS. Điều trị</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-sm text-blue-700">
+                            {a.service?.ServiceName || "Khám dịch vụ"}
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-sm text-blue-700">
-                          {a.service?.ServiceName || "Khám dịch vụ"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {a.doctor?.specialty?.SpecialtyName}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700">
-                        {new Date(a.StartTime).toLocaleDateString('vi-VN')}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold flex items-center gap-1 mx-auto shadow-sm"
-                          onClick={() => handleOpenReBook(a)}
-                        >
-                          <CalendarPlus className="w-4 h-4" /> Tái khám
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                          <div className="text-xs text-gray-500">
+                            {a.doctor?.specialty?.SpecialtyName}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {new Date(a.StartTime).toLocaleDateString('vi-VN')}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold flex items-center gap-1 mx-auto shadow-sm"
+                            onClick={() => handleOpenReBook(a)}
+                          >
+                            <CalendarPlus className="w-4 h-4" /> Tái khám
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -283,6 +296,55 @@ export default function LichHenKhamLai() {
             </div>
           </div>
         )}
+        <div className="py-4 border-t bg-gray-50/50 flex justify-center items-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) setCurrentPage(prev => prev - 1);
+                  }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                >
+                </PaginationPrevious>
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    isActive={currentPage === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(page);
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+                  }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                >
+                </PaginationNext>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+          <div className="text-sm text-gray-600">
+            <span className="text-gray-700 px-6 text-sm whitespace-nowrap">
+              Trang <span className="text-gray-600">{currentPage}</span>
+              <span className="mx-2 text-gray-300">|</span>
+              Tổng số <span className="">{totalPages} </span>trang
+            </span>
+          </div>
+        </div>
       </div>
     </LayoutUsers>
   );

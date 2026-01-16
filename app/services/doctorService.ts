@@ -177,14 +177,14 @@ class DoctorService {
     return res.data.data;
   }
 
-  // ==================== SCHEDULE ====================
+  // SCHEDULE
   async getSchedule(): Promise<ScheduleResponse> {
     
     const response = await apiClient.get("/doctor/schedule");
     return response.data;
   }
 
-  // ==================== APPOINTMENT STATUS UPDATES ====================
+  // APPOINTMENT STATUS UPDATES 
   async updateAppointmentStatus(id: number, status: string): Promise<boolean> {
     try {
       console.log(`[API] Đang gọi cập nhật status: ${status} cho ID ${id}`);
@@ -250,7 +250,17 @@ class DoctorService {
     };
   }
 }
-  
+  async createMedicalRecord(formData: FormData) {
+  try {
+    // Lưu ý: Khi gửi FormData, Axios sẽ tự động thiết lập 
+    // Content-Type: multipart/form-data
+    const response = await apiClient.post("/doctor/medical-records", formData);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi createMedicalRecord service:", error);
+    throw error;
+  }
+}
   async uploadExamResult(recordId: number, file: File, description: string = ''): Promise<any> {
     try {
       console.log('📎 [uploadExamResult] Uploading file:', { recordId, fileName: file.name });
