@@ -10,7 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import { getFullImageUrl } from "@/lib/utils";
@@ -20,11 +28,16 @@ export default function KetQuaKhamBenh() {
 
   const [completedAppointments, setCompletedAppointments] = useState<Model.Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedRecord, setSelectedRecord] = useState<Model.MedicalRecord | null>(null);
   const [openRecordModal, setOpenRecordModal] = useState(false);
 
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(completedAppointments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = completedAppointments.slice(startIndex, endIndex);
   // LOAD DỮ LIỆU
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +50,7 @@ export default function KetQuaKhamBenh() {
         );
 
         setCompletedAppointments(finished);
+        setCurrentPage(1);
       } catch (error) {
         console.error("Lỗi tải dữ liệu:", error);
       } finally {
@@ -86,70 +100,123 @@ export default function KetQuaKhamBenh() {
             </p>
           </div>
         ) : (
-          <div className="bg-white border rounded-lg shadow-sm overflow-x-auto">
-            <table className="w-full border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50 text-gray-700">
-                  <th className="py-3 px-4">Ngày khám</th>
-                  <th className="py-3 px-4">Bác sĩ</th>
-                  <th className="py-3 px-4">Chẩn đoán</th>
-                  <th className="py-3 px-4 text-center">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {completedAppointments.map((app) => {
-                  const record = app.medical_record!; // Chắc chắn có vì đã filter ở trên
-                  const doctorName = app.doctor?.user?.FullName || "---";
-                  const avatar = app.doctor?.imageURL || app.doctor?.user?.avatar_url;
-
-                  return (
-                    <tr
-                      key={app.AppointmentID}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 px-4 font-medium text-blue-600">
-                        {formatDate(app.StartTime)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8">
-                            <DataThumbnail
-                              src={avatar}
-                              alt="Doctor"
-                              fallbackType="doctor"
-                              className="w-full h-full rounded-full border"
-                            />
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-800">
-                              {doctorName}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        className="py-3 px-4 max-w-xs truncate"
-                        title={record.Diagnosis}
-                      >
-                        {record.Diagnosis}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex items-center gap-1 hover:bg-blue-50 hover:text-blue-600"
-                          onClick={() => handleViewDetail(record)}
-                        >
-                          <Eye className="w-4 h-4" />
-                          Xem chi tiết
-                        </Button>
-                      </td>
+          <>
+            <div className="bg-white border rounded-lg shadow-sm overflow-x-auto">
+              <div className="overflow-x-auto min-h-[500px]">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50 text-gray-700">
+                      <th className="py-3 px-4">Ngày khám</th>
+                      <th className="py-3 px-4 ">Bác sĩ</th>
+                      <th className="py-3 px-4">Chẩn đoán</th>
+                      <th className="py-3 px-4 text-center">Thao tác</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((app) => {
+                      const record = app.medical_record!;
+                      const doctorName = app.doctor?.user?.FullName || "---";
+                      const avatar = app.doctor?.imageURL || app.doctor?.user?.avatar_url;
+
+                      return (
+                        <tr
+                          key={app.AppointmentID}
+                          className="border-b hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="py-3 px-4 font-medium text-blue-600">
+                            {formatDate(app.StartTime)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8">
+                                <DataThumbnail
+                                  src={avatar}
+                                  alt="Doctor"
+                                  fallbackType="doctor"
+                                  className="w-full h-full rounded-full border"
+                                />
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-800">
+                                  {doctorName}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            className="py-3 px-4 max-w-xs truncate"
+                            title={record.Diagnosis}
+                          >
+                            {record.Diagnosis}
+                          </td>
+                          <td className="py-3 px-4 text-center flex justify-center items-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1 hover:bg-blue-50 hover:text-blue-600"
+                              onClick={() => handleViewDetail(record)}
+                            >
+                              <Eye className="w-4 h-4" />
+                              Xem chi tiết
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="py-4 border-t bg-gray-50/50 flex justify-center items-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 1) setCurrentPage(prev => prev - 1);
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      >
+                      </PaginationPrevious>
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          isActive={currentPage === page}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(page);
+                          }}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      >
+                      </PaginationNext>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+                <div className="text-sm text-gray-600">
+                  <span className="text-gray-700 text-sm px-6 whitespace-nowrap">
+                    Trang <span className="text-gray-600">{currentPage}</span>
+                    <span className="mx-2 text-gray-300">|</span>
+                    Tổng số <span className="">{totalPages} </span>trang
+                  </span>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
         {/* MODAL CHI TIẾT */}
@@ -245,7 +312,8 @@ export default function KetQuaKhamBenh() {
             )}
           </DialogContent>
         </Dialog>
+
       </div>
-    </LayoutUsers>
+    </LayoutUsers >
   );
 }

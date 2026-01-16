@@ -151,7 +151,7 @@ export const getTopFeedbacks = async (): Promise<Model.TopFeedback[]> => {
   return response.data;
 };
 
-// ==================== NHÓM BỆNH NHÂN ====================
+//NHÓM BỆNH NHÂN
 
 export const getMe = async (): Promise<Model.User> => {
   const response = await apiClient.get("/user");
@@ -179,11 +179,13 @@ export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
 
 export const bookAppointment = async (
   slotId: number,
+  PatientID: number,
   symptoms: string,
   file?: File
 ): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("SlotID", slotId.toString());
+  formData.append("PatientID", PatientID.toString());
   if (symptoms) formData.append("InitialSymptoms", symptoms);
   if (file) formData.append("file", file);
 
@@ -215,7 +217,10 @@ export const deleteMyNotification = async (
   const response = await apiClient.delete(`/notifications/${id}`);
   return response.data;
 };
-
+export const deleteAllReadNotifications = async () => {
+    const response = await apiClient.delete("/notifications/read");
+    return response.data;
+};
 export const sendOtp = async (email: string) => {
   const response = await apiClient.post(`/forgot-password/send-otp`, {
     email: email,
@@ -230,8 +235,13 @@ export const resetPassword = async (data: {
   const response = await apiClient.post(`/forgot-password/reset`, data);
   return response.data;
 };
-// ==================== NHÓM BÁC SĨ ====================
-
+export const changePassword = async (
+  data: Model.ChangePasswordRequest
+): Promise<Model.ChangePasswordResponse> => {
+  const response = await apiClient.post<Model.ChangePasswordResponse>("/user/change-password", data);
+  return response.data;
+};
+//NHÓM BÁC SĨ
 export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
   const response = await apiClient.get("/doctor/my-schedule");
   return response.data;
@@ -328,7 +338,7 @@ export const getDoctorDashboard = async (): Promise<any> => {
   }
 };
 
-// ==================== NHÓM STAFF & ADMIN ====================
+// NHÓM STAFF & ADMIN
 export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
   const response = await apiClient.get("/staff/dashboard-stats");
   return response.data;

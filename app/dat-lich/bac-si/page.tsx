@@ -27,6 +27,7 @@ export default function DoctorBookingPage() {
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
     const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
+    const [selectedPatientId, setSelectedPatientId] = useState<number>(0);
     //state form
     const [selectedPerson, setSelectedPerson] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState<Model.Doctor | null>(null);
@@ -58,7 +59,7 @@ export default function DoctorBookingPage() {
                     Api.getDoctors(),
                     Api.getSpecialties(),
                     Api.getMe().catch(() => null),
-                    Api.getFamilyMembers().catch(() => [])
+                    Api.getFamilyMembers().catch(() => [] as Model.FamilyMember[])
                 ]);
 
                 setDoctors(docsData);
@@ -66,14 +67,21 @@ export default function DoctorBookingPage() {
                 setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
-
+                    const savedPersonName = localStorage.getItem("booking_for_person");
                     //logic ghi nhớ
-                    const savedPerson = localStorage.getItem("booking_for_person");
-                    if (savedPerson) {
-                        setSelectedPerson(savedPerson);
-                        // localStorage.removeItem("booking_for_person"); // Bỏ comment nếu muốn chỉ nhớ 1 lần
+                    if (savedPersonName && savedPersonName !== userData.FullName) {
+                        const matchedMember = familyData.find((m: Model.FamilyMember) => m.FullName === savedPersonName);
+                        if (matchedMember) {
+                            setSelectedPatientId(matchedMember.UserID);
+                            setSelectedPerson(matchedMember.FullName);
+                        } else {
+                            // Nếu không tìm thấy người thân, mặc định là mình
+                            setSelectedPatientId(userData.UserID);
+                            setSelectedPerson(userData.FullName);
+                        }
                     } else {
-                        setSelectedPerson(userData.FullName); // Mặc định chọn chính mình
+                        setSelectedPatientId(userData.UserID);
+                        setSelectedPerson(userData.FullName);
                     }
                 }
             } catch (error) {
@@ -167,10 +175,10 @@ export default function DoctorBookingPage() {
         if (!selectedDoctor) return alert("Vui lòng chọn bác sĩ!");
         if (!selectedSlotId) return alert("Vui lòng chọn thời gian khám!");
         if (!reason.trim()) return alert("Vui lòng nhập lý do khám!");
-
+        if (!selectedPatientId) return alert("Vui lòng xác định người đi khám!");
         setBookingLoading(true);
         try {
-            await Api.bookAppointment(selectedSlotId, reason, file || undefined);
+            await Api.bookAppointment(selectedSlotId, selectedPatientId, reason, file || undefined);
 
             alert("Đặt lịch khám thành công!");
             router.push("/dat-lich");

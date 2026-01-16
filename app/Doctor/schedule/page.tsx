@@ -308,9 +308,9 @@ function AppointmentDetailModal({
   )
 }
 const ITEMS_PER_PAGE = 10;
-// ==================== MAIN COMPONENT ====================
+//  MAIN COMPONENT 
 export default function SchedulePage() {
-  // ==================== STATES ====================
+  // STATES 
   const [loading, setLoading] = useState(false)
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week")
@@ -358,7 +358,7 @@ export default function SchedulePage() {
     fetchAppointments();
   }, []);
 
-  // ==================== FILTERING ====================
+  // FILTERING 
   useEffect(() => {
 
     if (!Array.isArray(appointments)) {
@@ -406,7 +406,7 @@ export default function SchedulePage() {
     setFilteredAppointments(filtered);
   }, [appointments, filterStatus, searchTerm, viewMode, currentWeek]);
 
-  // ==================== EVENT HANDLERS ====================
+  //  EVENT HANDLERS 
   const handlePreviousWeek = () => {
     if (viewMode === "day") {
       setCurrentWeek(prev => addDays(prev, -1))
@@ -500,7 +500,7 @@ export default function SchedulePage() {
     }
   };
 
-  // ==================== HELPER FUNCTIONS ====================
+  //  HELPER FUNCTIONS
   const getStatusInfo = (status: string) => {
     switch (status) {
       case "CheckedIn":
@@ -597,7 +597,7 @@ export default function SchedulePage() {
     }
   }
 
-  // ==================== RENDER ====================
+  // RENDER 
   if (loading && appointments.length === 0) {
     return <LoadingState message="Đang tải lịch làm việc..." />
   }

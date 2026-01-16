@@ -18,6 +18,7 @@ export default function SpecialtyBookingPage() {
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
     const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
+    const [selectedPatientId, setSelectedPatientId] = useState<number>(0);
 
     const [selectedPerson, setSelectedPerson] = useState("");
     const [selectedSpecialty, setSelectedSpecialty] = useState<Model.Specialty | null>(null);
@@ -55,11 +56,20 @@ export default function SpecialtyBookingPage() {
                 setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
-                    const savedPerson = localStorage.getItem("booking_for_person");
-                    if (savedPerson) {
-                        setSelectedPerson(savedPerson);
-                        // localStorage.removeItem("booking_for_person");
+                    const savedPersonName = localStorage.getItem("booking_for_person");
+                    //logic ghi nhớ
+                    if (savedPersonName && savedPersonName !== userData.FullName) {
+                        const matchedMember = familyData.find((m: Model.FamilyMember) => m.FullName === savedPersonName);
+                        if (matchedMember) {
+                            setSelectedPatientId(matchedMember.UserID);
+                            setSelectedPerson(matchedMember.FullName);
+                        } else {
+                            // Nếu không tìm thấy người thân, mặc định là mình
+                            setSelectedPatientId(userData.UserID);
+                            setSelectedPerson(userData.FullName);
+                        }
                     } else {
+                        setSelectedPatientId(userData.UserID);
                         setSelectedPerson(userData.FullName);
                     }
                 }
@@ -146,10 +156,10 @@ export default function SpecialtyBookingPage() {
         if (!selectedSpecialty) return alert("Vui lòng chọn chuyên khoa!");
         if (!selectedSlotId) return alert("Vui lòng chọn thời gian khám!");
         if (!reason.trim()) return alert("Vui lòng nhập triệu chứng!");
-
+        if (!selectedPatientId) return alert("Vui lòng chọn người khám!");
         setBookingLoading(true);
         try {
-            await Api.bookAppointment(selectedSlotId, reason, file || undefined);
+            await Api.bookAppointment(selectedSlotId, selectedPatientId, reason, file || undefined);
             alert("Đặt lịch thành công!");
             router.push("/dat-lich");
         } catch (error) {

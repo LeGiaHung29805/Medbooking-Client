@@ -30,7 +30,7 @@ export default function ServiceBookingPage() {
     const [currentUser, setCurrentUser] = useState<Model.User | null>(null);
     const [loading, setLoading] = useState(true);
     const [familyMembers, setFamilyMembers] = useState<Model.FamilyMember[]>([]);
-
+    const [selectedPatientId, setSelectedPatientId] = useState<number>(0);
     //State cache lịch trống theo ServiceID (để không gọi lại API)
     const [slotsCache, setSlotsCache] = useState<Map<number, Model.AvailabilitySlot[]>>(new Map());
 
@@ -82,12 +82,21 @@ export default function ServiceBookingPage() {
                 setFamilyMembers(familyData);
                 if (userData) {
                     setCurrentUser(userData);
-                    setSelectedPerson(userData.FullName);
-                    const savedPerson = localStorage.getItem("booking_for_person");
-                    if (savedPerson) {
-                        setSelectedPerson(savedPerson);
-                        // localStorage.removeItem("booking_for_person");
+
+                    const savedPersonName = localStorage.getItem("booking_for_person");
+
+                    if (savedPersonName && savedPersonName !== userData.FullName) {
+
+                        const matchedMember = familyData.find((m: Model.FamilyMember) => m.FullName === savedPersonName);
+                        if (matchedMember) {
+                            setSelectedPatientId(matchedMember.UserID);
+                            setSelectedPerson(matchedMember.FullName);
+                        } else {
+                            setSelectedPatientId(userData.UserID);
+                            setSelectedPerson(userData.FullName);
+                        }
                     } else {
+                        setSelectedPatientId(userData.UserID);
                         setSelectedPerson(userData.FullName);
                     }
                 }
@@ -176,9 +185,10 @@ export default function ServiceBookingPage() {
         return `${weekday} ${day}/${month}`;
     };
 
-    // 5. GỬI FORM ĐẶT LỊCH (API)
+    // GỬI FORM ĐẶT LỊCH (API)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedPatientId) return alert("Vui lòng chọn người khám!");
         if (!selectedService) return alert("Vui lòng chọn dịch vụ!");
         if (!selectedSlotId) return alert("Vui lòng chọn thời gian khám!");
         if (!reason.trim()) return alert("Vui lòng nhập triệu chứng!");
@@ -188,6 +198,7 @@ export default function ServiceBookingPage() {
             // Gọi API đặt lịch, truyền thêm ServiceID để lưu chính xác
             await Api.bookAppointment(
                 selectedSlotId,
+                selectedPatientId,
                 reason,
                 file || undefined,
                 // selectedService.ServiceID

@@ -9,7 +9,7 @@ import {
 import { doctorService } from "../../services/doctorService";
 
 export default function SettingsPage() {
-  // ==================== STATES ====================
+  // STATES 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "preferences">("profile");
@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const [specialties, setSpecialties] = useState<{ SpecialtyID: number; SpecialtyName: string }[]>([]);
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | null>(null);
 
-  // ==================== DOCTOR PROFILE ====================
+  // DOCTOR PROFILE
   const [doctorInfo, setDoctorInfo] = useState({
     id: "DOC001",
     name: "Nguyễn Văn A",
@@ -36,7 +36,7 @@ export default function SettingsPage() {
     languages: ["Tiếng Việt", "Tiếng Anh"]
   });
 
-  // ==================== SECURITY SETTINGS ====================
+  // SECURITY SETTINGS
   const [securitySettings, setSecuritySettings] = useState({
     currentPassword: "",
     newPassword: "",
@@ -50,7 +50,7 @@ export default function SettingsPage() {
     ]
   });
 
-  // ==================== NOTIFICATION SETTINGS ====================
+  //  NOTIFICATION SETTINGS
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: {
       appointmentReminders: true,
@@ -76,7 +76,7 @@ export default function SettingsPage() {
     }
   });
 
-  // ==================== PREFERENCES ====================
+  // PREFERENCES 
   const [preferences, setPreferences] = useState({
     theme: "light" as "light" | "dark" | "auto",
     language: "vi",
@@ -94,7 +94,7 @@ export default function SettingsPage() {
     prescriptionTemplate: "Mẫu đơn thuốc chuẩn"
   });
 
-  // ==================== MOCK DATA LOADING ====================
+  // MOCK DATA LOADING 
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -174,7 +174,7 @@ export default function SettingsPage() {
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
   };
-  // ==================== EVENT HANDLERS ====================
+  // EVENT HANDLERS 
   const handleInputChange = (section: string, field: string, value: any) => {
     switch (section) {
       case "profile":
@@ -221,7 +221,7 @@ export default function SettingsPage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      alert("✅ Đổi mật khẩu thành công!");
+      alert("Đổi mật khẩu thành công!");
 
       // Reset password fields
       setSecuritySettings(prev => ({
@@ -235,8 +235,8 @@ export default function SettingsPage() {
       setTimeout(() => setSaveStatus("idle"), 3000);
 
     } catch (err) {
-      console.error("❌ Lỗi khi đổi mật khẩu:", err);
-      alert("❌ Đổi mật khẩu thất bại. Vui lòng thử lại.");
+      console.error(" Lỗi khi đổi mật khẩu:", err);
+      alert(" Đổi mật khẩu thất bại. Vui lòng thử lại.");
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -248,7 +248,7 @@ export default function SettingsPage() {
         ...prev,
         deviceManagement: prev.deviceManagement.filter(device => device.id !== deviceId)
       }));
-      alert(`✅ Đã đăng xuất thiết bị`);
+      alert(` Đã đăng xuất thiết bị`);
     }
   };
 
@@ -270,7 +270,7 @@ export default function SettingsPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    alert("📥 Đã xuất cài đặt thành công!");
+    alert(" Đã xuất cài đặt thành công!");
   };
 
   const handleRefreshData = () => {
@@ -281,7 +281,7 @@ export default function SettingsPage() {
     }, 1000);
   };
 
-  // ==================== RENDER LOADING/ERROR ====================
+  //  RENDER LOADING/ERROR 
   if (loading) {
     return <LoadingState message="Đang tải cài đặt..." />;
   }
@@ -295,7 +295,7 @@ export default function SettingsPage() {
     );
   }
 
-  // ==================== MAIN RENDER ====================
+  //  MAIN RENDER
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -325,13 +325,13 @@ export default function SettingsPage() {
 
             {saveStatus === "saved" && (
               <div className="px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm flex items-center gap-2">
-                ✓ Đã lưu
+                Đã lưu
               </div>
             )}
 
             {saveStatus === "error" && (
               <div className="px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-sm">
-                ❌ Lỗi khi lưu
+                Lỗi khi lưu
               </div>
             )}
 

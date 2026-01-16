@@ -326,7 +326,15 @@ export interface ScheduleDay {
   timeSlots: string[];
   appointmentsList: Appointment[];
 }
-
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+export interface ChangePasswordResponse {
+    success: boolean;
+    message: string;
+}
 export interface TimeSlot {
   start: string;
   end: string;
