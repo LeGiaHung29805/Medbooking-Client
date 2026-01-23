@@ -569,9 +569,7 @@ export default function DoctorManagementPage() {
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-md w-full md:w-auto"
           >
             <Plus className="w-4 h-4" />
-            <span>
-              Thêm Bác sĩ Mới
-            </span>
+            <span>Thêm Bác sĩ Mới</span>
           </button>
         </div>
       </div>
