@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import Layout from "@/components/layout";
 import { FaClipboardList, FaLightbulb, FaSearch, FaStar, FaUserMd } from "react-icons/fa";
 
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
 const SERVICES_PER_PAGE = 6;
 const PRICE_RANGES = {
   LOW: 200000,

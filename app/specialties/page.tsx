@@ -194,7 +194,7 @@ export default function HospitalPage() {
           {/* Thumbnail */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-8">
             {images.map((src, index) => (
-              <Button
+              <button
                 key={index}
                 onClick={() => showImage(index)}
                 className={`overflow-hidden rounded-lg border-2 transition ${currentIndex === index ? "border-white" : "border-transparent"
@@ -207,7 +207,7 @@ export default function HospitalPage() {
                   height={300}
                   className="object-cover hover:scale-105 transition-transform"
                 />
-              </Button>
+              </button>
             ))}
           </div>
         </section>

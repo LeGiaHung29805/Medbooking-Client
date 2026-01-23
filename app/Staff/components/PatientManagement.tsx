@@ -39,12 +39,13 @@ export default function PatientManagement() {
   useEffect(() => {
     fetchPatients();
   }, []);
+  const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
 
   const fetchPatients = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("api_token");
-      const res = await fetch("http://localhost:8000/api/admin/patients", {
+      const res = await fetch(API_BASE_URL + "/admin/patients", {
         method: "GET",
         headers: {
           "Accept": "application/json",
@@ -89,7 +90,7 @@ export default function PatientManagement() {
     try {
       const token = localStorage.getItem("api_token");
       const res = await fetch(
-        `http://localhost:8000/api/admin/patients/${patient.UserID}/history`,
+        `${API_BASE_URL}/admin/patients/${patient.UserID}/history`,
         {
           method: "GET",
           headers: {
@@ -132,7 +133,7 @@ export default function PatientManagement() {
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/admin/patients", {
+      const res = await fetch(`${API_BASE_URL}/admin/patients`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
