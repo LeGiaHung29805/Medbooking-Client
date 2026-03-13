@@ -282,18 +282,18 @@ export default function SettingsPage() {
   };
 
   //  RENDER LOADING/ERROR 
-  if (loading) {
-    return <LoadingState message="Đang tải cài đặt..." />;
-  }
+  // if (loading) {
+  //   return <LoadingState message="Đang tải cài đặt..." />;
+  // }
 
-  if (error) {
-    return (
-      <ErrorState
-        message="Không thể tải cài đặt"
-        onRetry={handleRefreshData}
-      />
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <ErrorState
+  //       message="Không thể tải cài đặt"
+  //       onRetry={handleRefreshData}
+  //     />
+  //   );
+  // }
 
   //  MAIN RENDER
   return (
@@ -1196,7 +1196,7 @@ export default function SettingsPage() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={handleResetToDefaults}
+                  // onClick={handleResetToDefaults}
                   className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
                 >
                   Khôi phục mặc định

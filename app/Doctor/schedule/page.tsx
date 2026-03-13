@@ -131,7 +131,7 @@ function AppointmentDetailModal({
   }
 
   const statusInfo = getStatusInfo(appointment.Status)
-  const priorityInfo = getPriorityInfo(appointment.priority || "medium")
+  // const priorityInfo = getPriorityInfo(appointment.priority || "medium")
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
@@ -199,9 +199,9 @@ function AppointmentDetailModal({
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-700">Mức độ ưu tiên</p>
-                  <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${priorityInfo.cls}`}>
+                  {/* <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${priorityInfo.cls}`}>
                     <span className="font-medium">{priorityInfo.text}</span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -254,7 +254,7 @@ function AppointmentDetailModal({
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Dịch vụ</p>
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-800">{appointment.serviceName || "Khám tổng quát"}</p>
+                  {/* <p className="text-gray-800">{appointment.serviceName || "Khám tổng quát"}</p> */}
                 </div>
               </div>
             </div>
@@ -570,7 +570,7 @@ export default function SchedulePage() {
         symptoms: appt.symptoms,
         appointmentTime: appt.appointmentTime,
         status: appt.status,
-        service: appt.serviceName
+        // service: appt.serviceName
       }))
     }
 
@@ -772,7 +772,7 @@ export default function SchedulePage() {
 
               {currentItems?.map((appointment) => {
                 const statusInfo = getStatusInfo(appointment.Status)
-                const priorityInfo = getPriorityInfo(appointment.priority)
+                // const priorityInfo = getPriorityInfo(appointment.priority)
                 const timeStr = appointment.StartTime ? appointment.StartTime.replace(' ', 'T') : "";
                 const apptDate = new Date(timeStr);
 
@@ -811,11 +811,11 @@ export default function SchedulePage() {
                           <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded">
                             {appointment.patient?.Gender}
                           </span>
-                          {priorityInfo && (
+                          {/* {priorityInfo && (
                             <span className={`text-xs px-2 py-1 rounded ${priorityInfo.cls}`}>
                               {priorityInfo.text}
                             </span>
-                          )}
+                          )} */}
                         </div>
 
                         <p className="flex items-center gap-2 text-sm text-gray-600">
