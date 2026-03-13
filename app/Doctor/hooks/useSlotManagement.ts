@@ -25,13 +25,13 @@ export const useSlotManagement = () => {
       const end = endDate || new Date();
       end.setDate(end.getDate() + 7); // Default to 1 week
       
-      const response = await doctorService.getSchedule(start, end);
+      // const response = await doctorService.getSchedule(start, end);
       
-      if (response.success) {
-        setSlots(response.data);
-      } else {
-        setError('Không thể tải lịch làm việc');
-      }
+      // if (response.success) {
+      //   setSlots(response.data);
+      // } else {
+      //   setError('Không thể tải lịch làm việc');
+      // }
     } catch (err) {
       setError('Có lỗi xảy ra khi tải lịch làm việc');
       console.error(err);
@@ -50,16 +50,16 @@ export const useSlotManagement = () => {
       setLoading(true);
       setError(null);
       
-      const response = await doctorService.createSlot(slotData);
+      // const response = await doctorService.createSlot(slotData);
       
-      if (response?.success) {
-        // Reload slots after creation
-        await loadSlots();
-        return { success: true, data: response };
-      } else {
-        setError('Không thể tạo slot');
-        return { success: false, error: 'Không thể tạo slot' };
-      }
+      // if (response?.success) {
+      //   // Reload slots after creation
+      //   await loadSlots();
+      //   return { success: true, data: response };
+      // } else {
+      //   setError('Không thể tạo slot');
+      //   return { success: false, error: 'Không thể tạo slot' };
+      // }
     } catch (err) {
       const errorMsg = 'Có lỗi xảy ra khi tạo slot';
       setError(errorMsg);
@@ -75,16 +75,16 @@ export const useSlotManagement = () => {
       setLoading(true);
       setError(null);
       
-      const response = await doctorService.deleteSlot(slotId);
+      // const response = await doctorService.deleteSlot(slotId);
       
-      if (response?.success) {
-        // Update local state immediately
-        setSlots(prev => prev.filter(slot => slot.id !== slotId));
-        return { success: true };
-      } else {
-        setError('Không thể xóa slot');
-        return { success: false, error: 'Không thể xóa slot' };
-      }
+      // if (response?.success) {
+      //   // Update local state immediately
+      //   setSlots(prev => prev.filter(slot => slot.id !== slotId));
+      //   return { success: true };
+      // } else {
+      //   setError('Không thể xóa slot');
+      //   return { success: false, error: 'Không thể xóa slot' };
+      // }
     } catch (err) {
       const errorMsg = 'Có lỗi xảy ra khi xóa slot';
       setError(errorMsg);

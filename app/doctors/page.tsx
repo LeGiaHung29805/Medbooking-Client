@@ -47,12 +47,14 @@ export default function DoctorsBookingPage() {
   //Load danh sách bác sĩ từ backend
   useEffect(() => {
     async function loadDoctors() {
+      console.log("1. Bắt đầu gọi API...");
       try {
         setLoading(true);
         setError(null);
-
+        console.log("Địa chỉ API hiện tại là:", process.env.NEXT_PUBLIC_API_URL);
         const [doctorsData, specialtiesData] = await Promise.all([
           Api.getDoctors(),
+
           Api.getSpecialties()
         ]);
 
@@ -90,7 +92,7 @@ export default function DoctorsBookingPage() {
 
       slots.forEach((slot) => {
         const dateObj = new Date(slot.StartTime);
-        const dateKey = dateObj.toISOString().split('T')[0]; 
+        const dateKey = dateObj.toISOString().split('T')[0];
         // Lấy giờ phút 
         const timeStr = dateObj.toTimeString().substring(0, 5);
 

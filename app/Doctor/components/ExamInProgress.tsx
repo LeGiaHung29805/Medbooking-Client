@@ -1,7 +1,7 @@
 "use client"
 
 import { User, Clock, Calendar, Stethoscope } from "lucide-react"
-import type { Appointment, Patient, PatientDetail, MedicalRecord } from "@/lib/model"
+import { type Appointment, type Patient, type PatientDetail, type MedicalRecord, PriorityLevel, AppointmentStatus } from "@/lib/model"
 
 interface ExamInProgressProps {
   appointments: Appointment[]
@@ -22,7 +22,7 @@ export default function ExamInProgress({
   getPriorityText,
   handleStartExam
 }: ExamInProgressProps) {
-  const inProgressAppointments = appointments.filter(appt => appt.status === "in_progress")
+  const inProgressAppointments = appointments.filter(appt => appt.status === "InProcess")
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl shadow-lg border-2 border-blue-300 p-4 mb-6 transform hover:scale-[1.01] transition-all duration-200">
@@ -40,8 +40,8 @@ export default function ExamInProgress({
         {inProgressAppointments.length > 0 ? (
           inProgressAppointments.map((appointment) => {
             // Tìm patient tương ứng
-            const fullPatient = waitingPatients.find(p => 
-              p.id === appointment.patientId || 
+            const fullPatient = waitingPatients.find(p =>
+              p.id === appointment.patientId ||
               p.id === appointment.id ||
               p.name === appointment.patientName
             )
@@ -58,10 +58,14 @@ export default function ExamInProgress({
               appointmentId: appointment.id,
               allergies: fullPatient?.allergies || [],
               medicalHistory: fullPatient?.medicalHistory || [],
-              priority: fullPatient?.priority || 'medium',
-              medicalRecords: medicalRecords.filter(r => 
-                r.patientName === (fullPatient?.name || appointment.patientName)
-              )
+              // priority: fullPatient?.priority || 'medium',
+              medicalRecords: medicalRecords.filter(r => r.patientName === (fullPatient?.name || appointment.patientName)
+              ),
+              patientId: 0,
+              status: AppointmentStatus.CONFIRMED,
+              initialSymptoms: "",
+              checkInTime: "",
+              priority: PriorityLevel.LOW
             }
 
             return (
@@ -112,7 +116,7 @@ export default function ExamInProgress({
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4 text-blue-500" />
-                          {appointment.appointmentTime ? 
+                          {appointment.appointmentTime ?
                             new Date(appointment.appointmentTime).toLocaleTimeString('vi-VN', {
                               hour: '2-digit',
                               minute: '2-digit'

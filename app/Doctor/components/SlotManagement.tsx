@@ -12,23 +12,23 @@ import { useSlotManagement } from "@/app/Doctor/hooks/useSlotManagement"
 import { format } from "date-fns"
 
 export default function SlotManagement() {
-  const { slots, loading, error, fetchSlots, createSlot, deleteSlot } = useSlotManagement()
+  const { slots, loading, error, createSlot, deleteSlot } = useSlotManagement()
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"))
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newSlot, setNewSlot] = useState({ startTime: "08:00", endTime: "08:30" })
   const [creating, setCreating] = useState(false)
 
-  useEffect(() => {
-    fetchSlots(selectedDate)
-  }, [selectedDate, fetchSlots])
+  // useEffect(() => {
+  //   fetchSlots(selectedDate)
+  // }, [selectedDate, fetchSlots])
 
   const handleCreateSlot = async () => {
     setCreating(true)
     try {
       await createSlot({
         date: selectedDate,
-        startTime: newSlot.startTime,
-        endTime: newSlot.endTime,
+        start_time: newSlot.startTime,
+        end_time: newSlot.endTime,
       })
       setDialogOpen(false)
       setNewSlot({ startTime: "08:00", endTime: "08:30" })
@@ -39,15 +39,15 @@ export default function SlotManagement() {
     }
   }
 
-  const handleDeleteSlot = async (slotId: string) => {
-    if (confirm("Bạn có chắc muốn xóa slot này?")) {
-      try {
-        await deleteSlot(slotId)
-      } catch (err) {
-        console.error("Failed to delete slot:", err)
-      }
-    }
-  }
+  // const handleDeleteSlot = async (slotId: string) => {
+  //   if (confirm("Bạn có chắc muốn xóa slot này?")) {
+  //     try {
+  //       await deleteSlot(slotId)
+  //     } catch (err) {
+  //       console.error("Failed to delete slot:", err)
+  //     }
+  //   }
+  // }
 
   return (
     <Card>
@@ -121,7 +121,7 @@ export default function SlotManagement() {
           <p className="py-8 text-center text-sm text-muted-foreground">Chưa có slot nào trong ngày này</p>
         ) : (
           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {slots.map((slot) => (
+            {/* {slots.map((slot) => (
               <div key={slot.id} className="flex items-center justify-between rounded-lg border p-3">
                 <div>
                   <p className="font-medium">
@@ -137,7 +137,7 @@ export default function SlotManagement() {
                   </Button>
                 )}
               </div>
-            ))}
+            ))} */}
           </div>
         )}
       </CardContent>

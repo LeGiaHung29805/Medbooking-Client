@@ -22,7 +22,7 @@ export default function WaitingPatients({
   handleViewPatientDetail,
   handleStartExam
 }: WaitingPatientsProps) {
-  const checkedInPatients = waitingPatients.filter(patient => patient.status === "checked_in")
+  const checkedInPatients = waitingPatients.filter(patient => patient.status === "CheckedIn")
 
   return (
     <div className="bg-white rounded-2xl shadow border p-4 mb-6">
@@ -76,23 +76,23 @@ export default function WaitingPatients({
                 </div>
 
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const patientDetail: PatientDetail = {
-                      id: patient.id,
-                      name: patient.name,
-                      age: patient.age,
-                      gender: patient.gender,
-                      phone: patient.phone,
-                      symptoms: patient.symptoms,
-                      appointmentId: patient.appointmentId || patient.id,
-                      allergies: patient.allergies,
-                      medicalHistory: patient.medicalHistory,
-                      priority: patient.priority,
-                      medicalRecords: medicalRecords.filter(r => r.patientName === patient.name)
-                    };
-                    handleStartExam(patientDetail);
-                  }}
+                  // onClick={(e) => {
+                  //   e.stopPropagation();
+                  //   const patientDetail: PatientDetail = {
+                  //     id: patient.id,
+                  //     name: patient.name,
+                  //     age: patient.age,
+                  //     gender: patient.gender,
+                  //     phone: patient.phone,
+                  //     symptoms: patient.symptoms,
+                  //     appointmentId: patient.patientId || patient.id,
+                  //     allergies: patient.allergies,
+                  //     medicalHistory: patient.medicalHistory,
+                  //     priority: patient.priority,
+                  //     medicalRecords: medicalRecords.filter(r => r.patientName === patient.name)
+                  //   };
+                  //   handleStartExam(patientDetail);
+                  // }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Bắt đầu khám

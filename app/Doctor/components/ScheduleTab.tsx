@@ -209,7 +209,7 @@ const ScheduleTab = ({
                         onClick={() => handleViewAppointmentDetail(appt.AppointmentID)}
                         className="group relative p-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer"
                       >
-                        <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${getPriorityColor(appt.Priority || "medium")}`}></div>
+                        {/* <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${getPriorityColor(appt.Priority || "medium")}`}></div> */}
 
                         <div className="flex justify-between items-start mb-1 gap-1">
                           <span className="text-[10px] font-black text-blue-700">

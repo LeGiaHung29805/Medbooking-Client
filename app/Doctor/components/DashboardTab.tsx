@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";
 import DashboardStats from "./DashboardStats";
 import TodayAppointments from "./TodayAppointments";
 import WaitingPatients from "./WaitingPatients";
@@ -9,16 +9,18 @@ import MedicalExamForm from "./MedicalExamForm";
 import type { Appointment, Patient, MedicalRecord, PatientDetail, MedicalExamFormData } from "@/lib/model";
 
 interface DashboardTabProps {
-  dashboardStats: { 
-    totalAppointments: number; 
-    completedAppointments: number; 
-    waitingAppointments: number 
+  dashboardStats: {
+    totalAppointments: number;
+    completedAppointments: number;
+    waitingAppointments: number;
+    inProgressAppointments: number;
+    todayAppointments: number;
   };
   appointments: Appointment[];
   waitingPatients: Patient[];
   medicalRecords: MedicalRecord[];
-  currentDoctor: { 
-    FullName: string; 
+  currentDoctor: {
+    FullName: string;
     specialty: { SpecialtyName: string };
     id?: number;
     email?: string;
@@ -27,6 +29,7 @@ interface DashboardTabProps {
   getPriorityColor: (p: string) => string;
   getPriorityText: (p: string) => string;
   onViewPatientDetail: (patient: Patient) => void;
+  handleStartExam: (patient: PatientDetail) => Promise<void>;
 }
 
 export default function DashboardTab({
@@ -44,7 +47,7 @@ export default function DashboardTab({
   const [waitingPatients, setWaitingPatients] = useState<Patient[]>(initialWaitingPatients);
   const [showExamForm, setShowExamForm] = useState(false);
   const [selectedPatientForExam, setSelectedPatientForExam] = useState<PatientDetail | null>(null);
-  
+
   // State cho TodayAppointments
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -62,133 +65,133 @@ export default function DashboardTab({
 
   const getStatusInfo = (status: string) => {
     switch (status) {
-      case "checked_in": return { 
-        cls: "bg-green-100 text-green-800", 
-        icon: "✓", 
-        text: "Đã check-in" 
+      case "checked_in": return {
+        cls: "bg-green-100 text-green-800",
+        icon: "✓",
+        text: "Đã check-in"
       };
-      case "in_progress": return { 
-        cls: "bg-blue-100 text-blue-800", 
-        icon: "↻", 
-        text: "Đang khám" 
+      case "in_progress": return {
+        cls: "bg-blue-100 text-blue-800",
+        icon: "↻",
+        text: "Đang khám"
       };
-      case "completed": return { 
-        cls: "bg-gray-100 text-gray-800", 
-        icon: "✓", 
-        text: "Hoàn thành" 
+      case "completed": return {
+        cls: "bg-gray-100 text-gray-800",
+        icon: "✓",
+        text: "Hoàn thành"
       };
-      default: return { 
-        cls: "bg-yellow-100 text-yellow-800", 
-        icon: "⏳", 
-        text: "Chờ" 
+      default: return {
+        cls: "bg-yellow-100 text-yellow-800",
+        icon: "⏳",
+        text: "Chờ"
       };
     }
   };
 
   // Xử lý bắt đầu khám
   const handleStartExam = (patientDetail: PatientDetail) => {
-  console.log('👨‍⚕️ Bắt đầu khám cho:', patientDetail.name);
+    console.log('👨‍⚕️ Bắt đầu khám cho:', patientDetail.name);
 
-  // Update state local 
-  setAppointments(prev => 
-    prev.map(appt => {
-      const isPatientAppointment = 
-        appt.patientId === patientDetail.id || 
-        appt.id === patientDetail.id ||
-        appt.patientName === patientDetail.name;
-      
-      if (isPatientAppointment && (appt.status === 'waiting' || appt.status === 'checked_in')) {
-        return { ...appt, status: 'in_progress' as const };
-      }
-      return appt;
-    })
-  );
-  
-  setWaitingPatients(prev => 
-    prev.filter(p => p.id !== patientDetail.id)
-  );
-  
-  setSelectedPatientForExam(patientDetail);
-  setShowExamForm(true);
-};
+    // Update state local 
+    // setAppointments(prev => 
+    //   prev.map(appt => {
+    //     const isPatientAppointment = 
+    //       appt.patientId === patientDetail.id || 
+    //       appt.id === patientDetail.id ||
+    //       appt.patientName === patientDetail.name;
+
+    //     if (isPatientAppointment && (appt.status === 'waiting' || appt.status === 'checked_in')) {
+    //       return { ...appt, status: 'in_progress' as const };
+    //     }
+    //     return appt;
+    //   })
+    // );
+
+    setWaitingPatients(prev =>
+      prev.filter(p => p.id !== patientDetail.id)
+    );
+
+    setSelectedPatientForExam(patientDetail);
+    setShowExamForm(true);
+  };
 
   // Xử lý khi hoàn thành khám
- const handleExamComplete = (formData: MedicalExamFormData) => {
-  if (!selectedPatientForExam) return;
+  const handleExamComplete = (formData: MedicalExamFormData) => {
+    if (!selectedPatientForExam) return;
 
-  console.log('✅ Hoàn thành khám cho:', selectedPatientForExam.name);
+    console.log('✅ Hoàn thành khám cho:', selectedPatientForExam.name);
 
-  setAppointments(prev => 
-    prev.map(appt => {
-      const isPatientAppointment = 
-        appt.patientId === selectedPatientForExam.id || 
-        appt.id === selectedPatientForExam.id ||
-        appt.patientName === selectedPatientForExam.name;
-      
-      // Chỉ chuyển từ in_progress sang completed
-      if (isPatientAppointment && appt.status === 'in_progress') {
-        return { ...appt, status: 'completed' as const };
-      }
-      return appt;
-    })
-  );
+    // setAppointments(prev => 
+    //   prev.map(appt => {
+    //     const isPatientAppointment = 
+    //       appt.patientId === selectedPatientForExam.id || 
+    //       appt.id === selectedPatientForExam.id ||
+    //       appt.patientName === selectedPatientForExam.name;
 
-  alert(`✅ Đã hoàn thành khám cho ${selectedPatientForExam.name}!`);
+    //     // Chỉ chuyển từ in_progress sang completed
+    //     if (isPatientAppointment && appt.status === 'in_progress') {
+    //       return { ...appt, status: 'completed' as const };
+    //     }
+    //     return appt;
+    //   })
+    // );
 
-  setShowExamForm(false);
-  setSelectedPatientForExam(null);
-};
+    alert(`✅ Đã hoàn thành khám cho ${selectedPatientForExam.name}!`);
+
+    setShowExamForm(false);
+    setSelectedPatientForExam(null);
+  };
 
   // Xử lý khi hủy khám
   const handleCancelExam = () => {
-  if (!selectedPatientForExam) return;
-  
-  console.log('❌ Hủy khám cho:', selectedPatientForExam.name);
-  
-  // KHÔNG chuyển sang completed, chỉ về waiting
-  setAppointments(prev => 
-    prev.map(appt => {
-      const isPatientAppointment = 
-        appt.patientId === selectedPatientForExam.id || 
-        appt.id === selectedPatientForExam.id ||
-        appt.patientName === selectedPatientForExam.name;
-      
-      if (isPatientAppointment && appt.status === 'in_progress') {
-        return { ...appt, status: 'waiting' as const }; // ← Chỉ về waiting, KHÔNG completed
-      }
-      return appt;
-    })
-  );
-  
-  // Thêm lại waiting list
-  setWaitingPatients(prev => {
-    const exists = prev.some(p => p.id === selectedPatientForExam.id);
-    if (!exists) {
-      return [...prev, {
-        id: selectedPatientForExam.id,
-        name: selectedPatientForExam.name,
-        age: selectedPatientForExam.age,
-        gender: selectedPatientForExam.gender,
-        phone: selectedPatientForExam.phone,
-        symptoms: selectedPatientForExam.symptoms,
-        appointmentTime: selectedPatientForExam.appointmentTime || "",
-        status: 'waiting' as const,
-        checkInTime: '',
-        priority: selectedPatientForExam.priority || 'medium',
-        allergies: selectedPatientForExam.allergies || [],
-        medicalHistory: selectedPatientForExam.medicalHistory || []
-      }];
-    }
-    return prev;
-  });
-  
-  // Reset form
-  setShowExamForm(false);
-  setSelectedPatientForExam(null);
-};
+    if (!selectedPatientForExam) return;
+
+    console.log('❌ Hủy khám cho:', selectedPatientForExam.name);
+
+    // KHÔNG chuyển sang completed, chỉ về waiting
+    // setAppointments(prev => 
+    //   prev.map(appt => {
+    //     const isPatientAppointment = 
+    //       appt.patientId === selectedPatientForExam.id || 
+    //       appt.id === selectedPatientForExam.id ||
+    //       appt.patientName === selectedPatientForExam.name;
+
+    //     if (isPatientAppointment && appt.status === 'in_progress') {
+    //       return { ...appt, status: 'waiting' as const }; // ← Chỉ về waiting, KHÔNG completed
+    //     }
+    //     return appt;
+    //   })
+    // );
+
+    // Thêm lại waiting list
+    // setWaitingPatients(prev => {
+    //   const exists = prev.some(p => p.id === selectedPatientForExam.id);
+    //   if (!exists) {
+    //     return [...prev, {
+    //       id: selectedPatientForExam.id,
+    //       name: selectedPatientForExam.name,
+    //       age: selectedPatientForExam.age,
+    //       gender: selectedPatientForExam.gender,
+    //       phone: selectedPatientForExam.phone,
+    //       symptoms: selectedPatientForExam.symptoms,
+    //       appointmentTime: selectedPatientForExam.appointmentTime || "",
+    //       status: 'waiting' as const,
+    //       checkInTime: '',
+    //       priority: selectedPatientForExam.priority || 'medium',
+    //       allergies: selectedPatientForExam.allergies || [],
+    //       medicalHistory: selectedPatientForExam.medicalHistory || []
+    //     }];
+    //   }
+    //   return prev;
+    // });
+
+    // Reset form
+    setShowExamForm(false);
+    setSelectedPatientForExam(null);
+  };
 
   // Tính toán các giá trị cần thiết 
-  const inProgressCount = appointments.filter(a => a.status === "in_progress").length;
+  const inProgressCount = appointments.filter(a => a.status === "InProcess").length;
   const today = new Date().toISOString().split('T')[0];
   const todayAppointments = appointments.filter(appt => {
     if (!appt.appointmentTime) return false;
@@ -219,13 +222,13 @@ export default function DashboardTab({
     <div className="space-y-8">
 
       {/* Stats Section */}
-      <DashboardStats 
+      <DashboardStats
         stats={{
           totalAppointments: dashboardStats.totalAppointments,
           completed: dashboardStats.completedAppointments,
           waiting: dashboardStats.waitingAppointments,
           inProgress: inProgressCount
-        }} 
+        }}
       />
 
       {/* Main Content Grid */}
@@ -233,7 +236,7 @@ export default function DashboardTab({
         {/* Left Column - Appointments (2/3 width) */}
         <div className="xl:col-span-2 space-y-6">
           <TodayAppointments
-            appointments={appointments} 
+            appointments={appointments}
             waitingPatients={waitingPatients}
             medicalRecords={medicalRecords}
             searchTerm={searchTerm}
@@ -270,7 +273,7 @@ export default function DashboardTab({
           />
 
           <WaitingPatients
-            waitingPatients={waitingPatients} 
+            waitingPatients={waitingPatients}
             medicalRecords={medicalRecords}
             getStatusInfo={getStatusInfo}
             getPriorityColor={getPriorityColor}
@@ -288,7 +291,7 @@ export default function DashboardTab({
       {showExamForm && selectedPatientForExam && (
         <MedicalExamForm
           patient={selectedPatientForExam}
-          onClose={handleCancelExam} 
+          onClose={handleCancelExam}
           onComplete={handleExamComplete}
         />
       )}

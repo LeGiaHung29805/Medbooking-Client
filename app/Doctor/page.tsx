@@ -23,7 +23,7 @@ export default function DoctorDashboardPage() {
   const [loadingMessage, setLoadingMessage] = useState("Đang tải dữ liệu...");
 
   const [dashboardStats, setDashboardStats] = useState({
-    totalpointments: 0,
+    totalAppointments: 0,
     completedAppointments: 0,
     waitingAppointments: 0,
     inProgressAppointments: 0,
@@ -122,7 +122,7 @@ export default function DoctorDashboardPage() {
         });
 
         console.log("[DEBUG] Danh sách Appointments sau khi map:", appointmentsList);
-        setAppointments(appointmentsList);
+        // setAppointments(appointmentsList);
       } else {
         console.warn("[DEBUG] Danh sách khám RỖNG hoặc API thất bại!");
         setAppointments([]);
@@ -203,9 +203,9 @@ export default function DoctorDashboardPage() {
       }
 
       // Frontend dùng 'in_progress', Backend dùng 'InProcess'
-      setAppointments(prev => prev.map(a =>
-        a.id === appointment.id ? { ...a, status: 'in_progress' } : a
-      ));
+      // setAppointments(prev => prev.map(a =>
+      //   a.id === appointment.id ? { ...a, status: "InProcess" } : a
+      // ));
       // 4. Mở Form khám
       const patientWithAppointment = { ...patient, appointmentId: appointment.id };
       setCurrentExamPatient(patientWithAppointment);
@@ -273,7 +273,7 @@ export default function DoctorDashboardPage() {
   };
 
   if (loading) return <LoadingState message={loadingMessage} />;
-  if (error) return <ErrorState message={error} onRetry={handleRefreshData} />;
+  // if (error) return <ErrorState message={error} onRetry={handleRefreshData} />;
 
   return (
     <div className="space-y-6">

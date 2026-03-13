@@ -35,8 +35,10 @@ apiClient.interceptors.response.use(
       url: error.config?.url,
       message: error.message,
       response: error.response?.data,
+      
     });
     return Promise.reject(error);
+    
   }
 );
 
