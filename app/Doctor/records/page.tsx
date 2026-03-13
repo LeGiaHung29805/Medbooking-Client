@@ -125,17 +125,17 @@ export default function RecordsPage() {
           });
         }
 
-        records.push({
-          id: patientIndex * 10 + i + 1,
-          patientName,
-          age: 25 + Math.floor(Math.random() * 50),
-          diagnosis: diagnoses[diagnosisIndex],
-          treatment: treatments[treatmentIndex],
-          prescriptions,
-          tests: ["Xét nghiệm máu CBC", "X-quang phổi"],
-          date: recordDate.toISOString().split('T')[0],
-          status: Math.random() > 0.3 ? "completed" : "pending"
-        });
+        // records.push({
+        //   id: patientIndex * 10 + i + 1,
+        //   patientName,
+        //   age: 25 + Math.floor(Math.random() * 50),
+        //   diagnosis: diagnoses[diagnosisIndex],
+        //   treatment: treatments[treatmentIndex],
+        //   prescriptions,
+        //   tests: ["Xét nghiệm máu CBC", "X-quang phổi"],
+        //   date: recordDate.toISOString().split('T')[0],
+        //   status: Math.random() > 0.3 ? "completed" : "pending"
+        // });
       }
     });
 
@@ -454,7 +454,7 @@ export default function RecordsPage() {
     setLoading(true);
     try {
       const data = await doctorService.getMedicalRecords();
-      setMedicalRecords(Array.isArray(data) ? data : data.data);
+      // setMedicalRecords(Array.isArray(data) ? data : data.data);
     } catch (err) {
       alert("Không thể làm mới dữ liệu");
     } finally {
@@ -480,7 +480,7 @@ export default function RecordsPage() {
     return (
       <ErrorState
         message="Không thể tải danh sách bệnh án"
-        onRetry={handleRefreshData}
+      // onRetry={handleRefreshData}
       />
     );
   }
