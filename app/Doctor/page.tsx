@@ -218,9 +218,11 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  const handleCompleteExam = async (formDataFromChild: FormData) => {
-    // 1. Kiểm tra ID cuộc hẹn (Lúc này lấy từ currentExamPatient đang chọn)
-    if (!currentExamPatient || (!currentExamPatient.appointmentId && !currentExamPatient.id)) {
+  // Sửa tham số truyền vào từ FormData thành MedicalExamFormData
+  const handleCompleteExam = async (formDataFromChild: MedicalExamFormData) => {
+    const appointmentId = currentExamPatient?.appointmentId || currentExamPatient?.id;
+
+    if (!appointmentId) {
       alert("Lỗi: Không tìm thấy ID cuộc hẹn để hoàn tất!");
       return;
     }
@@ -228,40 +230,57 @@ export default function DoctorDashboardPage() {
     try {
       setLoading(true);
 
+      // BƯỚC QUAN TRỌNG: Chuyển đổi Object sang FormData để hết lỗi đỏ
+      const formData = new FormData();
 
-      // Gọi service tạo bệnh án (Gửi trực tiếp FormData)
-      const recordResponse = await doctorService.createMedicalRecord(formDataFromChild);
+      // Thêm các trường văn bản
+      formData.append('diagnosis', formDataFromChild.diagnosis);
+      formData.append('clinicalNotes', formDataFromChild.clinicalNotes || '');
+      formData.append('notes', formDataFromChild.notes || '');
+      formData.append('currentSymptoms', formDataFromChild.currentSymptoms || '');
+
+      // Thêm ID cuộc hẹn để Backend biết bệnh án này của ai
+      formData.append('appointment_id', appointmentId.toString());
+
+      // Với mảng hoặc object phức tạp (như đơn thuốc), phải chuyển sang chuỗi JSON
+      if (formDataFromChild.prescriptions) {
+        formData.append('prescriptions', JSON.stringify(formDataFromChild.prescriptions));
+      }
+
+      if (formDataFromChild.vitalSigns) {
+        formData.append('vitalSigns', JSON.stringify(formDataFromChild.vitalSigns));
+      }
+
+      // Nếu có file đính kèm
+      if (formDataFromChild.attachments && formDataFromChild.attachments.length > 0) {
+        formDataFromChild.attachments.forEach((file) => {
+          formData.append('attachments[]', file);
+        });
+      }
+
+      // Gửi biến 'formData' (đã đúng kiểu dữ liệu) vào service
+      const recordResponse = await doctorService.createMedicalRecord(formData);
 
       if (!recordResponse.success) {
-        // Nếu Server trả về lỗi 422, nó sẽ hiển thị ở đây
         alert("Lưu bệnh án thất bại: " + recordResponse.message);
         setLoading(false);
         return;
       }
 
-      // Đổi trạng thái cuộc hẹn sang 'Completed'
-      // Sử dụng ID cuộc hẹn (trong interface của bạn là appointmentId hoặc id)
-      const appointmentId = currentExamPatient.appointmentId || currentExamPatient.id;
+      // 2. Đổi trạng thái cuộc hẹn sang 'Completed'
       const completeSuccess = await doctorService.completeExam(appointmentId);
 
       if (completeSuccess) {
         alert("Đã lưu bệnh án và kết thúc ca khám!");
-
-        // Dọn dẹp giao diện
         setShowExamForm(false);
         setCurrentExamPatient(null);
-
-        // Tải lại dữ liệu Dashboard để cập nhật số liệu mới nhất
         await loadDashboardData();
-
-        // hàm tải lại danh sách hàng đợi
-        // await fetchQueue(); 
       } else {
         alert("Đã lưu bệnh án nhưng LỖI cập nhật trạng thái 'Đã khám xong'.");
       }
 
     } catch (err: any) {
-      console.error(" Lỗi hệ thống tại file Cha:", err);
+      console.error("Lỗi hệ thống tại file Cha:", err);
       alert("Lỗi hệ thống: " + (err.message || "Không xác định"));
     } finally {
       setLoading(false);
@@ -274,7 +293,10 @@ export default function DoctorDashboardPage() {
 
   if (loading) return <LoadingState message={loadingMessage} />;
   // if (error) return <ErrorState message={error} onRetry={handleRefreshData} />;
-
+  const user = {
+    FullName: "Bác sĩ Đinh Thị Hoàng Anh", // Tên thực tế của bác sĩ
+    specialty: { SpecialtyName: "Nội khoa" }
+  };
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -314,6 +336,7 @@ export default function DoctorDashboardPage() {
         getPriorityText={getPriorityText}
         onViewPatientDetail={handleViewPatientDetail}
         handleStartExam={handleStartExam}
+        currentDoctor={user}
       />
 
       {showPatientModal && selectedPatient && (
