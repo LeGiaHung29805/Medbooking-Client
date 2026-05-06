@@ -13,14 +13,18 @@ interface DoctorProfile {
   phone?: string;
 }
 
-export default function DoctorLayout({ children }: { children: React.ReactNode }) {
+export default function DoctorLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentDoctor, setCurrentDoctor] = useState<DoctorProfile>({
     FullName: "Đang tải...",
-    specialty: { SpecialtyName: "Bác sĩ" }
+    specialty: { SpecialtyName: "Bác sĩ" },
   });
 
   const loadDoctorProfile = async (forceRefresh = false) => {
@@ -34,15 +38,20 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         const formattedData = {
           FullName: parsed.FullName || "Bác sĩ",
           specialty: {
-            SpecialtyName: parsed.doctor_profile?.specialty?.SpecialtyName || "Bác sĩ chuyên khoa"
+            SpecialtyName:
+              parsed.doctor_profile?.specialty?.SpecialtyName ||
+              "Bác sĩ chuyên khoa",
           },
           email: parsed.Email || parsed.email,
-          phone: parsed.PhoneNumber || parsed.phone
+          phone: parsed.PhoneNumber || parsed.phone,
         };
 
         setCurrentDoctor(formattedData);
 
-        if (formattedData.FullName !== "Bác sĩ" && formattedData.FullName !== "Đang tải...") {
+        if (
+          formattedData.FullName !== "Bác sĩ" &&
+          formattedData.FullName !== "Đang tải..."
+        ) {
           return;
         }
       }
@@ -56,10 +65,11 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         const doctorData = {
           FullName: d.FullName || "Bác sĩ",
           specialty: {
-            SpecialtyName: d.doctor_profile?.specialty?.SpecialtyName || "Chưa xác định"
+            SpecialtyName:
+              d.doctor_profile?.specialty?.SpecialtyName || "Chưa xác định",
           },
           email: d.Email,
-          phone: d.PhoneNumber
+          phone: d.PhoneNumber,
         };
 
         console.log("Dữ liệu chuẩn sau khi gọi API:", doctorData);
@@ -72,7 +82,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
       console.error("Không thể tải thông tin bác sĩ:", error);
       setCurrentDoctor({
         FullName: "Lỗi dữ liệu",
-        specialty: { SpecialtyName: "Bác sĩ" }
+        specialty: { SpecialtyName: "Bác sĩ" },
       });
     }
   };
@@ -95,7 +105,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     };
   }, []);
 
-  // Tự động refresh khi có flag 
+  // Tự động refresh khi có flag
   useEffect(() => {
     const shouldRefresh = localStorage.getItem("profileNeedsRefresh");
     if (shouldRefresh === "true") {
@@ -105,17 +115,23 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   }, [pathname]);
 
   // Xác định tab hiện tại
-  const activeTab = pathname === "/Doctor/schedule" ? "schedule"
-    : pathname === "/Doctor/records" ? "records"
-      : pathname === "/Doctor/settings" ? "settings"
-        : "dashboard";
+  const activeTab =
+    pathname === "/doctor/schedule"
+      ? "schedule"
+      : pathname === "/doctor/records"
+        ? "records"
+        : pathname === "/doctor/settings"
+          ? "settings"
+          : "dashboard";
 
-  const handleTabChange = (tab: "dashboard" | "schedule" | "records" | "settings") => {
+  const handleTabChange = (
+    tab: "dashboard" | "schedule" | "records" | "settings",
+  ) => {
     const routes: Record<string, string> = {
-      dashboard: "/Doctor",
-      schedule: "/Doctor/schedule",
-      records: "/Doctor/records",
-      settings: "/Doctor/settings"
+      dashboard: "/doctor",
+      schedule: "/doctor/schedule",
+      records: "/doctor/records",
+      settings: "/doctor/settings",
     };
     router.push(routes[tab]);
   };
