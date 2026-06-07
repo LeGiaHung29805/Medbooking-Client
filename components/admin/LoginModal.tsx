@@ -1,5 +1,6 @@
 "use client";
 
+import { login } from "@/lib/ApiClient";
 import dayjs from "dayjs";
 import { useState } from "react";
 
@@ -7,17 +8,37 @@ export default function LoginModal({ onLoginSuccess }: { onLoginSuccess: () => v
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (username === "admin" && password === "123456") {
-            onLoginSuccess();
-            setUsername("");
-            setPassword("");
-            setError("");
-            localStorage.setItem('isLoggedIn', dayjs().toLocaleString());
-        } else {
-            setError("Tên tài khoản hoặc mật khẩu không chính xác.");
+        setError("");
+        setIsLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append("Username", username);
+            formData.append("password", password);
+
+            const response = await login(formData);
+
+            if (response.user && response.user.Role === "QuanTriVien") {
+                onLoginSuccess();
+                setUsername("");
+                setPassword("");
+                setError("");
+                localStorage.setItem('isLoggedIn', dayjs().toLocaleString());
+            } else {
+                setError("Tài khoản không có quyền truy cập quản trị.");
+                localStorage.removeItem("api_token");
+                localStorage.removeItem("user_role");
+                localStorage.removeItem("user");
+            }
+        } catch (err: any) {
+            console.error("Admin login failed:", err);
+            const msg = err.response?.data?.message || err.message || "Tên tài khoản hoặc mật khẩu không chính xác.";
+            setError(msg);
+        } finally {
+            setIsLoading(false);
         }
     };
 

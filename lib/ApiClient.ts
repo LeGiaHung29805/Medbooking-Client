@@ -74,18 +74,53 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
   const response = await apiClient.post("/auth/login", data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  // Lưu token tự động khi login thành công
-  const token = response.data.access_token || response.data.token;
+
+  const rawData = response.data;
+  const token = rawData.access_token || rawData.token;
+
+  let user = rawData.user;
+  if (!user && rawData.userId) {
+    let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" = "BenhNhan";
+    const rawRole = (rawData.role || "").toUpperCase();
+    if (rawRole.includes("ADMIN")) {
+      frontendRole = "QuanTriVien";
+    } else if (rawRole.includes("DOCTOR")) {
+      frontendRole = "BacSi";
+    } else if (rawRole.includes("STAFF") || rawRole.includes("MEDICAL_STAFF")) {
+      frontendRole = "NhanVien";
+    } else if (rawRole.includes("PATIENT")) {
+      frontendRole = "BenhNhan";
+    }
+
+    user = {
+      UserID: rawData.userId,
+      Username: rawData.username || "",
+      Role: frontendRole,
+      Email: rawData.email || null,
+      PhoneNumber: rawData.phoneNumber || "",
+      FirstName: rawData.firstName || "",
+      LastName: rawData.lastName || "",
+      Status: "HoatDong",
+      avatar_url: rawData.avatarURL || null
+    };
+  }
+
   if (token && typeof window !== "undefined") {
     localStorage.setItem("api_token", token);
     localStorage.setItem(
       "user_role",
-      response.data.user.Role || response.data.user.role,
+      user ? user.Role : (rawData.role || "")
     );
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
     console.log("Đã lưu token:", token);
   }
 
-  return response.data;
+  return {
+    token: token,
+    user: user
+  };
 };
 
 export const logout = async () => {
