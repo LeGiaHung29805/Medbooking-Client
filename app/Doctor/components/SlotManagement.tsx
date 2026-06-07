@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Calendar, Plus, Trash2, Loader2 } from "lucide-react"
-import { useSlotManagement } from "@/app/Doctor/hooks/useSlotManagement"
+import { useSlotManagement } from "@/app/doctor/hooks/useSlotManagement"
 import { format } from "date-fns"
 
 export default function SlotManagement() {

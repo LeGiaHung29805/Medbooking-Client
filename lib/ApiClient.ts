@@ -1,9 +1,10 @@
 import axios from "axios";
 import * as Model from "./model";
 
-  const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
-  console.log(process.env.NEXT_PUBLIC_API_URL);
-  const apiClient = axios.create({
+const API_BASE_URL =
+  (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
+console.log(process.env.NEXT_PUBLIC_API_URL);
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
@@ -35,11 +36,9 @@ apiClient.interceptors.response.use(
       url: error.config?.url,
       message: error.message,
       response: error.response?.data,
-      
     });
     return Promise.reject(error);
-    
-  }
+  },
 );
 
 apiClient.interceptors.request.use((config) => {
@@ -63,16 +62,16 @@ apiClient.interceptors.request.use((config) => {
 //NHÓM XÁC THỰC
 
 export const register = async (
-  data: FormData
+  data: FormData,
 ): Promise<Model.MessageResponse> => {
-  const response = await apiClient.post("/register", data, {
+  const response = await apiClient.post("/auth/register", data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
 
 export const login = async (data: FormData): Promise<Model.LoginResponse> => {
-  const response = await apiClient.post("/login", data, {
+  const response = await apiClient.post("/auth/login", data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   // Lưu token tự động khi login thành công
@@ -81,7 +80,7 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
     localStorage.setItem("api_token", token);
     localStorage.setItem(
       "user_role",
-      response.data.user.Role || response.data.user.role
+      response.data.user.Role || response.data.user.role,
     );
     console.log("Đã lưu token:", token);
   }
@@ -90,7 +89,7 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
 };
 
 export const logout = async () => {
-  await apiClient.post("/logout");
+  await apiClient.post("/auth/logout");
   localStorage.removeItem("api_token");
   localStorage.removeItem("user_role");
 };
@@ -98,30 +97,30 @@ export const logout = async () => {
 // ==================== NHÓM CÔNG KHAI (PUBLIC) ====================
 
 export const getAllServices = async (
-  search?: string
+  search?: string,
 ): Promise<Model.Service[]> => {
   const params = search ? { search } : {};
-  const response = await apiClient.get("/services", { params });
+  const response = await apiClient.get("/public/services", { params });
   return response.data;
 };
 
 export const getSpecialties = async (
-  search?: string
+  search?: string,
 ): Promise<Model.Specialty[]> => {
   const params = search ? { search } : {};
-  const response = await apiClient.get("/specialties", { params });
+  const response = await apiClient.get("/public/specialties", { params });
   return response.data;
 };
 
 export const getDoctorDetails = async (id: number): Promise<Model.Doctor> => {
-  const response = await apiClient.get(`/doctors/${id}`);
+  const response = await apiClient.get(`/public/doctors/${id}`);
   return response.data;
 };
 
 //Gọi bác sĩ
 export const getDoctors = async (
   search?: string,
-  specialtyId?: number
+  specialtyId?: number,
 ): Promise<Model.Doctor[]> => {
   //Định nghĩa rõ kiểu: object này vì có key 'search' và 'specialty_id'
   const params: { search?: string; specialty_id?: number } = {};
@@ -129,35 +128,35 @@ export const getDoctors = async (
   if (search) params.search = search;
   if (specialtyId) params.specialty_id = specialtyId;
 
-  const response = await apiClient.get("/doctors", { params });
+  const response = await apiClient.get("/public/doctors", { params });
   return response.data;
 };
 
 export const getDoctorAvailability = async (
-  doctorId: number
+  doctorId: number,
 ): Promise<Model.AvailabilitySlot[]> => {
-  const response = await apiClient.get(`/doctors/${doctorId}/availability`);
+  const response = await apiClient.get(`/public/doctors/${doctorId}/slots`);
   return response.data;
 };
 
 export const getSpecialtyAvailability = async (
-  specialtyId: number
+  specialtyId: number,
 ): Promise<Model.AvailabilitySlot[]> => {
   const response = await apiClient.get(
-    `/specialties/${specialtyId}/availability`
+    `/public/specialties/${specialtyId}/available-slots`,
   );
   return response.data;
 };
 
 export const getTopFeedbacks = async (): Promise<Model.TopFeedback[]> => {
-  const response = await apiClient.get("/top-feedbacks");
+  const response = await apiClient.get("/public/feedbacks/featured");
   return response.data;
 };
 
 //NHÓM BỆNH NHÂN
 
 export const getMe = async (): Promise<Model.User> => {
-  const response = await apiClient.get("/user");
+  const response = await apiClient.get("/patient/profile");
   return response.data;
 };
 
@@ -171,12 +170,12 @@ export const uploadAvatar = async (file: File): Promise<Model.User> => {
 };
 
 export const getMyAppointments = async (): Promise<Model.Appointment[]> => {
-  const response = await apiClient.get("/my-appointments");
+  const response = await apiClient.get("/patient/appointments/me");
   return response.data;
 };
 
 export const getMyDoctors = async (): Promise<Model.Doctor[]> => {
-  const response = await apiClient.get("/my-doctors");
+  const response = await apiClient.get("/patient/previous-doctors");
   return response.data;
 };
 
@@ -184,7 +183,7 @@ export const bookAppointment = async (
   slotId: number,
   PatientID: number,
   symptoms: string,
-  file?: File
+  file?: File,
 ): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("SlotID", slotId.toString());
@@ -192,16 +191,16 @@ export const bookAppointment = async (
   if (symptoms) formData.append("InitialSymptoms", symptoms);
   if (file) formData.append("file", file);
 
-  const response = await apiClient.post("/appointments", formData, {
+  const response = await apiClient.post("/patient/appointments", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
 
 export const cancelAppointment = async (
-  id: number
+  id: number,
 ): Promise<Model.MessageResponse> => {
-  const response = await apiClient.patch(`/appointments/${id}/cancel`, {});
+  const response = await apiClient.put(`/patient/appointments/${id}/cancel`, {});
   return response.data;
 };
 
@@ -215,14 +214,14 @@ export const markNotificationAsRead = async (id: number): Promise<void> => {
 };
 
 export const deleteMyNotification = async (
-  id: number | string
+  id: number | string,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.delete(`/notifications/${id}`);
   return response.data;
 };
 export const deleteAllReadNotifications = async () => {
-    const response = await apiClient.delete("/notifications/read");
-    return response.data;
+  const response = await apiClient.delete("/notifications/read");
+  return response.data;
 };
 export const sendOtp = async (email: string) => {
   const response = await apiClient.post(`/forgot-password/send-otp`, {
@@ -239,36 +238,39 @@ export const resetPassword = async (data: {
   return response.data;
 };
 export const changePassword = async (
-  data: Model.ChangePasswordRequest
+  data: Model.ChangePasswordRequest,
 ): Promise<Model.ChangePasswordResponse> => {
-  const response = await apiClient.post<Model.ChangePasswordResponse>("/user/change-password", data);
+  const response = await apiClient.post<Model.ChangePasswordResponse>(
+    "/user/change-password",
+    data,
+  );
   return response.data;
 };
 //NHÓM BÁC SĨ
 export const doctorGetSchedule = async (): Promise<Model.Appointment[]> => {
-  const response = await apiClient.get("/doctor/my-schedule");
+  const response = await apiClient.get("/doctor/appointments/my-day");
   return response.data;
 };
 
 export const doctorCreateSlot = async (
   start: string,
-  end: string
+  end: string,
 ): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("StartTime", start);
   formData.append("EndTime", end);
-  const response = await apiClient.post("/doctor/availability", formData, {
+  const response = await apiClient.post("/doctor/schedules", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
 
 export const doctorDeleteSlot = async (id: number): Promise<void> => {
-  await apiClient.delete(`/doctor/availability/${id}`);
+  await apiClient.put(`/doctor/schedules/${id}/cancel`, {});
 };
 
 export const doctorCreateMedicalRecord = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/doctor/medical-records", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -279,51 +281,55 @@ export const doctorCreateMedicalRecord = async (
 export const doctorUploadResult = async (
   recordId: number,
   file: File,
-  desc: string
+  desc: string,
 ): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("description", desc);
   const response = await apiClient.post(
-    `/doctor/medical-records/${recordId}/upload-result`,
+    `/doctor/medical-records/${recordId}/results`,
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
-    }
+    },
   );
   return response.data;
 };
 
 export const updateAppointmentStatus = async (
   appointmentId: number,
-  status: "InProgress" | "Completed" | "Cancelled"
+  status: "InProgress" | "Completed" | "Cancelled",
 ): Promise<Model.MessageResponse> => {
-  const response = await apiClient.put(
-    `/doctor/appointments/${appointmentId}/status`,
-    { Status: status }
-  );
+  let response;
+  if (status === "InProgress") {
+    response = await apiClient.put(`/doctor/appointments/${appointmentId}/start`, {});
+  } else if (status === "Completed") {
+    response = await apiClient.put(`/doctor/appointments/${appointmentId}/complete`, {});
+  } else {
+    response = await apiClient.put(`/doctor/appointments/${appointmentId}/status`, { Status: status });
+  }
   return response.data;
 };
 
 export const getMySlots = async (
-  date?: string
+  date?: string,
 ): Promise<Model.AvailabilitySlot[]> => {
-  const url = date ? `/doctor/my-slots?date=${date}` : "/doctor/my-slots";
+  const url = date ? `/doctor/schedules/me?targetDate=${date}` : "/doctor/schedules/me";
   const response = await apiClient.get(url);
   return response.data;
 };
 
 export const getAppointmentDetail = async (
-  id: number
+  id: number,
 ): Promise<Model.Appointment> => {
   const response = await apiClient.get(`/doctor/appointments/${id}`);
   return response.data;
 };
 
 export const getPatientHistory = async (
-  patientId: number
+  patientId: number,
 ): Promise<Model.MedicalRecord[]> => {
-  const response = await apiClient.get(`/doctor/patient-history/${patientId}`);
+  const response = await apiClient.get(`/doctor/patients/${patientId}/medical-records`);
   return response.data;
 };
 
@@ -332,7 +338,7 @@ export const getDoctorDashboard = async (): Promise<any> => {
     console.log("Getting doctor dashboard...");
     console.log("Current token:", localStorage.getItem("api_token"));
 
-    const response = await apiClient.get("/doctor/dashboard-stats");
+    const response = await apiClient.get("/doctor/dashboard/stats");
     console.log("Dashboard response:", response.data);
     return response.data;
   } catch (error) {
@@ -348,21 +354,21 @@ export const getStaffDashboard = async (): Promise<Model.DashboardStats> => {
 };
 
 export const confirmAppointment = async (
-  id: number
+  id: number,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(
     `/staff/appointments/${id}/confirm`,
-    {}
+    {},
   );
   return response.data;
 };
 
 export const checkInAppointment = async (
-  id: number
+  id: number,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(
     `/staff/appointments/${id}/check-in`,
-    {}
+    {},
   );
   return response.data;
 };
@@ -389,11 +395,10 @@ export const getAllAppointments = async (): Promise<Model.Appointment[]> => {
 
 export const getDoctorScheduleAdmin = async (
   doctorId: number,
-  date: string
+  date: string,
 ) => {
-  // Gọi vào endpoint mới chúng ta vừa tạo
   const response = await apiClient.get(
-    `/admin/check-schedule?DoctorID=${doctorId}&Date=${date}`
+    `/admin/doctors/${doctorId}/schedules?targetDate=${date}`,
   );
   return response.data;
 };
@@ -420,7 +425,7 @@ export const getPendingAppointments = async (): Promise<
 
 // Các hàm Admin & Staff dùng FormData (giữ override Content-Type)
 export const adminCreateDoctor = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/doctors", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -430,7 +435,7 @@ export const adminCreateDoctor = async (
 
 export const adminUpdateDoctor = async (
   id: number,
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/doctors/${id}`, formData, {
@@ -441,7 +446,7 @@ export const adminUpdateDoctor = async (
 
 export const adminUploadDoctorImage = async (
   id: number,
-  file: File
+  file: File,
 ): Promise<Model.MessageResponse> => {
   const formData = new FormData();
   formData.append("imageURL", file);
@@ -450,7 +455,7 @@ export const adminUploadDoctorImage = async (
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
-    }
+    },
   );
   return response.data;
 };
@@ -461,7 +466,7 @@ export const adminDeleteDoctor = async (id: number): Promise<void> => {
 
 export const adminGetUsers = async (
   role?: string,
-  search?: string
+  search?: string,
 ): Promise<Model.User[]> => {
   const params = { role, search };
   const response = await apiClient.get("/admin/users", { params });
@@ -470,7 +475,7 @@ export const adminGetUsers = async (
 
 export const adminUpdateUser = async (
   id: number,
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/users/${id}`, formData, {
@@ -480,7 +485,7 @@ export const adminUpdateUser = async (
 };
 
 export const adminCreateSpecialty = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/specialties", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -490,7 +495,7 @@ export const adminCreateSpecialty = async (
 
 export const adminUpdateSpecialty = async (
   id: number,
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/specialties/${id}`, formData, {
@@ -504,7 +509,7 @@ export const adminDeleteSpecialty = async (id: number): Promise<void> => {
 };
 
 export const adminGetAllServices = async (
-  search?: string
+  search?: string,
 ): Promise<Model.Service[]> => {
   const params = search ? { search } : {};
   const response = await apiClient.get("/admin/services", { params });
@@ -512,7 +517,7 @@ export const adminGetAllServices = async (
 };
 
 export const adminCreateService = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/services", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -542,7 +547,7 @@ export const adminGetFeedbacks = async (): Promise<Model.AdminFeedback[]> => {
 };
 
 export const getAllMedicalRecords = async (
-  patientId?: number
+  patientId?: number,
 ): Promise<Model.MedicalRecord[]> => {
   const params = patientId ? { patient_id: patientId } : {};
   const response = await apiClient.get("/admin/medical-records", { params });
@@ -550,7 +555,7 @@ export const getAllMedicalRecords = async (
 };
 
 export const getMedicalRecordDetail = async (
-  id: number
+  id: number,
 ): Promise<Model.MedicalRecord> => {
   const response = await apiClient.get(`/admin/medical-records/${id}`);
   return response.data;
@@ -562,7 +567,7 @@ export const adminDeleteMedicalRecord = async (id: number): Promise<void> => {
 
 export const adminUpdateService = async (
   id: number,
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   formData.append("_method", "PUT");
   const response = await apiClient.post(`/admin/services/${id}`, formData, {
@@ -572,7 +577,7 @@ export const adminUpdateService = async (
 };
 
 export const updateProfile = async (
-  data: Model.UpdateProfileRequest
+  data: Model.UpdateProfileRequest,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.put("/user/profile", data);
   return response.data;
@@ -590,7 +595,7 @@ export const submitFeedback = async (data: {
       {
         Rating: data.Rating,
         Comment: data.Comment,
-      }
+      },
     );
     return response.data;
   } else if (data.TargetType === "System") {
@@ -610,7 +615,7 @@ export const adminGetUserDetail = async (id: number): Promise<Model.User> => {
 };
 
 export const adminCreatePatient = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/patients", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -623,7 +628,7 @@ export const adminDeleteUser = async (id: number): Promise<void> => {
 };
 
 export const adminCreateUser = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/users", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -633,7 +638,7 @@ export const adminCreateUser = async (
 
 export const adminCancelAppointment = async (
   id: number,
-  reason: string
+  reason: string,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.patch(`/staff/appointments/${id}/cancel`, {
     reason,
@@ -644,7 +649,7 @@ export const adminCancelAppointment = async (
 export const adminCreateSlot = async (
   doctorId: number,
   start: string,
-  end: string
+  end: string,
 ): Promise<Model.AvailabilitySlot> => {
   const formData = new FormData();
   formData.append("DoctorID", doctorId.toString());
@@ -663,7 +668,7 @@ export const adminDeleteSlot = async (slotId: number): Promise<void> => {
 
 export const adminUpdatePatient = async (
   id: number,
-  data: Model.AdminUpdatePatientRequest
+  data: Model.AdminUpdatePatientRequest,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.put(`/admin/patients/${id}`, data);
   return response.data;
@@ -675,14 +680,14 @@ export const getNotificationLogs = async (): Promise<Model.Notification[]> => {
 };
 
 export const sendNotification = async (
-  data: Model.SendNotificationRequest
+  data: Model.SendNotificationRequest,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/admin/notifications/send", data);
   return response.data;
 };
 
 export const deleteNotification = async (
-  id: number | string
+  id: number | string,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.delete(`/admin/notifications/${id}`);
   return response.data;
@@ -697,13 +702,13 @@ export const deleteAllNotifications =
 export const triggerReminders = async (): Promise<Model.MessageResponse> => {
   const response = await apiClient.post(
     `/admin/notifications/trigger-reminders`,
-    {}
+    {},
   );
   return response.data;
 };
 
 export const staffCreateAppointment = async (
-  formData: FormData
+  formData: FormData,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/staff/appointments", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -715,7 +720,7 @@ export const staffUpdateSlot = async (
   slotId: number,
   doctorId: number,
   startTime: string,
-  endTime: string
+  endTime: string,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.put(`/staff/availability/${slotId}`, {
     DoctorID: doctorId,
@@ -736,7 +741,7 @@ export const getFamilyMembers = async (): Promise<Model.FamilyMember[]> => {
 
 export const addFamilyMember = async (
   relativeUserId: number,
-  relationType: string
+  relationType: string,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.post("/user/family-members", {
     RelativeUserID: relativeUserId,
@@ -746,16 +751,16 @@ export const addFamilyMember = async (
 };
 
 export const removeFamilyMember = async (
-  relativeUserId: number
+  relativeUserId: number,
 ): Promise<Model.MessageResponse> => {
   const response = await apiClient.delete(
-    `/user/family-members/${relativeUserId}`
+    `/user/family-members/${relativeUserId}`,
   );
   return response.data;
 };
 
 export const searchUserPublic = async (
-  query: string
+  query: string,
 ): Promise<Model.User[]> => {
   const response = await apiClient.get(`/users/search-public?query=${query}`);
   return response.data;
