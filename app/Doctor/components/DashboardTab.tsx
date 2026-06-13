@@ -205,7 +205,7 @@ export default function DashboardTab({
 
   // Tính paginated appointments 
   const filteredAppointments = appointments.filter(appt => {
-    if (searchTerm && !appt.patientName?.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (searchTerm && !(appt?.patientName || "").toLowerCase().includes((searchTerm || "").toLowerCase())) {
       return false;
     }
     if (statusFilter !== "all" && appt.status !== statusFilter) {

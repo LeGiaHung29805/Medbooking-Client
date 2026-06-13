@@ -310,9 +310,9 @@ export default function ServiceManagementPage() {
     const query = searchQuery.toLowerCase();
     return services.filter(
       (s) =>
-        s.ServiceName.toLowerCase().includes(query) ||
-        (s.Description || "").toLowerCase().includes(query) ||
-        specialtyMap.get(s.SpecialtyID)?.toLowerCase().includes(query)
+        (s?.ServiceName || "").toLowerCase().includes(query) ||
+        (s?.Description || "").toLowerCase().includes(query) ||
+        (specialtyMap.get(s.SpecialtyID) || "").toLowerCase().includes(query)
     );
   }, [services, searchQuery, specialtyMap]);
 

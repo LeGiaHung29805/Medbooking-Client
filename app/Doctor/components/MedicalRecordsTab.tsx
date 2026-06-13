@@ -30,8 +30,8 @@ const MedicalRecordsTab = ({
   // Filter records
   const filteredRecords = medicalRecords.filter(record => {
     const matchesSearch =
-      (record.patient?.FullName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (record.Diagnosis?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+      (record?.patient?.FullName || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+      (record?.Diagnosis || "").toLowerCase().includes((searchTerm || "").toLowerCase());
 
     const matchesStatus = statusFilter === "all" || record.appointment?.Status === statusFilter;
 

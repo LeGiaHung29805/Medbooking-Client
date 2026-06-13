@@ -233,8 +233,8 @@ export default function SpecialtyManagementPage() {
     const query = searchQuery.toLowerCase();
     return specialties.filter(
       (s) =>
-        s.SpecialtyName.toLowerCase().includes(query) ||
-        (s.Description || "").toLowerCase().includes(query)
+        (s?.SpecialtyName || "").toLowerCase().includes(query) ||
+        (s?.Description || "").toLowerCase().includes(query)
     );
   }, [specialties, searchQuery]);
 

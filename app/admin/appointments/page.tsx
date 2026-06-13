@@ -197,10 +197,10 @@ export default function AppointmentsPage() {
     return appointments.filter((item) => {
       const statusMatch =
         filterStatus === "all" || item.Status === filterStatus;
-      const pName = item.patient?.FullName?.toLowerCase() || "";
-      const dName = item.doctor?.user?.FullName?.toLowerCase() || "";
-      const idStr = item.AppointmentID.toString();
-      const search = searchTerm.toLowerCase();
+      const pName = (item?.patient?.FullName || "").toLowerCase();
+      const dName = (item?.doctor?.user?.FullName || "").toLowerCase();
+      const idStr = (item?.AppointmentID || "").toString();
+      const search = (searchTerm || "").toLowerCase();
       return (
         statusMatch &&
         (pName.includes(search) ||

@@ -500,9 +500,9 @@ export default function DoctorManagementPage() {
   const filteredDoctors = useMemo(() => {
     if (!Array.isArray(doctors)) return [];
     return doctors.filter((doc) => {
-      const name = doc.user?.FullName?.toLowerCase() || "";
-      const email = (doc.user?.Email || "").toLowerCase();
-      const query = searchQuery.toLowerCase();
+      const name = (doc?.user?.FullName || "").toLowerCase();
+      const email = (doc?.user?.Email || "").toLowerCase();
+      const query = (searchQuery || "").toLowerCase();
 
       const matchesSearch = name.includes(query) || email.includes(query);
       const matchesSpec =

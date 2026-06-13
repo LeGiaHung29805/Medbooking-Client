@@ -123,9 +123,9 @@ export default function DoctorsBookingPage() {
 
   const filtered = doctors.filter((doc) => {
     // Truy cập user.FullName
-    const matchName = (doc.user?.FullName || "")
+    const matchName = (doc?.user?.FullName || "")
       .toLowerCase()
-      .includes(searchTrigger.toLowerCase());
+      .includes((searchTrigger || "").toLowerCase());
     // Truy cập specialty.SpecialtyName
     const docSpecName = doc.specialty?.SpecialtyName || "";
     const matchDept =

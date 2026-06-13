@@ -128,7 +128,7 @@ export default function SpecialtyBookingPage() {
     //LỌC & PHÂN TRANG
     const filteredSpecialties = useMemo(() => {
         return specialties.filter((s) =>
-            s.SpecialtyName.toLowerCase().includes(search.toLowerCase())
+            (s?.SpecialtyName || "").toLowerCase().includes((search || "").toLowerCase())
         );
     }, [specialties, search]);
 

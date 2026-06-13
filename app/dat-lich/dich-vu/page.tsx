@@ -161,9 +161,9 @@ export default function ServiceBookingPage() {
     //LỌC VÀ PHÂN TRANG (Client-side)
     const filteredServices = useMemo(() => {
         return services.filter((srv) =>
-            srv.ServiceName.toLowerCase().includes(search.toLowerCase()) ||
-            srv.Description?.toLowerCase().includes(search.toLowerCase()) ||
-            srv.SpecialtyName.toLowerCase().includes(search.toLowerCase())
+            (srv?.ServiceName || "").toLowerCase().includes((search || "").toLowerCase()) ||
+            (srv?.Description || "").toLowerCase().includes((search || "").toLowerCase()) ||
+            (srv?.SpecialtyName || "").toLowerCase().includes((search || "").toLowerCase())
         );
     }, [services, search]);
 

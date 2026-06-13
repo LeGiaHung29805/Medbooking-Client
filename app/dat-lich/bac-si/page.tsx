@@ -143,9 +143,9 @@ export default function DoctorBookingPage() {
     // Lọc danh sách bác sĩ (Client-side)
     const filteredDoctors = useMemo(() => {
         return doctors.filter((d) => {
-            const nameMatch = d.user?.FullName?.toLowerCase().includes(search.toLowerCase());
+            const nameMatch = (d.user?.FullName || "").toLowerCase().includes((search || "").toLowerCase());
             // Lọc theo tên chuyên khoa (deptFilter là text nhập vào)
-            const specMatch = !deptFilter || d.specialty?.SpecialtyName.toLowerCase().includes(deptFilter.toLowerCase());
+            const specMatch = !deptFilter || (d.specialty?.SpecialtyName || "").toLowerCase().includes((deptFilter || "").toLowerCase());
             return nameMatch && specMatch;
         });
     }, [doctors, search, deptFilter]);

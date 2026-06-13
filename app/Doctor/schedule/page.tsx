@@ -369,15 +369,15 @@ export default function SchedulePage() {
     let filtered = [...appointments];
 
     if (filterStatus !== "all") {
-      filtered = filtered.filter(appt => appt.Status?.toLowerCase() === filterStatus.toLowerCase());
+      filtered = filtered.filter(appt => (appt?.Status || "").toLowerCase() === (filterStatus || "").toLowerCase());
     }
 
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
+      const term = (searchTerm || "").toLowerCase();
       filtered = filtered.filter(appt =>
-        appt.patient?.FullName?.toLowerCase().includes(term) ||
-        appt.patient?.PhoneNumber?.includes(term) ||
-        appt.InitialSymptoms?.toLowerCase().includes(term)
+        (appt?.patient?.FullName || "").toLowerCase().includes(term) ||
+        (appt?.patient?.PhoneNumber || "").includes(term) ||
+        (appt?.InitialSymptoms || "").toLowerCase().includes(term)
       );
     }
 
@@ -604,11 +604,11 @@ export default function SchedulePage() {
 
   const stats = {
     total: filteredAppointments?.length || 0,
-    waiting: filteredAppointments?.filter(a => a.Status?.toLowerCase() === "pending").length || 0,
-    checkedIn: filteredAppointments?.filter(a => a.Status?.toLowerCase() === "checkedin").length || 0,
-    inProgress: filteredAppointments?.filter(a => a.Status?.toLowerCase() === "inprogress").length || 0,
-    completed: filteredAppointments?.filter(a => a.Status?.toLowerCase() === "completed").length || 0,
-    cancelled: filteredAppointments?.filter(a => a.Status?.toLowerCase() === "cancelled").length || 0
+    waiting: filteredAppointments?.filter(a => (a?.Status || "").toLowerCase() === "pending").length || 0,
+    checkedIn: filteredAppointments?.filter(a => (a?.Status || "").toLowerCase() === "checkedin").length || 0,
+    inProgress: filteredAppointments?.filter(a => (a?.Status || "").toLowerCase() === "inprogress").length || 0,
+    completed: filteredAppointments?.filter(a => (a?.Status || "").toLowerCase() === "completed").length || 0,
+    cancelled: filteredAppointments?.filter(a => (a?.Status || "").toLowerCase() === "cancelled").length || 0
   };
 
   return (

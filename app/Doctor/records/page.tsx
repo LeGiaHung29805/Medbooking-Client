@@ -193,17 +193,17 @@ export default function RecordsPage() {
 
     // Search filter
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase().trim();
+      const term = (searchTerm || "").toLowerCase().trim();
       filtered = filtered.filter(record =>
-        record.patient?.FullName?.toLowerCase().includes(term) ||
-        record.Diagnosis.toLowerCase().includes(term)
+        (record?.patient?.FullName || "").toLowerCase().includes(term) ||
+        (record?.Diagnosis || "").toLowerCase().includes(term)
       );
     }
 
     // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter(record =>
-        record.appointment?.Status?.toLowerCase() === statusFilter.toLowerCase()
+        (record?.appointment?.Status || "").toLowerCase() === (statusFilter || "").toLowerCase()
       );
     }
 
