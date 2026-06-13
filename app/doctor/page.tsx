@@ -42,7 +42,7 @@ export default function DoctorDashboardPage() {
 
   // HELPER FUNCTIONS
   const getPriorityColor = (priority: string): string => {
-    switch (priority?.toLowerCase()) {
+    switch ((priority || "").toLowerCase()) {
       case "emergency": return "bg-red-100 text-red-800 border-red-300";
       case "high": return "bg-orange-100 text-orange-800 border-orange-300";
       case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-300";
@@ -51,7 +51,7 @@ export default function DoctorDashboardPage() {
   };
 
   const getPriorityText = (priority: string): string => {
-    switch (priority?.toLowerCase()) {
+    switch ((priority || "").toLowerCase()) {
       case "emergency": return "CẤP CỨU";
       case "high": return "ƯU TIÊN CAO";
       case "medium": return "Trung bình";

@@ -149,14 +149,14 @@ export default function ServicesPage() {
 
   // Lọc dịch vụ (Sử dụng useMemo để tối ưu hiệu năng)
   const filteredServices = useMemo(() => {
-    const keyword = searchTerm.toLowerCase().trim();
+    const keyword = (searchTerm || "").toLowerCase().trim();
 
     return services.filter((service) => {
       // Lọc theo tìm kiếm
       const matchesSearch =
-        service.name.toLowerCase().includes(keyword) ||
-        service.desc.toLowerCase().includes(keyword) ||
-        service.doctor.toLowerCase().includes(keyword);
+        (service?.name || "").toLowerCase().includes(keyword) ||
+        (service?.desc || "").toLowerCase().includes(keyword) ||
+        (service?.doctor || "").toLowerCase().includes(keyword);
 
       // Lọc theo danh mục
       const matchesCategory =

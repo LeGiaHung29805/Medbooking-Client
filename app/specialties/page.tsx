@@ -55,7 +55,7 @@ export default function HospitalPage() {
 
   // Lọc dữ liệu client-side 
   const filtered = specialties.filter((sp) =>
-    (sp.SpecialtyName || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (sp?.SpecialtyName || "").toLowerCase().includes((searchTerm || "").toLowerCase())
   );
 
   return (

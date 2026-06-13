@@ -363,7 +363,7 @@ class DoctorService {
   private normalizeStatus(status: string): string {
     if (!status) return 'waiting';
 
-    const s = status.toLowerCase(); // Chuyển về chữ thường
+    const s = (status || "").toLowerCase(); // Chuyển về chữ thường
 
     const statusMap: Record<string, string> = {
       // Nhóm WAITING
@@ -407,7 +407,7 @@ class DoctorService {
       'critical': 'emergency'
     };
 
-    return priorityMap[priority.toLowerCase()] || 'medium';
+    return priorityMap[(priority || "").toLowerCase()] || 'medium';
   }
 }
 

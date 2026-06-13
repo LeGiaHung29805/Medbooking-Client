@@ -307,7 +307,7 @@ export default function ServiceManagementPage() {
   // Filter
   const filteredServices = useMemo(() => {
     if (!searchQuery) return services;
-    const query = searchQuery.toLowerCase();
+    const query = (searchQuery || "").toLowerCase();
     return services.filter(
       (s) =>
         (s?.ServiceName || "").toLowerCase().includes(query) ||

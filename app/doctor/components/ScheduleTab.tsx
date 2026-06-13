@@ -200,7 +200,7 @@ const ScheduleTab = ({
                   </div>
                 ) : (
                   day.appointmentsList.map((appt) => {
-                    const normalizedStatus = appt.Status?.toLowerCase();
+                    const normalizedStatus = (appt?.Status || "").toLowerCase();
                     const statusInfo = getStatusInfo(normalizedStatus);
 
                     return (

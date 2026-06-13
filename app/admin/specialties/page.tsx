@@ -230,7 +230,7 @@ export default function SpecialtyManagementPage() {
 
   const filteredSpecialties = useMemo(() => {
     if (!searchQuery) return specialties;
-    const query = searchQuery.toLowerCase();
+    const query = (searchQuery || "").toLowerCase();
     return specialties.filter(
       (s) =>
         (s?.SpecialtyName || "").toLowerCase().includes(query) ||
