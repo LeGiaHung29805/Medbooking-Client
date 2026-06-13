@@ -1,8 +1,8 @@
 import axios from "axios";
 import * as Model from "./model";
-
 const API_BASE_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://medbooking-server-production.up.railway.app";
 console.log(process.env.NEXT_PUBLIC_API_URL);
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -80,7 +80,8 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
 
   let user = rawData.user;
   if (!user && rawData.userId) {
-    let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" = "BenhNhan";
+    let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" =
+      "BenhNhan";
     const rawRole = (rawData.role || "").toUpperCase();
     if (rawRole.includes("ADMIN")) {
       frontendRole = "QuanTriVien";
@@ -101,16 +102,13 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
       FirstName: rawData.firstName || "",
       LastName: rawData.lastName || "",
       Status: "HoatDong",
-      avatar_url: rawData.avatarURL || null
+      avatar_url: rawData.avatarURL || null,
     };
   }
 
   if (token && typeof window !== "undefined") {
     localStorage.setItem("api_token", token);
-    localStorage.setItem(
-      "user_role",
-      user ? user.Role : (rawData.role || "")
-    );
+    localStorage.setItem("user_role", user ? user.Role : rawData.role || "");
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
     }
@@ -119,7 +117,7 @@ export const login = async (data: FormData): Promise<Model.LoginResponse> => {
 
   return {
     token: token,
-    user: user
+    user: user,
   };
 };
 
@@ -235,7 +233,10 @@ export const bookAppointment = async (
 export const cancelAppointment = async (
   id: number,
 ): Promise<Model.MessageResponse> => {
-  const response = await apiClient.put(`/patient/appointments/${id}/cancel`, {});
+  const response = await apiClient.put(
+    `/patient/appointments/${id}/cancel`,
+    {},
+  );
   return response.data;
 };
 
@@ -337,11 +338,20 @@ export const updateAppointmentStatus = async (
 ): Promise<Model.MessageResponse> => {
   let response;
   if (status === "InProgress") {
-    response = await apiClient.put(`/doctor/appointments/${appointmentId}/start`, {});
+    response = await apiClient.put(
+      `/doctor/appointments/${appointmentId}/start`,
+      {},
+    );
   } else if (status === "Completed") {
-    response = await apiClient.put(`/doctor/appointments/${appointmentId}/complete`, {});
+    response = await apiClient.put(
+      `/doctor/appointments/${appointmentId}/complete`,
+      {},
+    );
   } else {
-    response = await apiClient.put(`/doctor/appointments/${appointmentId}/status`, { Status: status });
+    response = await apiClient.put(
+      `/doctor/appointments/${appointmentId}/status`,
+      { Status: status },
+    );
   }
   return response.data;
 };
@@ -349,7 +359,9 @@ export const updateAppointmentStatus = async (
 export const getMySlots = async (
   date?: string,
 ): Promise<Model.AvailabilitySlot[]> => {
-  const url = date ? `/doctor/schedules/me?targetDate=${date}` : "/doctor/schedules/me";
+  const url = date
+    ? `/doctor/schedules/me?targetDate=${date}`
+    : "/doctor/schedules/me";
   const response = await apiClient.get(url);
   return response.data;
 };
@@ -364,7 +376,9 @@ export const getAppointmentDetail = async (
 export const getPatientHistory = async (
   patientId: number,
 ): Promise<Model.MedicalRecord[]> => {
-  const response = await apiClient.get(`/doctor/patients/${patientId}/medical-records`);
+  const response = await apiClient.get(
+    `/doctor/patients/${patientId}/medical-records`,
+  );
   return response.data;
 };
 
