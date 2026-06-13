@@ -1,9 +1,15 @@
 import axios from "axios";
 import * as Model from "./model";
-const API_BASE_URL =
+const rawBase =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://medbooking-server-production.up.railway.app";
-console.log(process.env.NEXT_PUBLIC_API_URL);
+export const API_BASE_URL = rawBase.replace(/\/$/, "") + "/api";
+console.log(
+  "Resolved NEXT_PUBLIC_API_URL:",
+  process.env.NEXT_PUBLIC_API_URL,
+  "=>",
+  API_BASE_URL,
+);
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,

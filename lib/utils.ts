@@ -14,15 +14,20 @@ export const getFullImageUrl = (url: string | null | undefined) => {
     return url;
   }
 
-const backendUrl = process.env.NEXT_PUBLIC_API_URL|| "http://127.0.0.1:8000";
+  const rawBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080";
+  let backendUrl = rawBase.replace(/\/$/, "");
+  
+  if (backendUrl.endsWith("/api")) {
+    backendUrl = backendUrl.substring(0, backendUrl.length - 4);
+  }
   
   let cleanPath = url.startsWith("/") ? url.slice(1) : url;
 
-  if (!cleanPath.startsWith("storage/")) {
-     cleanPath = `storage/${cleanPath}`;
+  if (cleanPath.startsWith("storage/")) {
+     cleanPath = cleanPath.substring(8);
   }
 
-  return `${backendUrl}/${cleanPath}`;
+  return `${backendUrl}/api/storage/${cleanPath}`;
 };
 interface ApiError {
   response?: {
