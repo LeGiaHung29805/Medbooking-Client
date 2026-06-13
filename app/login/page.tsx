@@ -53,11 +53,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("Username", username);
-      formData.append("password", password);
-
-      const response = await Api.login(formData);
+      const response = await Api.login({ username, password });
 
       if (response.token) {
         localStorage.setItem("user", JSON.stringify(response.user));

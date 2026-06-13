@@ -76,9 +76,9 @@ export const register = async (
   return response.data;
 };
 
-export const login = async (data: FormData): Promise<Model.LoginResponse> => {
+export const login = async (data: { username: string; password: string }): Promise<Model.LoginResponse> => {
   const response = await apiClient.post("/auth/login", data, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: { "Content-Type": "application/json" },
   });
 
   const rawData = response.data;

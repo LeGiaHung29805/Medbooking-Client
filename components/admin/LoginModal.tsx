@@ -15,11 +15,7 @@ export default function LoginModal({ onLoginSuccess }: { onLoginSuccess: () => v
         setError("");
         setIsLoading(true);
         try {
-            const formData = new FormData();
-            formData.append("Username", username);
-            formData.append("password", password);
-
-            const response = await login(formData);
+            const response = await login({ username, password });
 
             if (response.user && response.user.Role === "QuanTriVien") {
                 onLoginSuccess();
