@@ -1,0 +1,29 @@
+[33mcommit 759188eb5fc5e78724cfbe91b53854a60cd1dec0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: lunaHieu <nguyenvanhieu040205@gmail.com>
+Date:   Sat Jun 13 21:31:58 2026 +0700
+
+    fix: apply safe navigation to all toLowerCase() calls to prevent runtime crashes
+
+[33mcommit 7d65d9a1ae631d8025199334e1ebd5ceaaad3a41[m
+Author: lunaHieu <nguyenvanhieu040205@gmail.com>
+Date:   Sat Jun 13 20:52:45 2026 +0700
+
+    fix: resolve 404 errors by adding missing static route pages
+
+[33mcommit db28fd7e0a0db25bba5ca482c12046d74eaa00ae[m
+Author: lunaHieu <nguyenvanhieu040205@gmail.com>
+Date:   Sat Jun 13 20:31:26 2026 +0700
+
+    fix: Resolve CORS, 403 Forbidden, and H2 database init issues. Sync API endpoints.
+
+[33mcommit c8a4d41cfea581a8c6d04cb5c669da609f68cda9[m
+Author: lunaHieu <nguyenvanhieu040205@gmail.com>
+Date:   Sat Jun 13 15:54:28 2026 +0700
+
+    refactor: update ApiClient base url to production server
+
+[33mcommit da5f2eaef13a525d8db9c2730b1d64f81e5c0889[m
+Author: lunaHieu <nguyenvanhieu040205@gmail.com>
+Date:   Mon Jun 8 10:17:22 2026 +0700
+
+    fix: case sensitivity path for doctor components
