@@ -76,7 +76,10 @@ export const register = async (
   return response.data;
 };
 
-export const login = async (data: { username: string; password: string }): Promise<Model.LoginResponse> => {
+export const login = async (data: {
+  username: string;
+  password: string;
+}): Promise<Model.LoginResponse> => {
   const response = await apiClient.post("/auth/login", data, {
     headers: { "Content-Type": "application/json" },
   });
@@ -89,13 +92,25 @@ export const login = async (data: { username: string; password: string }): Promi
     let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" =
       "BenhNhan";
     const rawRole = (rawData.role || "").toUpperCase();
-    if (rawRole.includes("ADMIN")) {
+    if (
+      rawRole.includes("ADMIN") ||
+      rawRole.includes("QUANTRIVIEN") ||
+      rawRole === "QUANTRI"
+    ) {
       frontendRole = "QuanTriVien";
-    } else if (rawRole.includes("DOCTOR")) {
+    } else if (
+      rawRole.includes("DOCTOR") ||
+      rawRole.includes("BACSI") ||
+      rawRole === "BAC_SI"
+    ) {
       frontendRole = "BacSi";
-    } else if (rawRole.includes("STAFF") || rawRole.includes("MEDICAL_STAFF")) {
+    } else if (
+      rawRole.includes("STAFF") ||
+      rawRole.includes("MEDICAL_STAFF") ||
+      rawRole.includes("NHANVIEN")
+    ) {
       frontendRole = "NhanVien";
-    } else if (rawRole.includes("PATIENT")) {
+    } else if (rawRole.includes("PATIENT") || rawRole.includes("BENHNHAN")) {
       frontendRole = "BenhNhan";
     }
 
