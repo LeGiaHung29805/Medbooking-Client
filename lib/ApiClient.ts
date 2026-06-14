@@ -195,7 +195,7 @@ export const getTopFeedbacks = async (): Promise<Model.TopFeedback[]> => {
 //NHÓM BỆNH NHÂN
 
 export const getMe = async (): Promise<Model.User> => {
-  const response = await apiClient.get("/patient/profile");
+  const response = await apiClient.get("/user/profile");
   return response.data;
 };
 
