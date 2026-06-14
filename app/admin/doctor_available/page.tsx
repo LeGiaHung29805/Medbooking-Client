@@ -159,7 +159,7 @@ export default function ScheduleManagementPage() {
     }
   };
 
-  const getDoctorInfo = (id: number) => doctors.find((d) => d.DoctorID === id);
+  const getDoctorInfo = (id: number) => doctors.find((d) => (d.DoctorID || (d as any).doctorId) === id);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
@@ -186,11 +186,17 @@ export default function ScheduleManagementPage() {
               onChange={(e) => setSelectedDoctorId(e.target.value)}
             >
               <option value="all">-- Chọn Bác sĩ để xem --</option>
-              {doctors.map((d) => (
-                <option key={d.DoctorID} value={d.DoctorID}>
-                  {d.user?.FullName} ({d.specialty?.SpecialtyName})
-                </option>
-              ))}
+              {doctors.map((dItem) => {
+                const d = dItem as any;
+                const docId = d.DoctorID || d.doctorId;
+                const docName = d.user?.FullName || d.user?.fullName || d.user?.name || "";
+                const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
+                return (
+                  <option key={docId} value={docId}>
+                    {docName} {specName ? `(${specName})` : ""}
+                  </option>
+                );
+              })}
             </select>
             <button
               onClick={() => setIsModalOpen(true)}
@@ -231,26 +237,30 @@ export default function ScheduleManagementPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {currentSlots.map((slot) => {
-                  const doc = getDoctorInfo(slot.DoctorID);
-                  const startTime = slot.StartTime.split(" ")[1]?.slice(0, 5);
-                  const endTime = slot.EndTime.split(" ")[1]?.slice(0, 5);
+                {currentSlots.map((slotItem) => {
+                  const slot = slotItem as any;
+                  const slotId = slot.SlotID || slot.slotId;
+                  const doc = getDoctorInfo(slot.DoctorID || slot.doctorId) as any;
+                  const startTime = (slot.StartTime || slot.startTime || "").split(" ")[1]?.slice(0, 5);
+                  const endTime = (slot.EndTime || slot.endTime || "").split(" ")[1]?.slice(0, 5);
+                  const docName = doc?.user?.FullName || doc?.user?.fullName || doc?.user?.name || "N/A";
+                  const specName = doc?.specialty ? (doc.specialty.SpecialtyName || doc.specialty.specialtyName) : "---";
+                  const slotStatus = slot.Status || slot.status || "Available";
                   return (
                     <div
-                      key={slot.SlotID}
+                      key={slotId}
                       className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex items-center justify-between"
                     >
-                      {/* ... (Nội dung thẻ slot giữ nguyên) ... */}
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                          {doc?.user?.FullName?.charAt(0) || "D"}
+                          {(docName || "D").charAt(0)}
                         </div>
                         <div>
                           <p className="font-bold text-gray-800 text-sm">
-                            {doc?.user?.FullName}
+                            {docName}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {doc?.specialty?.SpecialtyName}
+                            {specName}
                           </p>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">
@@ -260,7 +270,7 @@ export default function ScheduleManagementPage() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        {slot.Status === "Available" ? (
+                        {slotStatus === "Available" ? (
                           <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
                             Trống
                           </span>
@@ -269,10 +279,10 @@ export default function ScheduleManagementPage() {
                             Đã đặt
                           </span>
                         )}
-                        {slot.Status === "Available" && (
+                        {slotStatus === "Available" && (
                           <button
                             onClick={() =>
-                              handleDeleteSlot(slot.SlotID, slot.Status)
+                              handleDeleteSlot(slotId, slotStatus)
                             }
                             className="text-red-400 hover:text-red-600 text-xs font-medium hover:underline"
                           >
@@ -343,11 +353,17 @@ export default function ScheduleManagementPage() {
                   }
                 >
                   <option value={0}>-- Chọn bác sĩ --</option>
-                  {doctors.map((d) => (
-                    <option key={d.DoctorID} value={d.DoctorID}>
-                      {d.user?.FullName} - {d.specialty?.SpecialtyName}
-                    </option>
-                  ))}
+                  {doctors.map((dItem) => {
+                    const d = dItem as any;
+                    const docId = d.DoctorID || d.doctorId;
+                    const docName = d.user?.FullName || d.user?.fullName || d.user?.name || "";
+                    const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
+                    return (
+                      <option key={docId} value={docId}>
+                        {docName} {specName ? `- ${specName}` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div>

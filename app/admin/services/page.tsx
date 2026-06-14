@@ -21,22 +21,25 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const srv = service as any;
   const isEdit = !!service;
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    ServiceName: service?.ServiceName || "",
-    Description: service?.Description || "",
-    EstimatedDuration: service?.EstimatedDuration?.toString() || "15",
-    Price: service?.Price?.toString() || "0",
-    SpecialtyID: service?.SpecialtyID || specialties[0]?.SpecialtyID || 0,
+    ServiceName: srv?.ServiceName || srv?.serviceName || "",
+    Description: srv?.Description || srv?.description || "",
+    EstimatedDuration: (srv?.EstimatedDuration || srv?.estimatedDuration || "15").toString(),
+    Price: (srv?.Price || srv?.price || "0").toString(),
+    SpecialtyID: srv?.SpecialtyID || srv?.specialtyId || specialties[0]?.SpecialtyID || (specialties[0] as any)?.specialtyId || 0,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Preview ảnh: Ưu tiên ảnh từ DB
   const [previewUrl, setPreviewUrl] = useState<string>(
-    service?.imageURL ? getFullImageUrl(service.imageURL) : ""
+    (srv?.imageURL || srv?.imageUrl || srv?.imagePath) 
+      ? getFullImageUrl(srv.imageURL || srv.imageUrl || srv.imagePath || "") 
+      : ""
   );
 
   const handleChange = (
@@ -82,9 +85,9 @@ const ServiceFormModal: React.FC<ServiceFormProps> = ({
         data.append("imageURL", selectedFile); // Key là 'image'
       }
 
-      if (isEdit && service) {
+      if (isEdit && srv) {
         data.append("_method", "PUT"); // Method Spoofing cho Laravel
-        await Api.adminUpdateService(service.ServiceID, data);
+        await Api.adminUpdateService(srv.ServiceID || srv.serviceId, data);
         alert("Cập nhật dịch vụ thành công!");
       } else {
         await Api.adminCreateService(data);
@@ -313,7 +316,7 @@ export default function ServiceManagementPage() {
   // Map Specialty Name
   const specialtyMap = useMemo(() => {
     return specialties.reduce((map, s) => {
-      map.set(s.SpecialtyID, s.SpecialtyName);
+      map.set(s.SpecialtyID || (s as any).specialtyId, s.SpecialtyName || (s as any).specialtyName);
       return map;
     }, new Map<number, string>());
   }, [specialties]);
@@ -324,9 +327,9 @@ export default function ServiceManagementPage() {
     const query = (searchQuery || "").toLowerCase();
     return services.filter(
       (s) =>
-        (s?.ServiceName || "").toLowerCase().includes(query) ||
-        (s?.Description || "").toLowerCase().includes(query) ||
-        (specialtyMap.get(s.SpecialtyID) || "").toLowerCase().includes(query)
+        (s?.ServiceName || (s as any)?.serviceName || "").toLowerCase().includes(query) ||
+        (s?.Description || (s as any)?.description || "").toLowerCase().includes(query) ||
+        (specialtyMap.get(s.SpecialtyID || (s as any).specialtyId) || "").toLowerCase().includes(query)
     );
   }, [services, searchQuery, specialtyMap]);
 
@@ -351,7 +354,7 @@ export default function ServiceManagementPage() {
     if (confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
       try {
         await Api.adminDeleteService(id);
-        setServices((prev) => prev.filter((s) => s.ServiceID !== id));
+        setServices((prev) => prev.filter((s) => (s.ServiceID || (s as any).serviceId) !== id));
         alert("Đã xóa thành công.");
       } catch (error) {
         console.error(error);
@@ -429,50 +432,58 @@ export default function ServiceManagementPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {currentServices.map((service) => (
-                  <tr
-                    key={service.ServiceID}
-                    className="hover:bg-blue-50 transition group"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <DataThumbnail
-                        src={service.imageURL}
-                        alt={service.ServiceName}
-                        fallbackType="service"
-                        className="w-10 h-10 rounded-lg"
-                      />
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-gray-800">
-                      {service.ServiceName}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                        {specialtyMap.get(service.SpecialtyID) ||
-                          "Chưa phân loại"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-green-600">
-                      {service.Price?.toLocaleString("vi-VN")} ₫
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 text-sm">
-                      {service.EstimatedDuration} phút
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-3">
-                      <button
-                        onClick={() => handleOpenModal(service)}
-                        className="text-blue-600 font-bold hover:underline"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(service.ServiceID)}
-                        className="text-red-600 font-bold hover:underline"
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {currentServices.map((service) => {
+                  const srv = service as any;
+                  const srvId = srv.ServiceID || srv.serviceId;
+                  const srvName = srv.ServiceName || srv.serviceName || "";
+                  const srvImg = srv.imageURL || srv.imageUrl || srv.imagePath || "";
+                  const srvPrice = srv.Price || srv.price || 0;
+                  const srvDuration = srv.EstimatedDuration || srv.estimatedDuration || 0;
+                  return (
+                    <tr
+                      key={srvId}
+                      className="hover:bg-blue-50 transition group"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <DataThumbnail
+                          src={srvImg}
+                          alt={srvName}
+                          fallbackType="service"
+                          className="w-10 h-10 rounded-lg"
+                        />
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-800">
+                        {srvName}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
+                          {specialtyMap.get(srv.SpecialtyID || srv.specialtyId) ||
+                            "Chưa phân loại"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-green-600">
+                        {srvPrice.toLocaleString("vi-VN")} ₫
+                      </td>
+                      <td className="px-6 py-4 text-gray-600 text-sm">
+                        {srvDuration} phút
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <button
+                          onClick={() => handleOpenModal(service)}
+                          className="text-blue-600 font-bold hover:underline"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(srvId)}
+                          className="text-red-600 font-bold hover:underline"
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {currentServices.length === 0 && (
                   <tr>
                     <td

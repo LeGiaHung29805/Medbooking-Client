@@ -21,19 +21,22 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const spec = specialty as any;
   const isEdit = !!specialty;
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    SpecialtyName: specialty?.SpecialtyName || "",
-    Description: specialty?.Description || "",
+    SpecialtyName: spec?.SpecialtyName || spec?.specialtyName || "",
+    Description: spec?.Description || spec?.description || "",
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Logic preview ảnh: Nếu có ảnh cũ -> lấy link từ DB (qua getFullImageUrl), nếu không -> rỗng
   const [previewUrl, setPreviewUrl] = useState<string>(
-    specialty?.imageURL ? getFullImageUrl(specialty.imageURL) : ""
+    (spec?.imageURL || spec?.imageUrl || spec?.imagePath) 
+      ? getFullImageUrl(spec.imageURL || spec.imageUrl || spec.imagePath || "") 
+      : ""
   );
 
   const handleChange = (
@@ -65,8 +68,8 @@ const SpecialtyFormModal: React.FC<SpecialtyFormProps> = ({
         data.append("imageURL", selectedFile);
       }
 
-      if (isEdit && specialty) {
-        await Api.adminUpdateSpecialty(specialty.SpecialtyID, data);
+      if (isEdit && spec) {
+        await Api.adminUpdateSpecialty(spec.SpecialtyID || spec.specialtyId || spec.id, data);
         alert("Cập nhật chuyên khoa thành công!");
       } else {
         await Api.adminCreateSpecialty(data);
@@ -240,8 +243,8 @@ export default function SpecialtyManagementPage() {
     const query = (searchQuery || "").toLowerCase();
     return specialties.filter(
       (s) =>
-        (s?.SpecialtyName || "").toLowerCase().includes(query) ||
-        (s?.Description || "").toLowerCase().includes(query)
+        (s?.SpecialtyName || (s as any)?.specialtyName || "").toLowerCase().includes(query) ||
+        (s?.Description || (s as any)?.description || "").toLowerCase().includes(query)
     );
   }, [specialties, searchQuery]);
 
@@ -274,7 +277,7 @@ export default function SpecialtyManagementPage() {
       try {
         await Api.adminDeleteSpecialty(specialtyId);
         setSpecialties((prev) =>
-          prev.filter((s) => s.SpecialtyID !== specialtyId)
+          prev.filter((s) => (s.SpecialtyID || (s as any).specialtyId || (s as any).id) !== specialtyId)
         );
         alert("Đã xóa thành công.");
       } catch (error) {
@@ -354,48 +357,55 @@ export default function SpecialtyManagementPage() {
                   </td>
                 </tr>
               ) : (
-                currentSpecialties.map((specialty) => (
-                  <tr
-                    key={specialty.SpecialtyID}
-                    className="hover:bg-blue-50 transition duration-150"
-                  >
-                    <td className="py-4 px-6 text-sm text-gray-500 font-mono">
-                      #{specialty.SpecialtyID}
-                    </td>
+               currentSpecialties.map((specialty) => {
+                  const spec = specialty as any;
+                  const specId = spec.SpecialtyID || spec.specialtyId || spec.id;
+                  const specName = spec.SpecialtyName || spec.specialtyName || "";
+                  const specDesc = spec.Description || spec.description || "";
+                  const specImg = spec.imageURL || spec.imageUrl || spec.imagePath || "";
+                  return (
+                    <tr
+                      key={specId}
+                      className="hover:bg-blue-50 transition duration-150"
+                    >
+                      <td className="py-4 px-6 text-sm text-gray-500 font-mono">
+                        #{specId}
+                      </td>
 
-                    <td className="py-4 px-6">
-                      <DataThumbnail
-                        src={specialty.imageURL}
-                        alt={specialty.SpecialtyName}
-                        fallbackType="specialty"
-                        className="w-10 h-10 rounded-full"
-                      />
-                    </td>
+                      <td className="py-4 px-6">
+                        <DataThumbnail
+                          src={specImg}
+                          alt={specName}
+                          fallbackType="specialty"
+                          className="w-10 h-10 rounded-full"
+                        />
+                      </td>
 
-                    <td className="py-4 px-6 text-sm text-gray-800 font-bold">
-                      {specialty.SpecialtyName}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-600">
-                      {specialty.Description}
-                    </td>
-                    <td className="py-4 px-6 text-right text-sm flex justify-end space-x-3">
-                      <button
-                        onClick={() => handleOpenModal(specialty)}
-                        className="text-blue-600 hover:text-blue-800 font-bold hover:underline"
-                        title="Chỉnh sửa"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(specialty.SpecialtyID)}
-                        className="text-red-600 hover:text-red-800 font-bold hover:underline"
-                        title="Xóa"
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      <td className="py-4 px-6 text-sm text-gray-800 font-bold">
+                        {specName}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {specDesc}
+                      </td>
+                      <td className="py-4 px-6 text-right text-sm flex justify-end space-x-3">
+                        <button
+                          onClick={() => handleOpenModal(specialty)}
+                          className="text-blue-600 hover:text-blue-800 font-bold hover:underline"
+                          title="Chỉnh sửa"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(specId)}
+                          className="text-red-600 hover:text-red-800 font-bold hover:underline"
+                          title="Xóa"
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

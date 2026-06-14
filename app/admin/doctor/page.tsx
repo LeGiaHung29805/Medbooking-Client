@@ -29,6 +29,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const doc = doctor as any;
   const isEdit = !!doctor;
   const [loading, setLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -51,27 +52,27 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Logic preview ảnh: Ưu tiên ảnh từ DB (qua getFullImageUrl)
-  const initialImage = doctor?.imageURL || doctor?.user?.avatar_url;
+  const initialImage = doc?.imageURL || doc?.imageUrl || doc?.user?.avatar_url || doc?.user?.avatarURL || doc?.user?.avatarUrl;
   const [previewUrl, setPreviewUrl] = useState<string>(
     initialImage ? getFullImageUrl(initialImage) : ""
   );
   useEffect(() => {
-    if (doctor) {
+    if (doc) {
       setFormData({
-        FullName: doctor.user?.FullName || "",
-        Email: doctor.user?.Email || "",
-        Username: doctor.user?.Username || "",
+        FullName: doc.user?.FullName || doc.user?.fullName || doc.user?.name || "",
+        Email: doc.user?.Email || doc.user?.email || "",
+        Username: doc.user?.Username || doc.user?.username || "",
         Password: "",
-        PhoneNumber: doctor.user?.PhoneNumber || "",
-        SpecialtyID: doctor.SpecialtyID || specialties[0]?.SpecialtyID || 0,
-        Degree: doctor.Degree || "",
-        YearsOfExperience: doctor.YearsOfExperience || 1,
-        ProfileDescription: doctor.ProfileDescription || "",
-        Status: doctor.user?.Status || "HoatDong",
+        PhoneNumber: doc.user?.PhoneNumber || doc.user?.phoneNumber || "",
+        SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.SpecialtyID || doc.specialty?.specialtyId || specialties[0]?.SpecialtyID || 0,
+        Degree: doc.Degree || doc.degree || "",
+        YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience || 1,
+        ProfileDescription: doc.ProfileDescription || doc.profileDescription || "",
+        Status: doc.user?.Status || doc.user?.status || "HoatDong",
       });
 
       // Cập nhật ảnh preview theo bác sĩ đang chọn
-      const img = doctor.imageURL || doctor.user?.avatar_url;
+      const img = doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL || doc.user?.avatarUrl;
       setPreviewUrl(img ? getFullImageUrl(img) : "");
     } else {
       setFormData({
@@ -158,11 +159,11 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
         data.append("imageURL", selectedFile);
       }
 
-      if (isEdit && doctor) {
+      if (isEdit && doc) {
         //Method Spoofing cho Laravel
         data.append("_method", "PUT");
 
-        await Api.adminUpdateDoctor(doctor.DoctorID, data);
+        await Api.adminUpdateDoctor(doc.DoctorID || doc.doctorId, data);
         alert("Cập nhật thành công!");
       } else {
         await Api.adminCreateDoctor(data);
@@ -507,7 +508,7 @@ export default function DoctorManagementPage() {
     if (window.confirm("Bạn có chắc chắn muốn VÔ HIỆU HÓA bác sĩ này?")) {
       try {
         await Api.adminDeleteDoctor(id);
-        setDoctors((prev) => prev.filter((d) => d.DoctorID !== id));
+        setDoctors((prev) => prev.filter((d) => (d.DoctorID || (d as any).doctorId) !== id));
         alert("Đã xóa thành công.");
       } catch (error) {
         console.log(error);
@@ -633,21 +634,23 @@ export default function DoctorManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {currentDoctors.map((doctor) => {
-                const fullName = doctor.user?.FullName || "N/A";
-                const email = doctor.user?.Email || "N/A";
+              {currentDoctors.map((doctorItem) => {
+                const doc = doctorItem as any;
+                const docId = doc.DoctorID || doc.doctorId;
+                const fullName = doc.user?.FullName || doc.user?.fullName || doc.user?.name || "N/A";
+                const email = doc.user?.Email || doc.user?.email || "N/A";
+                const phone = doc.user?.PhoneNumber || doc.user?.phoneNumber || "N/A";
+                const status = doc.user?.Status || doc.user?.status || "HoatDong";
+                const avatar = doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL || doc.user?.avatarUrl;
 
-                const phone = doctor.user?.PhoneNumber || "N/A";
-                const status = doctor.user?.Status || "HoatDong";
-                const avatar = doctor.imageURL || doctor.user?.avatar_url;
-
+                const specId = doc.SpecialtyID || doc.specialtyId || doc.specialty?.SpecialtyID || doc.specialty?.specialtyId;
                 const specName =
-                  specialties.find((s) => s.SpecialtyID === doctor.SpecialtyID)
-                    ?.SpecialtyName || "---";
+                  specialties.find((s) => (s.SpecialtyID || (s as any).specialtyId) === specId)
+                    ?.SpecialtyName || doc.specialty?.SpecialtyName || doc.specialty?.specialtyName || "---";
 
                 return (
                   <tr
-                    key={doctor.DoctorID}
+                    key={docId}
                     className="hover:bg-gray-50 transition"
                   >
                     <td className="py-3 px-4 text-sm text-gray-700">
@@ -665,10 +668,10 @@ export default function DoctorManagementPage() {
                       {specName}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-700">
-                      {doctor.Degree}
+                      {doc.Degree || doc.degree}
                       <br />
                       <span className="text-xs text-gray-500">
-                        {doctor.YearsOfExperience} năm
+                        {doc.YearsOfExperience || doc.yearsOfExperience} năm
                       </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-700">
@@ -689,13 +692,13 @@ export default function DoctorManagementPage() {
                     </td>
                     <td className="py-3 px-4 text-right text-sm space-x-2">
                       <button
-                        onClick={() => handleOpenModal(doctor)}
+                        onClick={() => handleOpenModal(doctorItem)}
                         className="text-blue-600 hover:text-blue-800 font-bold hover:underline"
                       >
                         Sửa
                       </button>
                       <button
-                        onClick={() => handleDelete(doctor.DoctorID)}
+                        onClick={() => handleDelete(docId)}
                         className="text-red-600 hover:text-red-800 font-bold hover:underline"
                       >
                         Xóa

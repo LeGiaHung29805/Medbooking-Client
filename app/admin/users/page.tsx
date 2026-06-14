@@ -54,18 +54,19 @@ const UserFormModal: React.FC<UserFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const u = user as any;
   const isEdit = !!user;
   const [loading, setLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   // State Form
   const [formData, setFormData] = useState({
-    FullName: user?.FullName || "",
-    Email: user?.Email || "",
-    Username: user?.Username || "",
-    PhoneNumber: user?.PhoneNumber || "",
-    Role: user?.Role || "BenhNhan",
-    Status: user?.Status || "HoatDong",
+    FullName: (u?.FullName || u?.fullName || u?.name || ""),
+    Email: (u?.Email || u?.email || ""),
+    Username: (u?.Username || u?.username || ""),
+    PhoneNumber: (u?.PhoneNumber || u?.phoneNumber || ""),
+    Role: (u?.Role || u?.role || "BenhNhan"),
+    Status: (u?.Status || u?.status || "HoatDong"),
     Password: "",
     SpecialtyID: 0,
   });
@@ -73,23 +74,26 @@ const UserFormModal: React.FC<UserFormProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [previewUrl, setPreviewUrl] = useState<string>(
-    user?.avatar_url ? getFullImageUrl(user.avatar_url) : ""
+    (u?.AvatarURL || u?.avatarURL || u?.avatarUrl || u?.avatar_url) 
+      ? getFullImageUrl(u?.AvatarURL || u?.avatarURL || u?.avatarUrl || u?.avatar_url || "") 
+      : ""
   );
   useEffect(() => {
-    if (user) {
+    if (u) {
       setFormData({
-        FullName: user.FullName || "",
-        Email: user.Email || "",
-        Username: user.Username || "",
-        PhoneNumber: user.PhoneNumber || "",
-        Role: user.Role || "BenhNhan",
-        Status: user.Status || "HoatDong",
+        FullName: u.FullName || u.fullName || u.name || "",
+        Email: u.Email || u.email || "",
+        Username: u.Username || u.username || "",
+        PhoneNumber: u.PhoneNumber || u.phoneNumber || "",
+        Role: u.Role || u.role || "BenhNhan",
+        Status: u.Status || u.status || "HoatDong",
         Password: "",
         SpecialtyID: 0,
       });
 
       // Cập nhật ảnh preview
-      setPreviewUrl(user.avatar_url ? getFullImageUrl(user.avatar_url) : "");
+      const av = u.AvatarURL || u.avatarURL || u.avatarUrl || u.avatar_url;
+      setPreviewUrl(av ? getFullImageUrl(av) : "");
     } else {
       setFormData({
         FullName: "",
@@ -169,8 +173,8 @@ const UserFormModal: React.FC<UserFormProps> = ({
         data.append("SpecialtyID", formData.SpecialtyID.toString());
       }
 
-      if (isEdit && user) {
-        await Api.adminUpdateUser(user.UserID, data);
+      if (isEdit && u) {
+        await Api.adminUpdateUser(u.UserID || u.userId, data);
         alert("Cập nhật thành công!");
       } else {
         await Api.adminCreateUser(data);
@@ -308,7 +312,7 @@ const UserFormModal: React.FC<UserFormProps> = ({
                   value={formData.Role}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 outline-none bg-white cursor-pointer"
-                  disabled={isEdit && user.Role === "QuanTriVien"}
+                  disabled={isEdit && (u.Role || u.role) === "QuanTriVien"}
                 >
                   {ROLES.filter((role) =>
                     isEdit ? true : role !== "BacSi"
@@ -501,28 +505,29 @@ export default function UserManagementPage() {
 
   const handleDelete = async (userId: number) => {
     //Tìm thông tin người dùng trong danh sách hiện tại
-    const userToDelete = users.find((u) => u.UserID === userId);
+    const userToDelete = users.find((u) => (u.UserID || (u as any).userId) === userId) as any;
     if (!userToDelete) return;
 
+    const uName = userToDelete.FullName || userToDelete.fullName || userToDelete.name || "";
     if (
       confirm(
-        `Bạn có chắc chắn muốn KHÓA tài khoản "${userToDelete.FullName}" không?`
+        `Bạn có chắc chắn muốn KHÓA tài khoản "${uName}" không?`
       )
     ) {
       try {
         const data = new FormData();
         data.append("Status", "Khoa"); // Chuyển trạng thái sang Khóa
 
-        data.append("FullName", userToDelete.FullName);
-        data.append("Username", userToDelete.Username);
-        data.append("PhoneNumber", userToDelete.PhoneNumber);
-        data.append("Role", userToDelete.Role);
+        data.append("FullName", uName);
+        data.append("Username", userToDelete.Username || userToDelete.username || "");
+        data.append("PhoneNumber", userToDelete.PhoneNumber || userToDelete.phoneNumber || "");
+        data.append("Role", userToDelete.Role || userToDelete.role || "");
 
         await Api.adminUpdateUser(userId, data);
 
         //Cập nhật giao diện
         setUsers((prev) =>
-          prev.map((u) => (u.UserID === userId ? { ...u, Status: "Khoa" } : u))
+          prev.map((u) => ((u.UserID || (u as any).userId) === userId ? { ...u, Status: "Khoa" } : u))
         );
         alert("Đã khóa tài khoản thành công.");
       } catch (error) {
@@ -532,23 +537,25 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleToggleStatus = async (user: Model.User) => {
-    const newStatus = user.Status === "HoatDong" ? "Khoa" : "HoatDong";
+  const handleToggleStatus = async (userItem: Model.User) => {
+    const user = userItem as any;
+    const newStatus = (user.Status || user.status) === "HoatDong" ? "Khoa" : "HoatDong";
     const actionName = newStatus === "Khoa" ? "KHÓA" : "KÍCH HOẠT";
+    const uName = user.FullName || user.fullName || user.name || "";
 
-    if (confirm(`Bạn có muốn ${actionName} tài khoản "${user.FullName}"?`)) {
+    if (confirm(`Bạn có muốn ${actionName} tài khoản "${uName}"?`)) {
       try {
         const data = new FormData();
         data.append("Status", newStatus);
-        data.append("FullName", user.FullName);
-        data.append("Role", user.Role);
-        data.append("Username", user.Username);
-        data.append("PhoneNumber", user.PhoneNumber);
+        data.append("FullName", uName);
+        data.append("Role", user.Role || user.role || "");
+        data.append("Username", user.Username || user.username || "");
+        data.append("PhoneNumber", user.PhoneNumber || user.phoneNumber || "");
 
-        await Api.adminUpdateUser(user.UserID, data);
+        await Api.adminUpdateUser(user.UserID || user.userId, data);
         setUsers((prev) =>
           prev.map((u) =>
-            u.UserID === user.UserID ? { ...u, Status: newStatus } : u
+            (u.UserID || (u as any).userId) === (user.UserID || user.userId) ? { ...u, Status: newStatus } : u
           )
         );
       } catch (error) {
@@ -640,83 +647,91 @@ export default function UserManagementPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {currentUsers.map((u) => (
-                  <tr
-                    key={u.UserID}
-                    className="hover:bg-blue-50 transition group"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      #{u.UserID}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <DataThumbnail
-                          src={u.avatar_url}
-                          alt={u.FullName}
-                          fallbackType="user"
-                          className="h-10 w-10 rounded-full border mr-3"
-                        />
+                {currentUsers.map((uItem) => {
+                  const u = uItem as any;
+                  const uid = u.UserID || u.userId;
+                  const uName = u.FullName || u.fullName || u.name || "";
+                  const uRole = u.Role || u.role || "";
+                  const uStatus = u.Status || u.status || "";
+                  const uAvatar = u.AvatarURL || u.avatarURL || u.avatarUrl || u.avatar_url || "";
+                  return (
+                    <tr
+                      key={uid}
+                      className="hover:bg-blue-50 transition group"
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-500 font-mono">
+                        #{uid}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <DataThumbnail
+                            src={uAvatar}
+                            alt={uName}
+                            fallbackType="user"
+                            className="h-10 w-10 rounded-full border mr-3"
+                          />
 
-                        <div>
-                          <div className="text-sm font-bold text-gray-900">
-                            {u.FullName}
+                          <div>
+                            <div className="text-sm font-bold text-gray-900">
+                              {uName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              @{u.Username || u.username}
+                            </div>
+                            <div className="text-xs text-gray-400">{u.Email || u.email}</div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            @{u.Username}
-                          </div>
-                          <div className="text-xs text-gray-400">{u.Email}</div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold
-                        ${
-                          u.Role === "QuanTriVien"
-                            ? "bg-purple-100 text-purple-800"
-                            : u.Role === "BacSi"
-                            ? "bg-blue-100 text-blue-800"
-                            : u.Role === "NhanVien"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }
-                      `}
-                      >
-                        {ROLE_LABELS[u.Role] || u.Role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80
-                        ${
-                          u.Status === "HoatDong"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                      `}
-                        onClick={() => handleToggleStatus(u)}
-                        title="Bấm để đổi trạng thái"
-                      >
-                        {STATUS_LABELS[u.Status] || u.Status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-3">
-                      <button
-                        onClick={() => handleOpenModal(u)}
-                        className="text-blue-600 font-bold hover:underline text-sm"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(u.UserID)}
-                        className="text-red-600 font-bold hover:underline text-sm"
-                        disabled={u.Role === "QuanTriVien"}
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold
+                          ${
+                            uRole === "QuanTriVien"
+                              ? "bg-purple-100 text-purple-800"
+                              : uRole === "BacSi"
+                              ? "bg-blue-100 text-blue-800"
+                              : uRole === "NhanVien"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                          }
+                        `}
+                        >
+                          {ROLE_LABELS[uRole] || uRole}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80
+                          ${
+                            uStatus === "HoatDong"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }
+                        `}
+                          onClick={() => handleToggleStatus(u)}
+                          title="Bấm để đổi trạng thái"
+                        >
+                          {STATUS_LABELS[uStatus] || uStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <button
+                          onClick={() => handleOpenModal(u)}
+                          className="text-blue-600 hover:text-blue-800 font-bold hover:underline text-sm"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(uid)}
+                          className="text-red-600 hover:text-red-800 font-bold hover:underline text-sm"
+                          disabled={uRole === "QuanTriVien"}
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {currentUsers.length === 0 && (
                   <tr>
                     <td

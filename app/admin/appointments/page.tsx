@@ -9,11 +9,19 @@ import { Doctor } from "@/lib/model";
 const ITEMS_PER_PAGE = 10; // Số lượng dòng trên mỗi trang (áp dụng cho cả 2 tab)
 
 // ... (Các hàm helper formatTime và getStatusBadge giữ nguyên) ...
+const parseSafeDate = (dateStr: any) => {
+  if (!dateStr) return null;
+  const s = dateStr.toString().replace(" ", "T");
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return null;
+  return d;
+};
+
 const formatTime = (dateString: string) => {
   if (!dateString) return "";
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
+    const date = parseSafeDate(dateString);
+    if (!date) return "";
     return date.toLocaleTimeString("vi-VN", {
       hour: "2-digit",
       minute: "2-digit",
@@ -390,55 +398,60 @@ export default function AppointmentsPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {currentAppointments.map((item) => (
-                          <tr
-                            key={item.AppointmentID}
-                            className="hover:bg-blue-50 transition"
-                          >
-                            <td className="px-6 py-4 text-sm font-bold">
-                              #{item.AppointmentID}
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="font-bold text-sm">
-                                {item.patient?.FullName}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {item.patient?.PhoneNumber}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm font-medium text-blue-700">
-                                BS. {item.doctor?.user?.FullName}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {item.doctor?.specialty?.SpecialtyName}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              {new Date(item.StartTime).toLocaleDateString(
-                                "vi-VN"
-                              )}{" "}
-                              <br />
-                              <span className="text-xs text-gray-500">
-                                {new Date(item.StartTime).toLocaleTimeString(
-                                  "vi-VN",
-                                  { hour: "2-digit", minute: "2-digit" }
-                                )}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              {getStatusBadge(item.Status)}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => openModal(item)}
-                                className="text-blue-600 font-bold hover:underline text-sm"
-                              >
-                                Chi tiết
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {currentAppointments.map((item) => {
+                          const appt = item as any;
+                          const apptId = appt.AppointmentID || appt.appointmentId;
+                          const patientName = appt.patient?.FullName || appt.patient?.fullName || appt.patient?.name || "N/A";
+                          const patientPhone = appt.patient?.PhoneNumber || appt.patient?.phoneNumber || "N/A";
+                          const doctorName = appt.doctor?.user?.FullName || appt.doctor?.user?.fullName || appt.doctor?.user?.name || "N/A";
+                          const specialtyName = appt.doctor?.specialty?.SpecialtyName || appt.doctor?.specialty?.specialtyName || "---";
+                          const apptStatus = appt.Status || appt.status || "Pending";
+                          const startTimeObj = parseSafeDate(appt.StartTime || appt.startTime);
+                          return (
+                            <tr
+                              key={apptId}
+                              className="hover:bg-blue-50 transition"
+                            >
+                              <td className="px-6 py-4 text-sm font-bold">
+                                #{apptId}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="font-bold text-sm">
+                                  {patientName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {patientPhone}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-blue-700">
+                                  BS. {doctorName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {specialtyName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {startTimeObj ? startTimeObj.toLocaleDateString("vi-VN") : "N/A"}{" "}
+                                <br />
+                                <span className="text-xs text-gray-500">
+                                  {startTimeObj ? startTimeObj.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "N/A"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {getStatusBadge(apptStatus)}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <button
+                                  onClick={() => openModal(item)}
+                                  className="text-blue-600 font-bold hover:underline text-sm"
+                                >
+                                  Chi tiết
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                         {currentAppointments.length === 0 && (
                           <tr>
                             <td
@@ -497,14 +510,17 @@ export default function AppointmentsPage() {
                     }}
                   >
                     <option value="">-- Chọn bác sĩ --</option>
-                    {doctorsList.map((d) => (
-                      <option key={d.DoctorID} value={d.DoctorID}>
-                        BS. {d.user?.FullName}{" "}
-                        {d.specialty
-                          ? `- Khoa ${d.specialty.SpecialtyName}`
-                          : ""}
-                      </option>
-                    ))}
+                    {doctorsList.map((dItem) => {
+                      const doc = dItem as any;
+                      const docId = doc.DoctorID || doc.doctorId;
+                      const docName = doc.user?.FullName || doc.user?.fullName || doc.user?.name || "";
+                      const specName = doc.specialty ? (doc.specialty.SpecialtyName || doc.specialty.specialtyName) : "";
+                      return (
+                        <option key={docId} value={docId}>
+                          BS. {docName} {specName ? `- Khoa ${specName}` : ""}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div className="w-full md:w-56">
@@ -571,29 +587,48 @@ export default function AppointmentsPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {/* Dùng currentScheduleSlots thay vì doctorSchedule */}
-                        {currentScheduleSlots.map((slot) => {
-                          const appt = slot.appointment;
-                          const patient = appt?.patient;
+                        {currentScheduleSlots.map((slotItem) => {
+                          const slot = slotItem as any;
+                          const slotId = slot.SlotID || slot.slotId;
+                          const appt = slot.appointment as any;
+                          const apptId = appt ? (appt.AppointmentID || appt.appointmentId) : null;
+                          const apptStatus = appt ? (appt.Status || appt.status) : null;
+                          
+                          const patient = appt?.patient as any;
+                          const patientName = patient ? (patient.FullName || patient.fullName || patient.name) : null;
+                          const patientPhone = patient ? (patient.PhoneNumber || patient.phoneNumber) : null;
+                          
+                          const slotStatus = slot.Status || slot.status || "available";
+                          
+                          const dStart = parseSafeDate(slot.StartTime || slot.startTime);
+                          const dEnd = parseSafeDate(slot.EndTime || slot.endTime);
+                          const startStr = dStart ? dStart.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+                          const endStr = dEnd ? dEnd.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+                          
+                          const docUser = (currentSelectedDoctor as any)?.user;
+                          const docName = docUser ? (docUser.FullName || docUser.fullName || docUser.name) : "N/A";
+                          const specName = (currentSelectedDoctor as any)?.specialty ? ((currentSelectedDoctor as any).specialty.SpecialtyName || (currentSelectedDoctor as any).specialty.specialtyName) : "---";
+
                           return (
                             <tr
-                              key={slot.SlotID}
+                              key={slotId}
                               className={`transition ${
-                                slot.Status === "available"
+                                slotStatus === "available"
                                   ? "hover:bg-green-50"
                                   : "hover:bg-blue-50"
                               }`}
                             >
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
-                                #{appt ? appt.AppointmentID : slot.SlotID}
+                                #{appt ? apptId : slotId}
                               </td>
                               <td className="px-6 py-4">
                                 {patient ? (
                                   <>
                                     <div className="font-bold text-sm">
-                                      {patient.FullName}
+                                      {patientName}
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                      {patient.PhoneNumber}
+                                      {patientPhone}
                                     </div>
                                   </>
                                 ) : (
@@ -604,30 +639,24 @@ export default function AppointmentsPage() {
                               </td>
                               <td className="px-6 py-4">
                                 <div className="text-sm font-medium text-blue-700">
-                                  BS. {currentSelectedDoctor?.user?.FullName}
+                                  BS. {docName}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {
-                                    currentSelectedDoctor?.specialty
-                                      ?.SpecialtyName
-                                  }
+                                  {specName}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {new Date(slot.StartTime).toLocaleDateString(
-                                    "vi-VN"
-                                  )}
+                                  {dStart ? dStart.toLocaleDateString("vi-VN") : "N/A"}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {formatTime(slot.StartTime)} -{" "}
-                                  {formatTime(slot.EndTime)}
+                                  {startStr} - {endStr}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                {slot.Status === "available"
+                                {slotStatus === "available"
                                   ? getStatusBadge("available")
-                                  : getStatusBadge(appt?.Status || slot.Status)}
+                                  : getStatusBadge(apptStatus || slotStatus)}
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <button
@@ -677,107 +706,110 @@ export default function AppointmentsPage() {
           )}
 
           {/* MODAL */}
-          {isModalOpen && selectedAppt && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Chi tiết Lịch hẹn #{selectedAppt.AppointmentID}
-                  </h3>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
-                  >
-                    &times;
-                  </button>
-                </div>
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-800">
-                  <div className="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <p className="text-xs text-blue-600 font-bold uppercase mb-1">
-                      Ghi chú
-                    </p>
-                    <p className="font-medium text-gray-800">
-                      {selectedAppt.InitialSymptoms || "Không có mô tả"}
-                    </p>
+          {isModalOpen && selectedAppt && (() => {
+            const appt = selectedAppt as any;
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100">
+                  <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Chi tiết Lịch hẹn #{appt.AppointmentID || appt.appointmentId}
+                    </h3>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="text-gray-400 hover:text-gray-600 text-2xl"
+                    >
+                      &times;
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">
-                      Bệnh nhân
-                    </p>
-                    <p className="font-bold text-lg">
-                      {selectedAppt.patient?.FullName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {selectedAppt.patient?.PhoneNumber}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">
-                      Bác sĩ
-                    </p>
-                    <p className="font-bold text-lg text-blue-700">
-                      {selectedAppt.doctor?.user?.FullName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {selectedAppt.doctor?.specialty?.SpecialtyName}
-                    </p>
-                  </div>
-                  {selectedAppt.file_path && (
-                    <div className="col-span-1 md:col-span-2">
-                      <a
-                        href={selectedAppt.file_path}
-                        target="_blank"
-                        className="text-blue-600 hover:underline"
-                      >
-                        Xem file đính kèm
-                      </a>
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-800">
+                    <div className="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                      <p className="text-xs text-blue-600 font-bold uppercase mb-1">
+                        Ghi chú
+                      </p>
+                      <p className="font-medium text-gray-800">
+                        {appt.InitialSymptoms || appt.initialSymptoms || "Không có mô tả"}
+                      </p>
                     </div>
-                  )}
-                  {["Pending", "Confirmed"].includes(selectedAppt.Status) && (
-                    <div className="col-span-1 md:col-span-2 mt-4 pt-6 border-t border-gray-100">
-                      <div className="flex gap-3 mb-4">
-                        {selectedAppt.Status === "Pending" && (
-                          <button
-                            onClick={handleConfirm}
-                            className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold"
-                          >
-                            Duyệt
-                          </button>
-                        )}
-                        {selectedAppt.Status === "Confirmed" && (
-                          <button
-                            onClick={handleCheckIn}
-                            className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold"
-                          >
-                            Check-in
-                          </button>
-                        )}
-                      </div>
-                      <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Lý do hủy..."
-                          className="flex-1 border rounded px-3"
-                          onChange={(e) => setCancelReason(e.target.value)}
-                        />
-                        <button
-                          onClick={handleCancel}
-                          className="bg-red-600 text-white px-4 rounded font-bold"
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">
+                        Bệnh nhân
+                      </p>
+                      <p className="font-bold text-lg">
+                        {appt.patient?.FullName || appt.patient?.fullName || appt.patient?.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {appt.patient?.PhoneNumber || appt.patient?.phoneNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">
+                        Bác sĩ
+                      </p>
+                      <p className="font-bold text-lg text-blue-700">
+                        {appt.doctor?.user?.FullName || appt.doctor?.user?.fullName || appt.doctor?.user?.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {appt.doctor?.specialty?.SpecialtyName || appt.doctor?.specialty?.specialtyName}
+                      </p>
+                    </div>
+                    {(appt.file_path || appt.filePath) && (
+                      <div className="col-span-1 md:col-span-2">
+                        <a
+                          href={appt.file_path || appt.filePath}
+                          target="_blank"
+                          className="text-blue-600 hover:underline"
                         >
-                          Hủy
-                        </button>
+                          Xem file đính kèm
+                        </a>
                       </div>
-                    </div>
-                  )}
-                  {selectedAppt.Status === "Cancelled" && (
-                    <div className="col-span-1 md:col-span-2 bg-gray-100 p-3 rounded text-red-600">
-                      Đã hủy: {selectedAppt.CancellationReason}
-                    </div>
-                  )}
+                    )}
+                    {["Pending", "Confirmed"].includes(appt.Status || appt.status || "") && (
+                      <div className="col-span-1 md:col-span-2 mt-4 pt-6 border-t border-gray-100">
+                        <div className="flex gap-3 mb-4">
+                          {(appt.Status || appt.status) === "Pending" && (
+                            <button
+                              onClick={handleConfirm}
+                              className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold"
+                            >
+                              Duyệt
+                            </button>
+                          )}
+                          {(appt.Status || appt.status) === "Confirmed" && (
+                            <button
+                              onClick={handleCheckIn}
+                              className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold"
+                            >
+                              Check-in
+                            </button>
+                          )}
+                        </div>
+                        <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Lý do hủy..."
+                            className="flex-1 border rounded px-3"
+                            onChange={(e) => setCancelReason(e.target.value)}
+                          />
+                          <button
+                            onClick={handleCancel}
+                            className="bg-red-600 text-white px-4 rounded font-bold"
+                          >
+                            Hủy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {(appt.Status || appt.status) === "Cancelled" && (
+                      <div className="col-span-1 md:col-span-2 bg-gray-100 p-3 rounded text-red-600">
+                        Đã hủy: {appt.CancellationReason || appt.cancellationReason}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </section>
     </div>
