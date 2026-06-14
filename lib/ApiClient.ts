@@ -189,6 +189,7 @@ export const getDoctors = async (
 export const getDoctorAvailability = async (
   doctorId: number,
 ): Promise<Model.AvailabilitySlot[]> => {
+  if (!doctorId || isNaN(Number(doctorId))) return [];
   const response = await apiClient.get(`/public/doctors/${doctorId}/slots`);
   return response.data;
 };

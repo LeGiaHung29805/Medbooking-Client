@@ -81,6 +81,7 @@ export default function DoctorsBookingPage() {
 
   //Load lịch khám của 1 bác sĩ 
   async function loadAvailability(doctorId: number) {
+    if (!doctorId || isNaN(Number(doctorId))) return;
     try {
       setLoadingDoctorId(doctorId);
 
