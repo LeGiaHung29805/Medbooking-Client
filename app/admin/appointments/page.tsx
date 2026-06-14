@@ -89,7 +89,38 @@ export default function AppointmentsPage() {
     setLoading(true);
     try {
       const data = await Api.getAllAppointments();
-      const sortedData = data.sort(
+      const normalized = (data || []).map((item: any) => ({
+        ...item,
+        AppointmentID: item.AppointmentID || item.appointmentId,
+        Status: item.Status || item.status,
+        StartTime: item.StartTime || item.startTime,
+        EstimatedDuration: item.EstimatedDuration || item.estimatedDuration,
+        InitialSymptoms: item.InitialSymptoms || item.initialSymptoms,
+        CancellationReason: item.CancellationReason || item.cancellationReason,
+        file_path: item.file_path || item.filePath,
+        patient: item.patient ? {
+          ...item.patient,
+          UserID: item.patient.UserID || item.patient.userId,
+          FullName: item.patient.FullName || item.patient.fullName || [item.patient.lastName, item.patient.firstName].filter(Boolean).join(" ").trim(),
+          PhoneNumber: item.patient.PhoneNumber || item.patient.phoneNumber
+        } : null,
+        doctor: item.doctor ? {
+          ...item.doctor,
+          DoctorID: item.doctor.DoctorID || item.doctor.doctorId,
+          SpecialtyID: item.doctor.SpecialtyID || item.doctor.specialtyId || item.doctor.specialty?.specialtyId,
+          user: item.doctor.user ? {
+            ...item.doctor.user,
+            UserID: item.doctor.user.UserID || item.doctor.user.userId,
+            FullName: item.doctor.user.FullName || item.doctor.user.fullName || [item.doctor.user.lastName, item.doctor.user.firstName].filter(Boolean).join(" ").trim()
+          } : null,
+          specialty: item.doctor.specialty ? {
+            ...item.doctor.specialty,
+            SpecialtyID: item.doctor.specialty.SpecialtyID || item.doctor.specialty.specialtyId,
+            SpecialtyName: item.doctor.specialty.SpecialtyName || item.doctor.specialty.specialtyName
+          } : null
+        } : null
+      }));
+      const sortedData = normalized.sort(
         (a, b) =>
           new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime()
       );
@@ -104,7 +135,20 @@ export default function AppointmentsPage() {
   const fetchDoctors = async () => {
     try {
       const res = await Api.getDoctors();
-      setDoctorsList(res);
+      const normalized = (res || []).map((d: any) => ({
+        ...d,
+        DoctorID: d.DoctorID || d.doctorId,
+        SpecialtyID: d.SpecialtyID || d.specialtyId || d.specialty?.specialtyId,
+        user: d.user ? {
+          ...d.user,
+          FullName: d.user.FullName || d.user.fullName || [d.user.lastName, d.user.firstName].filter(Boolean).join(" ").trim()
+        } : null,
+        specialty: d.specialty ? {
+          ...d.specialty,
+          SpecialtyName: d.specialty.SpecialtyName || d.specialty.specialtyName
+        } : null
+      }));
+      setDoctorsList(normalized);
     } catch (error) {
       console.error("Lỗi lấy danh sách bác sĩ", error);
     }
@@ -118,7 +162,25 @@ export default function AppointmentsPage() {
         selectedDoctorId,
         selectedDate
       );
-      setDoctorSchedule(res);
+      const normalized = (res || []).map((slot: any) => ({
+        ...slot,
+        SlotID: slot.SlotID || slot.slotId,
+        StartTime: slot.StartTime || slot.startTime,
+        EndTime: slot.EndTime || slot.endTime,
+        Status: slot.Status || slot.status,
+        appointment: slot.appointment ? {
+          ...slot.appointment,
+          AppointmentID: slot.appointment.AppointmentID || slot.appointment.appointmentId,
+          Status: slot.appointment.Status || slot.appointment.status,
+          StartTime: slot.appointment.StartTime || slot.appointment.startTime,
+          patient: slot.appointment.patient ? {
+            ...slot.appointment.patient,
+            FullName: slot.appointment.patient.FullName || slot.appointment.patient.fullName || [slot.appointment.patient.lastName, slot.appointment.patient.firstName].filter(Boolean).join(" ").trim(),
+            PhoneNumber: slot.appointment.patient.PhoneNumber || slot.appointment.patient.phoneNumber
+          } : null
+        } : null
+      }));
+      setDoctorSchedule(normalized);
       setSchedulePage(1); // Reset về trang 1 khi load dữ liệu mới
     } catch (error) {
       alert("Không tải được lịch làm việc");

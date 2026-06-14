@@ -283,8 +283,22 @@ export default function ServiceManagementPage() {
         Api.adminGetAllServices(searchQuery),
         Api.getSpecialties(),
       ]);
-      setServices(servicesData);
-      setSpecialties(specialtiesData);
+      const normalizedServices = (servicesData || []).map((s: any) => ({
+        ...s,
+        ServiceID: s.ServiceID || s.serviceId,
+        ServiceName: s.ServiceName || s.serviceName,
+        SpecialtyID: s.SpecialtyID || s.specialtyId,
+        Price: s.Price || s.price,
+        EstimatedDuration: s.EstimatedDuration || s.estimatedDuration,
+        imageURL: s.imageURL || s.imageUrl || s.imagePath
+      }));
+      const normalizedSpecs = (specialtiesData || []).map((sp: any) => ({
+        ...sp,
+        SpecialtyID: sp.SpecialtyID || sp.specialtyId,
+        SpecialtyName: sp.SpecialtyName || sp.specialtyName
+      }));
+      setServices(normalizedServices);
+      setSpecialties(normalizedSpecs);
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
     } finally {

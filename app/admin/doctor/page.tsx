@@ -9,6 +9,13 @@ import { getFullImageUrl } from "@/lib/utils";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 import { Plus, Search } from "lucide-react";
 
+const normalizeStatus = (status: string) => {
+  const s = (status || "").toLowerCase();
+  if (s === "active" || s === "hoatdong" || s === "hoat_dong") return "HoatDong";
+  if (s === "blocked" || s === "khoa" || s === "inactive") return "Khoa";
+  return "HoatDong";
+};
+
 interface DoctorFormProps {
   doctor: Model.Doctor | null;
   specialties: Model.Specialty[];
@@ -459,13 +466,35 @@ export default function DoctorManagementPage() {
         Api.getDoctors(),
         Api.getSpecialties(),
       ]);
-      setDoctors(docsData); // ← ĐÚNG – backend trả mảng trực tiếp
-      // Nếu backend trả { success: true, data: [...] } thì dùng:
-      // setDoctors(docsData.data);
-      setSpecialties(specsData);
+      const normalizedDocs = (docsData || []).map((doc: any) => ({
+        ...doc,
+        DoctorID: doc.DoctorID || doc.doctorId,
+        SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
+        Degree: doc.Degree || doc.degree,
+        YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
+        ProfileDescription: doc.ProfileDescription || doc.profileDescription,
+        imageURL: doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL,
+        user: doc.user ? {
+          ...doc.user,
+          UserID: doc.user.UserID || doc.user.userId,
+          FullName: doc.user.FullName || doc.user.fullName || [doc.user.lastName, doc.user.firstName].filter(Boolean).join(" ").trim(),
+          Email: doc.user.Email || doc.user.email,
+          Username: doc.user.Username || doc.user.username,
+          PhoneNumber: doc.user.PhoneNumber || doc.user.phoneNumber,
+          Status: normalizeStatus(doc.user.Status || doc.user.status),
+          avatar_url: doc.user.avatar_url || doc.user.avatarURL
+        } : null
+      }));
+      const normalizedSpecs = (specsData || []).map((s: any) => ({
+        ...s,
+        SpecialtyID: s.SpecialtyID || s.specialtyId,
+        SpecialtyName: s.SpecialtyName || s.specialtyName
+      }));
+      setDoctors(normalizedDocs);
+      setSpecialties(normalizedSpecs);
     } catch (error) {
       console.error("Error:", error);
-      setDoctors([]); // fallback array rỗng để tránh lỗi .filter
+      setDoctors([]);
     } finally {
       setLoading(false);
     }

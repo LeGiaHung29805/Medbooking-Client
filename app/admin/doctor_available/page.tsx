@@ -7,6 +7,12 @@ import { handleError } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 9;
 
+const formatDateTimeStr = (dateStr: any) => {
+  if (!dateStr) return "";
+  const s = dateStr.toString().replace("T", " ");
+  return s.slice(0, 19);
+};
+
 interface NewSlotForm {
   doctor_id: number;
   date: string;
@@ -35,7 +41,31 @@ export default function ScheduleManagementPage() {
     const loadDoctors = async () => {
       try {
         const data = await Api.getDoctors();
-        setDoctors(data || []);
+        const normalized = (data || []).map((doc: any) => ({
+          ...doc,
+          DoctorID: doc.DoctorID || doc.doctorId,
+          SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
+          Degree: doc.Degree || doc.degree,
+          YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
+          ProfileDescription: doc.ProfileDescription || doc.profileDescription,
+          imageURL: doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL,
+          user: doc.user ? {
+            ...doc.user,
+            UserID: doc.user.UserID || doc.user.userId,
+            FullName: doc.user.FullName || doc.user.fullName || [doc.user.lastName, doc.user.firstName].filter(Boolean).join(" ").trim(),
+            Email: doc.user.Email || doc.user.email,
+            Username: doc.user.Username || doc.user.username,
+            PhoneNumber: doc.user.PhoneNumber || doc.user.phoneNumber,
+            Status: doc.user.Status || doc.user.status,
+            avatar_url: doc.user.avatar_url || doc.user.avatarURL
+          } : null,
+          specialty: doc.specialty ? {
+            ...doc.specialty,
+            SpecialtyID: doc.specialty.SpecialtyID || doc.specialty.specialtyId,
+            SpecialtyName: doc.specialty.SpecialtyName || doc.specialty.specialtyName,
+          } : null
+        }));
+        setDoctors(normalized);
       } catch (error) {
         console.error("Error loading doctors:", error);
         setDoctors([]);
@@ -53,7 +83,15 @@ export default function ScheduleManagementPage() {
     try {
       const docId = parseInt(selectedDoctorId);
       const data = await Api.getDoctorAvailability(docId);
-      setSlots(data);
+      const normalizedSlots = (data || []).map((slot: any) => ({
+        ...slot,
+        SlotID: slot.SlotID || slot.slotId,
+        DoctorID: slot.DoctorID || slot.doctorId || docId,
+        StartTime: formatDateTimeStr(slot.StartTime || slot.startTime),
+        EndTime: formatDateTimeStr(slot.EndTime || slot.endTime),
+        Status: slot.Status || slot.status,
+      }));
+      setSlots(normalizedSlots);
     } catch (error) {
       console.error("Lỗi tải lịch:", error);
     } finally {

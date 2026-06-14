@@ -15,6 +15,21 @@ const ROLE_LABELS: Record<string, string> = {
   QuanTriVien: "Quản trị viên",
 };
 
+const normalizeRole = (role: string) => {
+  const r = (role || "").toUpperCase();
+  if (r === "DOCTOR" || r === "BACSI" || r === "BAC_SI") return "BacSi";
+  if (r === "MEDICAL_STAFF" || r === "NHANVIEN" || r === "STAFF") return "NhanVien";
+  if (r === "ADMIN" || r === "QUANTRI" || r === "QUANTRIVIEN") return "QuanTriVien";
+  return "BenhNhan";
+};
+
+const normalizeStatus = (status: string) => {
+  const s = (status || "").toLowerCase();
+  if (s === "active" || s === "hoatdong" || s === "hoat_dong") return "HoatDong";
+  if (s === "blocked" || s === "khoa" || s === "inactive") return "Khoa";
+  return "HoatDong";
+};
+
 const STATUS_LABELS: Record<string, string> = {
   HoatDong: "Hoạt động",
   Khoa: "Đã khóa",
@@ -441,8 +456,24 @@ export default function UserManagementPage() {
         Api.adminGetUsers(filterRole || undefined, searchQuery || undefined),
         Api.getSpecialties(),
       ]);
-      setUsers(usersData);
-      setSpecialties(specsData);
+      const normalizedUsers = (usersData || []).map((u: any) => ({
+        ...u,
+        UserID: u.UserID || u.userId,
+        FullName: u.FullName || u.fullName || [u.lastName, u.firstName].filter(Boolean).join(" ").trim() || "User",
+        Username: u.Username || u.username,
+        Email: u.Email || u.email,
+        PhoneNumber: u.PhoneNumber || u.phoneNumber,
+        Role: normalizeRole(u.Role || u.role),
+        Status: normalizeStatus(u.Status || u.status),
+        avatar_url: u.avatar_url || u.avatarURL
+      }));
+      const normalizedSpecs = (specsData || []).map((s: any) => ({
+        ...s,
+        SpecialtyID: s.SpecialtyID || s.specialtyId,
+        SpecialtyName: s.SpecialtyName || s.specialtyName
+      }));
+      setUsers(normalizedUsers);
+      setSpecialties(normalizedSpecs);
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
     } finally {

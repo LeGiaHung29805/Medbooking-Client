@@ -212,7 +212,14 @@ export default function SpecialtyManagementPage() {
     setLoading(true);
     try {
       const data = await Api.getSpecialties();
-      setSpecialties(data);
+      const normalizedSpecs = (data || []).map((s: any) => ({
+        ...s,
+        SpecialtyID: s.SpecialtyID || s.specialtyId,
+        SpecialtyName: s.SpecialtyName || s.specialtyName,
+        Description: s.Description || s.description,
+        imageURL: s.imageURL || s.imageUrl || s.imagePath
+      }));
+      setSpecialties(normalizedSpecs);
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
     } finally {
