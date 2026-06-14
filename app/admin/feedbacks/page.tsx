@@ -48,16 +48,16 @@ export default function FeedbacksPage() {
     try {
       const data = await Api.adminGetFeedbacks();
 
-      //Map dữ liệu từ API sang UI
-      const mappedData: FeedbackUI[] = data.map((item) => ({
-        id: item.FeedbackID,
-        patientName: item.ReviewerName,
-        patientAvatar: item.ReviewerAvatar,
-        targetName: item.TargetName,
-        type: item.Type,
-        rating: item.Rating,
-        comment: item.Comment || "",
-        date: item.CreatedAt,
+      //Map dữ liệu từ API sang UI (hỗ trợ cả Java CamelCase và PHP PascalCase)
+      const mappedData: FeedbackUI[] = (data as any[]).map((item) => ({
+        id: item.FeedbackID || item.feedbackId || 0,
+        patientName: item.ReviewerName || item.patientName || "Bệnh nhân",
+        patientAvatar: item.ReviewerAvatar || item.patientAvatar || "",
+        targetName: item.TargetName || item.doctorName || item.specialtyName || "Hệ thống",
+        type: item.Type || (item.doctorName ? "Doctor" : "System"),
+        rating: item.Rating !== undefined ? item.Rating : (item.rating !== undefined ? item.rating : 5),
+        comment: item.Comment || item.comment || "",
+        date: item.CreatedAt || item.createdAt || "",
       }));
 
       setFeedbacks(mappedData);
@@ -165,7 +165,7 @@ export default function FeedbacksPage() {
                       <div className="flex items-center gap-3">
                         {/* Avatar (Chữ cái đầu) */}
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                          {fb.patientName.charAt(0).toUpperCase()}
+                          {(fb.patientName || "U").charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-800">

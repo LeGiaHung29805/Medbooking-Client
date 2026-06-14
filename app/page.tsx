@@ -886,7 +886,7 @@ export default function HomePage() {
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-                    {review.name.charAt(0)}
+                    {(review.name || "U").charAt(0)}
                   </div>
                   <p className="font-semibold text-blue-600">{review.name}</p>
                 </div>
