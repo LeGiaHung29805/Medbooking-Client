@@ -52,7 +52,7 @@ export default function ScheduleManagementPage() {
           user: doc.user ? {
             ...doc.user,
             UserID: doc.user.UserID || doc.user.userId,
-            FullName: doc.user.FullName || doc.user.fullName || [doc.user.lastName, doc.user.firstName].filter(Boolean).join(" ").trim(),
+            FullName: ((doc.user.FirstName || doc.user.firstName || "") + " " + (doc.user.LastName || doc.user.lastName || "")).trim() || doc.user.FullName || doc.user.fullName || "Chưa cập nhật",
             Email: doc.user.Email || doc.user.email,
             Username: doc.user.Username || doc.user.username,
             PhoneNumber: doc.user.PhoneNumber || doc.user.phoneNumber,
@@ -189,7 +189,7 @@ export default function ScheduleManagementPage() {
               {doctors.map((dItem) => {
                 const d = dItem as any;
                 const docId = d.DoctorID || d.doctorId;
-                const docName = d.user?.FullName || d.user?.fullName || d.user?.name || "";
+                const docName = d.user?.FullName || ((d.user?.FirstName || d.user?.firstName || "") + " " + (d.user?.LastName || d.user?.lastName || "")).trim() || "";
                 const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
                 return (
                   <option key={docId} value={docId}>
@@ -243,7 +243,7 @@ export default function ScheduleManagementPage() {
                   const doc = getDoctorInfo(slot.DoctorID || slot.doctorId) as any;
                   const startTime = (slot.StartTime || slot.startTime || "").split(" ")[1]?.slice(0, 5);
                   const endTime = (slot.EndTime || slot.endTime || "").split(" ")[1]?.slice(0, 5);
-                  const docName = doc?.user?.FullName || doc?.user?.fullName || doc?.user?.name || "N/A";
+                  const docName = doc?.user?.FullName || ((doc?.user?.FirstName || doc?.user?.firstName || "") + " " + (doc?.user?.LastName || doc?.user?.lastName || "")).trim() || "N/A";
                   const specName = doc?.specialty ? (doc.specialty.SpecialtyName || doc.specialty.specialtyName) : "---";
                   const slotStatus = slot.Status || slot.status || "Available";
                   return (
@@ -356,7 +356,7 @@ export default function ScheduleManagementPage() {
                   {doctors.map((dItem) => {
                     const d = dItem as any;
                     const docId = d.DoctorID || d.doctorId;
-                    const docName = d.user?.FullName || d.user?.fullName || d.user?.name || "";
+                    const docName = d.user?.FullName || ((d.user?.FirstName || d.user?.firstName || "") + " " + (d.user?.LastName || d.user?.lastName || "")).trim() || "";
                     const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
                     return (
                       <option key={docId} value={docId}>

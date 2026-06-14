@@ -109,7 +109,7 @@ export default function AppointmentsPage() {
         patient: item.patient ? {
           ...item.patient,
           UserID: item.patient.UserID || item.patient.userId,
-          FullName: item.patient.FullName || item.patient.fullName || [item.patient.lastName, item.patient.firstName].filter(Boolean).join(" ").trim(),
+          FullName: ((item.patient.FirstName || item.patient.firstName || "") + " " + (item.patient.LastName || item.patient.lastName || "")).trim() || item.patient.FullName || item.patient.fullName || "Chưa cập nhật",
           PhoneNumber: item.patient.PhoneNumber || item.patient.phoneNumber
         } : null,
         doctor: item.doctor ? {
@@ -119,7 +119,7 @@ export default function AppointmentsPage() {
           user: item.doctor.user ? {
             ...item.doctor.user,
             UserID: item.doctor.user.UserID || item.doctor.user.userId,
-            FullName: item.doctor.user.FullName || item.doctor.user.fullName || [item.doctor.user.lastName, item.doctor.user.firstName].filter(Boolean).join(" ").trim()
+            FullName: ((item.doctor.user.FirstName || item.doctor.user.firstName || "") + " " + (item.doctor.user.LastName || item.doctor.user.lastName || "")).trim() || item.doctor.user.FullName || item.doctor.user.fullName || "Chưa cập nhật"
           } : null,
           specialty: item.doctor.specialty ? {
             ...item.doctor.specialty,
@@ -149,7 +149,7 @@ export default function AppointmentsPage() {
         SpecialtyID: d.SpecialtyID || d.specialtyId || d.specialty?.specialtyId,
         user: d.user ? {
           ...d.user,
-          FullName: d.user.FullName || d.user.fullName || [d.user.lastName, d.user.firstName].filter(Boolean).join(" ").trim()
+          FullName: ((d.user.FirstName || d.user.firstName || "") + " " + (d.user.LastName || d.user.lastName || "")).trim() || d.user.FullName || d.user.fullName || "Chưa cập nhật"
         } : null,
         specialty: d.specialty ? {
           ...d.specialty,
@@ -183,7 +183,7 @@ export default function AppointmentsPage() {
           StartTime: slot.appointment.StartTime || slot.appointment.startTime,
           patient: slot.appointment.patient ? {
             ...slot.appointment.patient,
-            FullName: slot.appointment.patient.FullName || slot.appointment.patient.fullName || [slot.appointment.patient.lastName, slot.appointment.patient.firstName].filter(Boolean).join(" ").trim(),
+            FullName: ((slot.appointment.patient.FirstName || slot.appointment.patient.firstName || "") + " " + (slot.appointment.patient.LastName || slot.appointment.patient.lastName || "")).trim() || slot.appointment.patient.FullName || slot.appointment.patient.fullName || "Chưa cập nhật",
             PhoneNumber: slot.appointment.patient.PhoneNumber || slot.appointment.patient.phoneNumber
           } : null
         } : null

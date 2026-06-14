@@ -59,7 +59,7 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   useEffect(() => {
     if (doc) {
       setFormData({
-        FullName: doc.user?.FullName || doc.user?.fullName || doc.user?.name || "",
+        FullName: ((doc.user?.FirstName || doc.user?.firstName || "") + " " + (doc.user?.LastName || doc.user?.lastName || "")).trim() || doc.user?.FullName || doc.user?.fullName || doc.user?.name || "",
         Email: doc.user?.Email || doc.user?.email || "",
         Username: doc.user?.Username || doc.user?.username || "",
         Password: "",
@@ -478,7 +478,7 @@ export default function DoctorManagementPage() {
         user: doc.user ? {
           ...doc.user,
           UserID: doc.user.UserID || doc.user.userId,
-          FullName: doc.user.FullName || doc.user.fullName || [doc.user.lastName, doc.user.firstName].filter(Boolean).join(" ").trim(),
+           FullName: ((doc.user.FirstName || doc.user.firstName || "") + " " + (doc.user.LastName || doc.user.lastName || "")).trim() || doc.user.FullName || doc.user.fullName || "Chưa cập nhật",
           Email: doc.user.Email || doc.user.email,
           Username: doc.user.Username || doc.user.username,
           PhoneNumber: doc.user.PhoneNumber || doc.user.phoneNumber,
@@ -637,7 +637,7 @@ export default function DoctorManagementPage() {
               {currentDoctors.map((doctorItem) => {
                 const doc = doctorItem as any;
                 const docId = doc.DoctorID || doc.doctorId;
-                const fullName = doc.user?.FullName || doc.user?.fullName || doc.user?.name || "N/A";
+                 const fullName = doc.user?.FullName || ((doc.user?.FirstName || doc.user?.firstName || "") + " " + (doc.user?.LastName || doc.user?.lastName || "")).trim() || "N/A";
                 const email = doc.user?.Email || doc.user?.email || "N/A";
                 const phone = doc.user?.PhoneNumber || doc.user?.phoneNumber || "N/A";
                 const status = doc.user?.Status || doc.user?.status || "HoatDong";

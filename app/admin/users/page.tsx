@@ -59,9 +59,13 @@ const UserFormModal: React.FC<UserFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
+  const fName = u?.FirstName || u?.firstName || "";
+  const lName = u?.LastName || u?.lastName || "";
+  const initialFullName = (fName + " " + lName).trim() || u?.FullName || u?.fullName || u?.name || "";
+
   // State Form
   const [formData, setFormData] = useState({
-    FullName: (u?.FullName || u?.fullName || u?.name || ""),
+    FullName: initialFullName,
     Email: (u?.Email || u?.email || ""),
     Username: (u?.Username || u?.username || ""),
     PhoneNumber: (u?.PhoneNumber || u?.phoneNumber || ""),
@@ -80,8 +84,11 @@ const UserFormModal: React.FC<UserFormProps> = ({
   );
   useEffect(() => {
     if (u) {
+      const f = u.FirstName || u.firstName || "";
+      const l = u.LastName || u.lastName || "";
+      const fn = (f + " " + l).trim() || u.FullName || u.fullName || u.name || "";
       setFormData({
-        FullName: u.FullName || u.fullName || u.name || "",
+        FullName: fn,
         Email: u.Email || u.email || "",
         Username: u.Username || u.username || "",
         PhoneNumber: u.PhoneNumber || u.phoneNumber || "",
@@ -460,17 +467,22 @@ export default function UserManagementPage() {
         Api.adminGetUsers(filterRole || undefined, searchQuery || undefined),
         Api.getSpecialties(),
       ]);
-      const normalizedUsers = (usersData || []).map((u: any) => ({
-        ...u,
-        UserID: u.UserID || u.userId,
-        FullName: u.FullName || u.fullName || [u.lastName, u.firstName].filter(Boolean).join(" ").trim() || "User",
-        Username: u.Username || u.username,
-        Email: u.Email || u.email,
-        PhoneNumber: u.PhoneNumber || u.phoneNumber,
-        Role: normalizeRole(u.Role || u.role),
-        Status: normalizeStatus(u.Status || u.status),
-        avatar_url: u.avatar_url || u.avatarURL
-      }));
+      const normalizedUsers = (usersData || []).map((u: any) => {
+        const f = u.FirstName || u.firstName || "";
+        const l = u.LastName || u.lastName || "";
+        const fullName = (f + " " + l).trim() || u.FullName || u.fullName || u.name || "Chưa cập nhật";
+        return {
+          ...u,
+          UserID: u.UserID || u.userId,
+          FullName: fullName,
+          Username: u.Username || u.username,
+          Email: u.Email || u.email,
+          PhoneNumber: u.PhoneNumber || u.phoneNumber,
+          Role: normalizeRole(u.Role || u.role),
+          Status: normalizeStatus(u.Status || u.status),
+          avatar_url: u.avatar_url || u.avatarURL
+        };
+      });
       const normalizedSpecs = (specsData || []).map((s: any) => ({
         ...s,
         SpecialtyID: s.SpecialtyID || s.specialtyId,
@@ -508,7 +520,9 @@ export default function UserManagementPage() {
     const userToDelete = users.find((u) => (u.UserID || (u as any).userId) === userId) as any;
     if (!userToDelete) return;
 
-    const uName = userToDelete.FullName || userToDelete.fullName || userToDelete.name || "";
+    const fName = userToDelete.FirstName || userToDelete.firstName || "";
+    const lName = userToDelete.LastName || userToDelete.lastName || "";
+    const uName = (fName + " " + lName).trim() || userToDelete.FullName || userToDelete.fullName || userToDelete.name || "Chưa cập nhật";
     if (
       confirm(
         `Bạn có chắc chắn muốn KHÓA tài khoản "${uName}" không?`
@@ -541,7 +555,9 @@ export default function UserManagementPage() {
     const user = userItem as any;
     const newStatus = (user.Status || user.status) === "HoatDong" ? "Khoa" : "HoatDong";
     const actionName = newStatus === "Khoa" ? "KHÓA" : "KÍCH HOẠT";
-    const uName = user.FullName || user.fullName || user.name || "";
+    const fName = user.FirstName || user.firstName || "";
+    const lName = user.LastName || user.lastName || "";
+    const uName = (fName + " " + lName).trim() || user.FullName || user.fullName || user.name || "Chưa cập nhật";
 
     if (confirm(`Bạn có muốn ${actionName} tài khoản "${uName}"?`)) {
       try {
