@@ -58,7 +58,7 @@ export default function DoctorsBookingPage() {
           Api.getSpecialties()
         ]);
 
-        const docsWithUI: DoctorUI[] = doctorsData.map(d => ({
+        const docsWithUI: DoctorUI[] = (doctorsData || []).map(d => ({
           ...d,
           // price: 300000,
           hospital: "Bệnh viện HUNRE",
@@ -67,7 +67,7 @@ export default function DoctorsBookingPage() {
         }));
 
         setDoctors(docsWithUI);
-        const specNames = specialtiesData.map(s => s.SpecialtyName);
+        const specNames = (specialtiesData || []).map(s => s?.SpecialtyName || "");
         setCategories(["Tất cả danh mục", ...specNames]);
       } catch (error) {
         handleError(error, "Lỗi tải ảnh!");

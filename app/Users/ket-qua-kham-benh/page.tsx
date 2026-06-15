@@ -277,14 +277,14 @@ export default function KetQuaKhamBenh() {
                 </div>
 
                 {/* File đính kèm */}
-                {selectedRecord.exam_results &&
+                {selectedRecord?.exam_results &&
                   selectedRecord.exam_results.length > 0 && (
                     <div>
                       <span className="font-bold block mb-2 text-gray-800">
                         Kết quả xét nghiệm / File đính kèm:
                       </span>
                       <div className="space-y-2">
-                        {selectedRecord.exam_results.map((file, idx) => (
+                        {(selectedRecord.exam_results || []).map((file, idx) => (
                           <a
                             key={file.ResultID}
                             href={getFullImageUrl(file.FilePath)}

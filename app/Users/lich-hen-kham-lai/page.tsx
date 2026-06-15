@@ -84,9 +84,8 @@ export default function LichHenKhamLai() {
     }
   };
 
-  //LOGIC TÍNH TOÁN NGÀY GIỜ (Tái sử dụng)
   const uniqueDates = useMemo(() => {
-    const dates = new Set(availabilities.map(slot => slot.StartTime.split(" ")[0]));
+    const dates = new Set((availabilities || []).map(slot => slot.StartTime?.split(" ")[0] || ""));
     return Array.from(dates).sort();
   }, [availabilities]);
 
