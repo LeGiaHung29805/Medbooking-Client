@@ -63,6 +63,10 @@ export default function DashboardTab({
     setWaitingPatients(initialWaitingPatients);
   }, [initialWaitingPatients]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   const getStatusInfo = (status: string) => {
     switch (status) {
       case "checked_in": return {

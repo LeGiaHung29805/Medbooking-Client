@@ -72,6 +72,10 @@ export default function FeedbacksPage() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterRating]);
+
   // FILTER
   const filteredFeedbacks = feedbacks.filter((fb) =>
     filterRating === "all" ? true : fb.rating === filterRating

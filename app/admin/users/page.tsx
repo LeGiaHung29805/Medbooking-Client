@@ -504,6 +504,10 @@ export default function UserManagementPage() {
     return () => clearTimeout(timer);
   }, [loadData]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterRole, searchQuery]);
+
   //Handlers
   const handleOpenModal = (user: Model.User | null = null) => {
     setSelectedUser(user);
