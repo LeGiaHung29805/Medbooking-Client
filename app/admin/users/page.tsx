@@ -666,7 +666,7 @@ export default function UserManagementPage() {
                 {currentUsers.map((uItem) => {
                   const u = uItem as any;
                   const uid = u.UserID || u.userId;
-                  const uName = u.FullName || u.fullName || u.name || "";
+                  const uName = u.FullName || u.fullName || u.name || (((u.FirstName || u.firstName || "") + " " + (u.LastName || u.lastName || "")).trim()) || "";
                   const uRole = u.Role || u.role || "";
                   const uStatus = u.Status || u.status || "";
                   const uAvatar = u.AvatarURL || u.avatarURL || u.avatarUrl || u.avatar_url || "";

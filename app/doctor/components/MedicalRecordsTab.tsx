@@ -30,7 +30,7 @@ const MedicalRecordsTab = ({
   // Filter records
   const filteredRecords = medicalRecords.filter(record => {
     const matchesSearch =
-      (record?.patient?.FullName || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+      (record?.patientName || record?.patient?.FullName || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
       (record?.Diagnosis || "").toLowerCase().includes((searchTerm || "").toLowerCase());
 
     const matchesStatus = statusFilter === "all" || record.appointment?.Status === statusFilter;
@@ -94,7 +94,7 @@ const MedicalRecordsTab = ({
               <div key={record.RecordID} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h3 className="font-semibold text-slate-900">{record.patient?.FullName}</h3>
+                    <h3 className="font-semibold text-slate-900">{record.patientName || record.patient?.FullName || ((((record.patient as any)?.FirstName || (record.patient as any)?.firstName || "") + " " + ((record.patient as any)?.LastName || (record.patient as any)?.lastName || "")).trim())}</h3>
                     <p className="text-sm text-slate-600">Ngày sinh: {record.patient?.DateOfBirth ? (
                       new Date(record.patient.DateOfBirth).toLocaleDateString('vi-VN', {
                         day: '2-digit',

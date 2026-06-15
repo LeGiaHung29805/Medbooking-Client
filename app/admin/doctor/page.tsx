@@ -58,17 +58,21 @@ const DoctorFormModal: React.FC<DoctorFormProps> = ({
   );
   useEffect(() => {
     if (doc) {
+      const u = doc.user || doc.User || {};
+      const fName = u.FirstName || u.firstName || "";
+      const lName = u.LastName || u.lastName || "";
+      const fullName = (fName + " " + lName).trim() || doc.user?.FullName || doc.user?.fullName || doc.user?.name || "";
       setFormData({
-        FullName: ((doc.user?.FirstName || doc.user?.firstName || "") + " " + (doc.user?.LastName || doc.user?.lastName || "")).trim() || doc.user?.FullName || doc.user?.fullName || doc.user?.name || "",
-        Email: doc.user?.Email || doc.user?.email || "",
-        Username: doc.user?.Username || doc.user?.username || "",
+        FullName: fullName,
+        Email: u.Email || u.email || "",
+        Username: u.Username || u.username || "",
         Password: "",
-        PhoneNumber: doc.user?.PhoneNumber || doc.user?.phoneNumber || "",
+        PhoneNumber: u.PhoneNumber || u.phoneNumber || "",
         SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.SpecialtyID || doc.specialty?.specialtyId || specialties[0]?.SpecialtyID || 0,
         Degree: doc.Degree || doc.degree || "",
         YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience || 1,
         ProfileDescription: doc.ProfileDescription || doc.profileDescription || "",
-        Status: doc.user?.Status || doc.user?.status || "HoatDong",
+        Status: u.Status || u.status || "HoatDong",
       });
 
       // Cập nhật ảnh preview theo bác sĩ đang chọn
@@ -467,25 +471,31 @@ export default function DoctorManagementPage() {
         Api.getDoctors(),
         Api.getSpecialties(),
       ]);
-      const normalizedDocs = (docsData || []).map((doc: any) => ({
-        ...doc,
-        DoctorID: doc.DoctorID || doc.doctorId,
-        SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
-        Degree: doc.Degree || doc.degree,
-        YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
-        ProfileDescription: doc.ProfileDescription || doc.profileDescription,
-        imageURL: doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL,
-        user: doc.user ? {
-          ...doc.user,
-          UserID: doc.user.UserID || doc.user.userId,
-           FullName: ((doc.user.FirstName || doc.user.firstName || "") + " " + (doc.user.LastName || doc.user.lastName || "")).trim() || doc.user.FullName || doc.user.fullName || "Chưa cập nhật",
-          Email: doc.user.Email || doc.user.email,
-          Username: doc.user.Username || doc.user.username,
-          PhoneNumber: doc.user.PhoneNumber || doc.user.phoneNumber,
-          Status: normalizeStatus(doc.user.Status || doc.user.status),
-          avatar_url: doc.user.avatar_url || doc.user.avatarURL
-        } : null
-      }));
+      const normalizedDocs = (docsData || []).map((doc: any) => {
+        const u = doc.user || doc.User || {};
+        const fName = u.FirstName || u.firstName || "";
+        const lName = u.LastName || u.lastName || "";
+        const fullName = (fName + " " + lName).trim() || u.FullName || u.fullName || u.name || "Chưa cập nhật";
+        return {
+          ...doc,
+          DoctorID: doc.DoctorID || doc.doctorId,
+          SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
+          Degree: doc.Degree || doc.degree,
+          YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
+          ProfileDescription: doc.ProfileDescription || doc.profileDescription,
+          imageURL: doc.imageURL || doc.imageUrl || u.avatar_url || u.avatarURL,
+          user: doc.user || doc.User ? {
+            ...(doc.user || doc.User),
+            UserID: u.UserID || u.userId,
+            FullName: fullName,
+            Email: u.Email || u.email,
+            Username: u.Username || u.username,
+            PhoneNumber: u.PhoneNumber || u.phoneNumber,
+            Status: normalizeStatus(u.Status || u.status),
+            avatar_url: u.avatar_url || u.avatarURL
+          } : null
+        };
+      });
       const normalizedSpecs = (specsData || []).map((s: any) => ({
         ...s,
         SpecialtyID: s.SpecialtyID || s.specialtyId,
@@ -530,8 +540,9 @@ export default function DoctorManagementPage() {
   const filteredDoctors = useMemo(() => {
     if (!Array.isArray(doctors)) return [];
     return doctors.filter((doc) => {
-      const name = (doc?.user?.FullName || "").toLowerCase();
-      const email = (doc?.user?.Email || "").toLowerCase();
+      const u = doc?.user as any;
+      const name = (u?.FullName || u?.fullName || u?.name || "").toLowerCase();
+      const email = (u?.Email || u?.email || "").toLowerCase();
       const query = (searchQuery || "").toLowerCase();
 
       const matchesSearch = name.includes(query) || email.includes(query);
@@ -637,8 +648,11 @@ export default function DoctorManagementPage() {
               {currentDoctors.map((doctorItem) => {
                 const doc = doctorItem as any;
                 const docId = doc.DoctorID || doc.doctorId;
-                 const fullName = doc.user?.FullName || ((doc.user?.FirstName || doc.user?.firstName || "") + " " + (doc.user?.LastName || doc.user?.lastName || "")).trim() || "N/A";
-                const email = doc.user?.Email || doc.user?.email || "N/A";
+                 const u = doc.user || doc.User || {};
+                const fName = u.FirstName || u.firstName || "";
+                const lName = u.LastName || u.lastName || "";
+                 const fullName = (fName + " " + lName).trim() || doc.user?.FullName || doc.user?.fullName || doc.user?.name || "Chưa cập nhật";
+                 const email = doc.user?.Email || doc.user?.email || "N/A";
                 const phone = doc.user?.PhoneNumber || doc.user?.phoneNumber || "N/A";
                 const status = doc.user?.Status || doc.user?.status || "HoatDong";
                 const avatar = doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL || doc.user?.avatarUrl;

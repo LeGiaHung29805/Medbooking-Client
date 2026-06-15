@@ -170,7 +170,7 @@ export default function RecordsPage() {
         setFilteredRecords(records);
 
         const uniqueNames = Array.from(
-          new Set(records.map((r: any) => r.patient?.FullName).filter(Boolean))
+          new Set(records.map((r: any) => r.patientName || r.patient?.FullName || r.patient?.fullName || r.patient?.name || (((r.patient?.FirstName || r.patient?.firstName || "") + " " + (r.patient?.LastName || r.patient?.lastName || "")).trim())).filter(Boolean))
         ) as string[];
 
         setPatientList(uniqueNames.sort());
@@ -195,7 +195,7 @@ export default function RecordsPage() {
     if (searchTerm.trim()) {
       const term = (searchTerm || "").toLowerCase().trim();
       filtered = filtered.filter(record =>
-        (record?.patient?.FullName || "").toLowerCase().includes(term) ||
+        (record?.patientName || record?.patient?.FullName || "").toLowerCase().includes(term) ||
         (record?.Diagnosis || "").toLowerCase().includes(term)
       );
     }
@@ -209,7 +209,7 @@ export default function RecordsPage() {
 
     // Patient filter
     if (selectedPatient !== "all") {
-      filtered = filtered.filter(record => record.patient?.FullName === selectedPatient);
+      filtered = filtered.filter(record => (record.patientName || record.patient?.FullName) === selectedPatient);
     }
 
     // Date filter
@@ -313,15 +313,18 @@ export default function RecordsPage() {
   };
 
   const handleGeneratePrescriptionPDF = (record: MedicalRecord) => {
+    const rec = record as any;
+    const docUser = rec.doctor?.user as any;
+    const patientUser = rec.patient as any;
     const pdfContent = `
       BỆNH VIỆN ĐA KHOA
       ===============================
-      Bác sĩ: ${record.doctor?.user.FullName}
+      Bác sĩ: ${rec.doctorName || docUser?.FullName || (((docUser?.FirstName || docUser?.firstName || "") + " " + (docUser?.LastName || docUser?.lastName || "")).trim()) || "Bác sĩ"}
       Ngày: ${new Date().toLocaleDateString('vi-VN')}
       
       THÔNG TIN BỆNH NHÂN
       -------------------
-      Họ tên: ${record.patient?.FullName}
+      Họ tên: ${rec.patientName || patientUser?.FullName || (((patientUser?.FirstName || patientUser?.firstName || "") + " " + (patientUser?.LastName || patientUser?.lastName || "")).trim()) || "Bệnh nhân"}
       Ngày sinh: ${record.patient?.DateOfBirth}
       Ngày khám: ${record.created_at}
       Chẩn đoán: ${record.Diagnosis}
@@ -433,7 +436,7 @@ export default function RecordsPage() {
                 ${filteredRecords.map((record, index) => `
                   <tr>
                     <td>${index + 1}</td>
-                    <td>${record.patient?.FullName}</td>
+                     <td>${record.patientName || (record.patient as any)?.FullName || ((((record.patient as any)?.FirstName || (record.patient as any)?.firstName || "") + " " + ((record.patient as any)?.LastName || (record.patient as any)?.lastName || "")).trim())}</td>
                     <td>${record.patient?.DateOfBirth}</td>
                     <td>${record.created_at}</td>
                     <td>${record.Diagnosis}</td>
@@ -719,7 +722,7 @@ export default function RecordsPage() {
           <div className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-900">
-                Chi tiết bệnh án - {selectedRecord.patient?.FullName}
+                 Chi tiết bệnh án - {selectedRecord.patientName || selectedRecord.patient?.FullName || (selectedRecord.patient ? ((( (selectedRecord.patient as any).FirstName || (selectedRecord.patient as any).firstName || "") + " " + ((selectedRecord.patient as any).LastName || (selectedRecord.patient as any).lastName || "")).trim()) : "")}
               </h3>
               <button
                 onClick={() => setShowDetailModal(false)}
@@ -733,7 +736,7 @@ export default function RecordsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-gray-600">Bệnh nhân</div>
-                  <div className="font-semibold">{selectedRecord.patient?.FullName}</div>
+                   <div className="font-semibold">{selectedRecord.patientName || selectedRecord.patient?.FullName || (selectedRecord.patient ? ((( (selectedRecord.patient as any).FirstName || (selectedRecord.patient as any).firstName || "") + " " + ((selectedRecord.patient as any).LastName || (selectedRecord.patient as any).lastName || "")).trim()) : "")}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Ngày sinh</div>

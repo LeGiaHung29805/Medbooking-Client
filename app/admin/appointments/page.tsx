@@ -97,37 +97,49 @@ export default function AppointmentsPage() {
     setLoading(true);
     try {
       const data = await Api.getAllAppointments();
-      const normalized = (data || []).map((item: any) => ({
-        ...item,
-        AppointmentID: item.AppointmentID || item.appointmentId,
-        Status: item.Status || item.status,
-        StartTime: item.StartTime || item.startTime,
-        EstimatedDuration: item.EstimatedDuration || item.estimatedDuration,
-        InitialSymptoms: item.InitialSymptoms || item.initialSymptoms,
-        CancellationReason: item.CancellationReason || item.cancellationReason,
-        file_path: item.file_path || item.filePath,
-        patient: item.patient ? {
-          ...item.patient,
-          UserID: item.patient.UserID || item.patient.userId,
-          FullName: ((item.patient.FirstName || item.patient.firstName || "") + " " + (item.patient.LastName || item.patient.lastName || "")).trim() || item.patient.FullName || item.patient.fullName || "Chưa cập nhật",
-          PhoneNumber: item.patient.PhoneNumber || item.patient.phoneNumber
-        } : null,
-        doctor: item.doctor ? {
-          ...item.doctor,
-          DoctorID: item.doctor.DoctorID || item.doctor.doctorId,
-          SpecialtyID: item.doctor.SpecialtyID || item.doctor.specialtyId || item.doctor.specialty?.specialtyId,
-          user: item.doctor.user ? {
-            ...item.doctor.user,
-            UserID: item.doctor.user.UserID || item.doctor.user.userId,
-            FullName: ((item.doctor.user.FirstName || item.doctor.user.firstName || "") + " " + (item.doctor.user.LastName || item.doctor.user.lastName || "")).trim() || item.doctor.user.FullName || item.doctor.user.fullName || "Chưa cập nhật"
+      const normalized = (data || []).map((item: any) => {
+        const patientUser = item.patient || item.Patient || {};
+        const patFName = patientUser.FirstName || patientUser.firstName || "";
+        const patLName = patientUser.LastName || patientUser.lastName || "";
+        const patFullName = (patFName + " " + patLName).trim() || patientUser.FullName || patientUser.fullName || patientUser.name || "Chưa cập nhật";
+
+        const docUser = item.doctor?.user || item.doctor?.User || {};
+        const docFName = docUser.FirstName || docUser.firstName || "";
+        const docLName = docUser.LastName || docUser.lastName || "";
+        const docFullName = (docFName + " " + docLName).trim() || docUser.FullName || docUser.fullName || docUser.name || "Chưa cập nhật";
+
+        return {
+          ...item,
+          AppointmentID: item.AppointmentID || item.appointmentId,
+          Status: item.Status || item.status,
+          StartTime: item.StartTime || item.startTime,
+          EstimatedDuration: item.EstimatedDuration || item.estimatedDuration,
+          InitialSymptoms: item.InitialSymptoms || item.initialSymptoms,
+          CancellationReason: item.CancellationReason || item.cancellationReason,
+          file_path: item.file_path || item.filePath,
+          patient: item.patient || item.Patient ? {
+            ...(item.patient || item.Patient),
+            UserID: patientUser.UserID || patientUser.userId,
+            FullName: patFullName,
+            PhoneNumber: patientUser.PhoneNumber || patientUser.phoneNumber
           } : null,
-          specialty: item.doctor.specialty ? {
-            ...item.doctor.specialty,
-            SpecialtyID: item.doctor.specialty.SpecialtyID || item.doctor.specialty.specialtyId,
-            SpecialtyName: item.doctor.specialty.SpecialtyName || item.doctor.specialty.specialtyName
+          doctor: item.doctor || item.Doctor ? {
+            ...(item.doctor || item.Doctor),
+            DoctorID: (item.doctor || item.Doctor).DoctorID || (item.doctor || item.Doctor).doctorId,
+            SpecialtyID: (item.doctor || item.Doctor).SpecialtyID || (item.doctor || item.Doctor).specialtyId || (item.doctor || item.Doctor).specialty?.specialtyId,
+            user: item.doctor.user || item.doctor.User ? {
+              ...(item.doctor.user || item.doctor.User),
+              UserID: docUser.UserID || docUser.userId,
+              FullName: docFullName
+            } : null,
+            specialty: (item.doctor || item.Doctor).specialty ? {
+              ...(item.doctor || item.Doctor).specialty,
+              SpecialtyID: (item.doctor || item.Doctor).specialty.SpecialtyID || (item.doctor || item.Doctor).specialty.specialtyId,
+              SpecialtyName: (item.doctor || item.Doctor).specialty.SpecialtyName || (item.doctor || item.Doctor).specialty.specialtyName
+            } : null
           } : null
-        } : null
-      }));
+        };
+      });
       const sortedData = normalized.sort(
         (a, b) =>
           new Date(b.StartTime).getTime() - new Date(a.StartTime).getTime()
@@ -143,19 +155,25 @@ export default function AppointmentsPage() {
   const fetchDoctors = async () => {
     try {
       const res = await Api.getDoctors();
-      const normalized = (res || []).map((d: any) => ({
-        ...d,
-        DoctorID: d.DoctorID || d.doctorId,
-        SpecialtyID: d.SpecialtyID || d.specialtyId || d.specialty?.specialtyId,
-        user: d.user ? {
-          ...d.user,
-          FullName: ((d.user.FirstName || d.user.firstName || "") + " " + (d.user.LastName || d.user.lastName || "")).trim() || d.user.FullName || d.user.fullName || "Chưa cập nhật"
-        } : null,
-        specialty: d.specialty ? {
-          ...d.specialty,
-          SpecialtyName: d.specialty.SpecialtyName || d.specialty.specialtyName
-        } : null
-      }));
+      const normalized = (res || []).map((d: any) => {
+        const u = d.user || d.User || {};
+        const fName = u.FirstName || u.firstName || "";
+        const lName = u.LastName || u.lastName || "";
+        const fullName = (fName + " " + lName).trim() || u.FullName || u.fullName || u.name || "Chưa cập nhật";
+        return {
+          ...d,
+          DoctorID: d.DoctorID || d.doctorId,
+          SpecialtyID: d.SpecialtyID || d.specialtyId || d.specialty?.specialtyId,
+          user: d.user || d.User ? {
+            ...(d.user || d.User),
+            FullName: fullName
+          } : null,
+          specialty: d.specialty ? {
+            ...d.specialty,
+            SpecialtyName: d.specialty.SpecialtyName || d.specialty.specialtyName
+          } : null
+        };
+      });
       setDoctorsList(normalized);
     } catch (error) {
       console.error("Lỗi lấy danh sách bác sĩ", error);
@@ -267,8 +285,10 @@ export default function AppointmentsPage() {
     return appointments.filter((item) => {
       const statusMatch =
         filterStatus === "all" || item.Status === filterStatus;
-      const pName = (item?.patient?.FullName || "").toLowerCase();
-      const dName = (item?.doctor?.user?.FullName || "").toLowerCase();
+      const patient = item?.patient as any;
+      const docUser = item?.doctor?.user as any;
+      const pName = (patient?.FullName || patient?.fullName || patient?.name || "").toLowerCase();
+      const dName = (docUser?.FullName || docUser?.fullName || docUser?.name || "").toLowerCase();
       const idStr = (item?.AppointmentID || "").toString();
       const search = (searchTerm || "").toLowerCase();
       return (
@@ -401,9 +421,9 @@ export default function AppointmentsPage() {
                         {currentAppointments.map((item) => {
                           const appt = item as any;
                           const apptId = appt.AppointmentID || appt.appointmentId;
-                          const patientName = appt.patient?.FullName || appt.patient?.fullName || appt.patient?.name || "N/A";
+                          const patientName = appt.patient?.FullName || appt.patient?.fullName || appt.patient?.name || (((appt.patient?.FirstName || appt.patient?.firstName || "") + " " + (appt.patient?.LastName || appt.patient?.lastName || "")).trim() || "N/A");
                           const patientPhone = appt.patient?.PhoneNumber || appt.patient?.phoneNumber || "N/A";
-                          const doctorName = appt.doctor?.user?.FullName || appt.doctor?.user?.fullName || appt.doctor?.user?.name || "N/A";
+                          const doctorName = appt.doctor?.user?.FullName || appt.doctor?.user?.fullName || appt.doctor?.user?.name || (((appt.doctor?.user?.FirstName || appt.doctor?.user?.firstName || "") + " " + (appt.doctor?.user?.LastName || appt.doctor?.user?.lastName || "")).trim() || "N/A");
                           const specialtyName = appt.doctor?.specialty?.SpecialtyName || appt.doctor?.specialty?.specialtyName || "---";
                           const apptStatus = appt.Status || appt.status || "Pending";
                           const startTimeObj = parseSafeDate(appt.StartTime || appt.startTime);
@@ -513,7 +533,10 @@ export default function AppointmentsPage() {
                     {doctorsList.map((dItem) => {
                       const doc = dItem as any;
                       const docId = doc.DoctorID || doc.doctorId;
-                      const docName = doc.user?.FullName || doc.user?.fullName || doc.user?.name || "";
+                      const u = doc.user || doc.User || {};
+                      const fName = u.FirstName || u.firstName || "";
+                      const lName = u.LastName || u.lastName || "";
+                      const docName = (fName + " " + lName).trim() || u.FullName || u.fullName || u.name || "Chưa cập nhật";
                       const specName = doc.specialty ? (doc.specialty.SpecialtyName || doc.specialty.specialtyName) : "";
                       return (
                         <option key={docId} value={docId}>
@@ -595,7 +618,7 @@ export default function AppointmentsPage() {
                           const apptStatus = appt ? (appt.Status || appt.status) : null;
                           
                           const patient = appt?.patient as any;
-                          const patientName = patient ? (patient.FullName || patient.fullName || patient.name) : null;
+                          const patientName = patient ? (patient.FullName || patient.fullName || patient.name || (((patient.FirstName || patient.firstName || "") + " " + (patient.LastName || patient.lastName || "")).trim())) : null;
                           const patientPhone = patient ? (patient.PhoneNumber || patient.phoneNumber) : null;
                           
                           const slotStatus = slot.Status || slot.status || "available";
@@ -606,7 +629,7 @@ export default function AppointmentsPage() {
                           const endStr = dEnd ? dEnd.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
                           
                           const docUser = (currentSelectedDoctor as any)?.user;
-                          const docName = docUser ? (docUser.FullName || docUser.fullName || docUser.name) : "N/A";
+                          const docName = docUser ? (docUser.FullName || docUser.fullName || docUser.name || (((docUser.FirstName || docUser.firstName || "") + " " + (docUser.LastName || docUser.lastName || "")).trim())) : "N/A";
                           const specName = (currentSelectedDoctor as any)?.specialty ? ((currentSelectedDoctor as any).specialty.SpecialtyName || (currentSelectedDoctor as any).specialty.specialtyName) : "---";
 
                           return (
@@ -736,7 +759,7 @@ export default function AppointmentsPage() {
                         Bệnh nhân
                       </p>
                       <p className="font-bold text-lg">
-                        {appt.patient?.FullName || appt.patient?.fullName || appt.patient?.name}
+                        {appt.patient?.FullName || appt.patient?.fullName || appt.patient?.name || (((appt.patient?.FirstName || appt.patient?.firstName || "") + " " + (appt.patient?.LastName || appt.patient?.lastName || "")).trim())}
                       </p>
                       <p className="text-sm text-gray-600">
                         {appt.patient?.PhoneNumber || appt.patient?.phoneNumber}
@@ -747,7 +770,7 @@ export default function AppointmentsPage() {
                         Bác sĩ
                       </p>
                       <p className="font-bold text-lg text-blue-700">
-                        {appt.doctor?.user?.FullName || appt.doctor?.user?.fullName || appt.doctor?.user?.name}
+                        {appt.doctor?.user?.FullName || appt.doctor?.user?.fullName || appt.doctor?.user?.name || (((appt.doctor?.user?.FirstName || appt.doctor?.user?.firstName || "") + " " + (appt.doctor?.user?.LastName || appt.doctor?.user?.lastName || "")).trim())}
                       </p>
                       <p className="text-sm text-gray-600">
                         {appt.doctor?.specialty?.SpecialtyName || appt.doctor?.specialty?.specialtyName}

@@ -223,7 +223,7 @@ const ScheduleTab = ({
 
                         <p className="text-xs font-bold text-slate-900 truncate">
                           {/* Lấy từ object patient lồng bên trong JSON */}
-                          {appt.patient?.FullName || "Bệnh nhân chưa có tên"}
+                          {appt.patientName || appt.patient?.FullName || (appt.patient as any)?.fullName || (appt.patient as any)?.name || ((( (appt.patient as any)?.FirstName || (appt.patient as any)?.firstName || "") + " " + ((appt.patient as any)?.LastName || (appt.patient as any)?.lastName || "")).trim()) || "Bệnh nhân chưa có tên"}
                         </p>
 
                         <div className="flex items-center gap-1 text-[9px] text-slate-500 mt-1">

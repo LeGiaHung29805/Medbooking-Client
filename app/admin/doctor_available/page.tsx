@@ -41,30 +41,36 @@ export default function ScheduleManagementPage() {
     const loadDoctors = async () => {
       try {
         const data = await Api.getDoctors();
-        const normalized = (data || []).map((doc: any) => ({
-          ...doc,
-          DoctorID: doc.DoctorID || doc.doctorId,
-          SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
-          Degree: doc.Degree || doc.degree,
-          YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
-          ProfileDescription: doc.ProfileDescription || doc.profileDescription,
-          imageURL: doc.imageURL || doc.imageUrl || doc.user?.avatar_url || doc.user?.avatarURL,
-          user: doc.user ? {
-            ...doc.user,
-            UserID: doc.user.UserID || doc.user.userId,
-            FullName: ((doc.user.FirstName || doc.user.firstName || "") + " " + (doc.user.LastName || doc.user.lastName || "")).trim() || doc.user.FullName || doc.user.fullName || "Chưa cập nhật",
-            Email: doc.user.Email || doc.user.email,
-            Username: doc.user.Username || doc.user.username,
-            PhoneNumber: doc.user.PhoneNumber || doc.user.phoneNumber,
-            Status: doc.user.Status || doc.user.status,
-            avatar_url: doc.user.avatar_url || doc.user.avatarURL
-          } : null,
-          specialty: doc.specialty ? {
-            ...doc.specialty,
-            SpecialtyID: doc.specialty.SpecialtyID || doc.specialty.specialtyId,
-            SpecialtyName: doc.specialty.SpecialtyName || doc.specialty.specialtyName,
-          } : null
-        }));
+        const normalized = (data || []).map((doc: any) => {
+          const u = doc.user || doc.User || {};
+          const fName = u.FirstName || u.firstName || "";
+          const lName = u.LastName || u.lastName || "";
+          const fullName = (fName + " " + lName).trim() || u.FullName || u.fullName || u.name || "Chưa cập nhật";
+          return {
+            ...doc,
+            DoctorID: doc.DoctorID || doc.doctorId,
+            SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
+            Degree: doc.Degree || doc.degree,
+            YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
+            ProfileDescription: doc.ProfileDescription || doc.profileDescription,
+            imageURL: doc.imageURL || doc.imageUrl || u.avatar_url || u.avatarURL,
+            user: doc.user || doc.User ? {
+              ...(doc.user || doc.User),
+              UserID: u.UserID || u.userId,
+              FullName: fullName,
+              Email: u.Email || u.email,
+              Username: u.Username || u.username,
+              PhoneNumber: u.PhoneNumber || u.phoneNumber,
+              Status: u.Status || u.status,
+              avatar_url: u.avatar_url || u.avatarURL
+            } : null,
+            specialty: doc.specialty ? {
+              ...doc.specialty,
+              SpecialtyID: doc.specialty.SpecialtyID || doc.specialty.specialtyId,
+              SpecialtyName: doc.specialty.SpecialtyName || doc.specialty.specialtyName,
+            } : null
+          };
+        });
         setDoctors(normalized);
       } catch (error) {
         console.error("Error loading doctors:", error);
@@ -189,7 +195,10 @@ export default function ScheduleManagementPage() {
               {doctors.map((dItem) => {
                 const d = dItem as any;
                 const docId = d.DoctorID || d.doctorId;
-                const docName = d.user?.FullName || ((d.user?.FirstName || d.user?.firstName || "") + " " + (d.user?.LastName || d.user?.lastName || "")).trim() || "";
+                const u = d.user || d.User || {};
+                const fName = u.FirstName || u.firstName || "";
+                const lName = u.LastName || u.lastName || "";
+                const docName = (fName + " " + lName).trim() || d.user?.FullName || d.user?.fullName || d.user?.name || "Chưa cập nhật";
                 const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
                 return (
                   <option key={docId} value={docId}>
@@ -243,7 +252,7 @@ export default function ScheduleManagementPage() {
                   const doc = getDoctorInfo(slot.DoctorID || slot.doctorId) as any;
                   const startTime = (slot.StartTime || slot.startTime || "").split(" ")[1]?.slice(0, 5);
                   const endTime = (slot.EndTime || slot.endTime || "").split(" ")[1]?.slice(0, 5);
-                  const docName = doc?.user?.FullName || ((doc?.user?.FirstName || doc?.user?.firstName || "") + " " + (doc?.user?.LastName || doc?.user?.lastName || "")).trim() || "N/A";
+                  const docName = doc ? (((doc.user?.FirstName || doc.user?.firstName || "") + " " + (doc.user?.LastName || doc.user?.lastName || "")).trim() || doc.user?.FullName || doc.user?.fullName || doc.user?.name || "N/A") : "N/A";
                   const specName = doc?.specialty ? (doc.specialty.SpecialtyName || doc.specialty.specialtyName) : "---";
                   const slotStatus = slot.Status || slot.status || "Available";
                   return (
@@ -356,7 +365,10 @@ export default function ScheduleManagementPage() {
                   {doctors.map((dItem) => {
                     const d = dItem as any;
                     const docId = d.DoctorID || d.doctorId;
-                    const docName = d.user?.FullName || ((d.user?.FirstName || d.user?.firstName || "") + " " + (d.user?.LastName || d.user?.lastName || "")).trim() || "";
+                    const u = d.user || d.User || {};
+                    const fName = u.FirstName || u.firstName || "";
+                    const lName = u.LastName || u.lastName || "";
+                    const docName = (fName + " " + lName).trim() || d.user?.FullName || d.user?.fullName || d.user?.name || "Chưa cập nhật";
                     const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
                     return (
                       <option key={docId} value={docId}>

@@ -173,10 +173,10 @@ function AppointmentDetailModal({
               {/* Patient Info */}
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                  {appointment.patient?.FullName?.charAt(0)}
+                  {(appointment.patientName || appointment.patient?.FullName || (appointment.patient as any)?.fullName || (appointment.patient as any)?.name || ((( (appointment.patient as any)?.FirstName || (appointment.patient as any)?.firstName || "") + " " + ((appointment.patient as any)?.LastName || (appointment.patient as any)?.lastName || "")).trim()) || "P").charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{appointment.patient?.FullName || "Bệnh nhân không tên"}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{appointment.patientName || appointment.patient?.FullName || (appointment.patient as any)?.fullName || (appointment.patient as any)?.name || ((( (appointment.patient as any)?.FirstName || (appointment.patient as any)?.firstName || "") + " " + ((appointment.patient as any)?.LastName || (appointment.patient as any)?.lastName || "")).trim()) || "Bệnh nhân không tên"}</h3>
                   <p className="flex items-center gap-2 text-sm text-gray-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
                     <span className="font-medium">Giới tính:</span> {appointment.patient?.Gender}
@@ -375,7 +375,7 @@ export default function SchedulePage() {
     if (searchTerm.trim()) {
       const term = (searchTerm || "").toLowerCase();
       filtered = filtered.filter(appt =>
-        (appt?.patient?.FullName || "").toLowerCase().includes(term) ||
+        (appt?.patientName || appt?.patient?.FullName || "").toLowerCase().includes(term) ||
         (appt?.patient?.PhoneNumber || "").includes(term) ||
         (appt?.InitialSymptoms || "").toLowerCase().includes(term)
       );
@@ -799,14 +799,14 @@ export default function SchedulePage() {
 
                       {/* Patient Avatar */}
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg">
-                        {appointment.patient?.FullName?.charAt(0) || "P"}
+                        {(appointment.patientName || appointment.patient?.FullName || (appointment.patient as any)?.fullName || (appointment.patient as any)?.name || ((( (appointment.patient as any)?.FirstName || (appointment.patient as any)?.firstName || "") + " " + ((appointment.patient as any)?.LastName || (appointment.patient as any)?.lastName || "")).trim()) || "P").charAt(0).toUpperCase()}
                       </div>
 
                       {/* Patient Info */}
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-1">
                           <h4 className="font-semibold text-lg text-gray-900">
-                            {appointment.patient?.FullName || "Bệnh nhân không tên"}
+                            {appointment.patientName || appointment.patient?.FullName || (appointment.patient as any)?.fullName || (appointment.patient as any)?.name || ((( (appointment.patient as any)?.FirstName || (appointment.patient as any)?.firstName || "") + " " + ((appointment.patient as any)?.LastName || (appointment.patient as any)?.lastName || "")).trim()) || "Bệnh nhân không tên"}
                           </h4>
                           <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded">
                             {appointment.patient?.Gender}

@@ -69,7 +69,9 @@ export default function NotificationManagerPage() {
           id: item.NotificationID,
 
           recipient: item.user
-            ? item.user.FullName
+            ? ((item.user as any).FullName || (item.user as any).fullName || `User #${(item as any).UserID || (item as any).userId}`)
+            : ((item as any).UserID || (item as any).userId)
+            ? `User #${(item as any).UserID || (item as any).userId}`
             : item.target_group === "patients"
             ? "Tất cả Bệnh nhân"
             : "Tất cả",
