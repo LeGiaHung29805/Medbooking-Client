@@ -2,7 +2,7 @@ import axios from "axios";
 import * as Model from "./model";
 const rawBase =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://medbooking-server-production.up.railway.app";
+  "https://medbooking-java-production.up.railway.app";
 export const API_BASE_URL = rawBase.replace(/\/$/, "") + "/api";
 console.log(
   "Resolved NEXT_PUBLIC_API_URL:",
