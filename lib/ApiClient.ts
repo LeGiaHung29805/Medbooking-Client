@@ -87,52 +87,60 @@ export const login = async (data: {
   const rawData = response.data;
   const token = rawData.access_token || rawData.token;
 
-  let user = rawData.user;
-  if (!user && rawData.userId) {
-    let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" =
-      "BenhNhan";
-    const rawRole = (rawData.role || "").toUpperCase();
-    if (
-      rawRole.includes("ADMIN") ||
-      rawRole.includes("QUANTRIVIEN") ||
-      rawRole === "QUANTRI"
-    ) {
-      frontendRole = "QuanTriVien";
-    } else if (
-      rawRole.includes("DOCTOR") ||
-      rawRole.includes("BACSI") ||
-      rawRole === "BAC_SI"
-    ) {
-      frontendRole = "BacSi";
-    } else if (
-      rawRole.includes("STAFF") ||
-      rawRole.includes("MEDICAL_STAFF") ||
-      rawRole.includes("NHANVIEN")
-    ) {
-      frontendRole = "NhanVien";
-    } else if (rawRole.includes("PATIENT") || rawRole.includes("BENHNHAN")) {
-      frontendRole = "BenhNhan";
-    }
-
-    user = {
-      UserID: rawData.userId,
-      Username: rawData.username || "",
-      Role: frontendRole,
-      Email: rawData.email || null,
-      PhoneNumber: rawData.phoneNumber || "",
-      FirstName: rawData.firstName || "",
-      LastName: rawData.lastName || "",
-      Status: "HoatDong",
-      avatar_url: rawData.avatarURL || null,
-    };
+  // Extract raw role
+  let rawRole = "";
+  if (rawData.user && (rawData.user.Role || rawData.user.role)) {
+    rawRole = rawData.user.Role || rawData.user.role;
+  } else if (rawData.role) {
+    rawRole = rawData.role;
+  } else if (rawData.Role) {
+    rawRole = rawData.Role;
   }
+
+  // Map to Vietnamese version
+  let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" = "BenhNhan";
+  const upperRole = (rawRole || "").toUpperCase();
+  if (
+    upperRole.includes("ADMIN") ||
+    upperRole.includes("QUANTRIVIEN") ||
+    upperRole.includes("QUANTRIYEN") ||
+    upperRole === "QUANTRI"
+  ) {
+    frontendRole = "QuanTriVien";
+  } else if (
+    upperRole.includes("DOCTOR") ||
+    upperRole.includes("BACSI") ||
+    upperRole === "BAC_SI"
+  ) {
+    frontendRole = "BacSi";
+  } else if (
+    upperRole.includes("STAFF") ||
+    upperRole.includes("MEDICAL_STAFF") ||
+    upperRole.includes("NHANVIEN")
+  ) {
+    frontendRole = "NhanVien";
+  } else if (upperRole.includes("PATIENT") || upperRole.includes("BENHNHAN")) {
+    frontendRole = "BenhNhan";
+  }
+
+  // Build or update user object
+  let user = rawData.user || {};
+  user = {
+    UserID: user.UserID || user.userId || rawData.userId,
+    Username: user.Username || user.username || rawData.username || "",
+    Role: frontendRole,
+    Email: user.Email || user.email || rawData.email || null,
+    PhoneNumber: user.PhoneNumber || user.phoneNumber || rawData.phoneNumber || "",
+    FirstName: user.FirstName || user.firstName || rawData.firstName || "",
+    LastName: user.LastName || user.lastName || rawData.lastName || "",
+    Status: user.Status || user.status || rawData.status || "Active",
+    avatar_url: user.avatar_url || user.avatarURL || rawData.avatarURL || null,
+  };
 
   if (token && typeof window !== "undefined") {
     localStorage.setItem("api_token", token);
-    localStorage.setItem("user_role", user ? user.Role : rawData.role || "");
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    }
+    localStorage.setItem("user_role", frontendRole);
+    localStorage.setItem("user", JSON.stringify(user));
     console.log("Đã lưu token:", token);
   }
 
