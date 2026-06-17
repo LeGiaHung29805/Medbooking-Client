@@ -87,9 +87,21 @@ export default function SpecialtyBookingPage() {
             router.push("/Users/quan-li-gia-dinh");
             return;
         }
-        setSelectedPerson(value);
+        const selectedId = Number(value);
+        setSelectedPatientId(selectedId);
+
+        let name = "";
+        if (currentUser && selectedId === currentUser.UserID) {
+            name = currentUser.FullName;
+        } else {
+            const matched = familyMembers.find((m) => m.UserID === selectedId);
+            if (matched) {
+                name = matched.FullName;
+            }
+        }
+        setSelectedPerson(name);
         // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
-        localStorage.setItem("booking_for_person", value);
+        localStorage.setItem("booking_for_person", name);
     };
     //XỬ LÝ KHI BẤM VÀO MỘT CHUYÊN KHOA (MỞ SHEET CHI TIẾT)
     const handleViewSpecialty = async (spec: Model.Specialty) => {
@@ -184,19 +196,19 @@ export default function SpecialtyBookingPage() {
                     <div>
                         <label className="block font-semibold mb-2">Người tới khám</label>
                         <select
-                            value={selectedPerson}
+                            value={selectedPatientId || ""}
                             onChange={handlePersonChange}
                             className="w-full border rounded px-3 py-2 focus:outline-green-600 bg-white"
                         >
                             {currentUser ? (
                                 <>
-                                    <option value={currentUser.FullName}>{currentUser.FullName}</option>
+                                    <option value={currentUser.UserID}>{currentUser.FullName}</option>
 
                                     {/* Render danh sách người thân */}
                                     {familyMembers.length > 0 && (
                                         <optgroup label="Người thân">
                                             {familyMembers.map((mem) => (
-                                                <option key={mem.UserID} value={mem.FullName}>
+                                                <option key={mem.UserID} value={mem.UserID}>
                                                     {mem.FullName} ({mem.RelationType || mem.pivot?.RelationType})
                                                 </option>
                                             ))}

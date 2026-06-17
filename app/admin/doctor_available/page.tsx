@@ -167,6 +167,21 @@ export default function ScheduleManagementPage() {
 
   const getDoctorInfo = (id: number) => doctors.find((d) => (d.DoctorID || (d as any).doctorId) === id);
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    if (selectedDoctorId !== "all") {
+      setNewSlot((prev) => ({
+        ...prev,
+        doctor_id: Number(selectedDoctorId),
+      }));
+    } else {
+      setNewSlot((prev) => ({
+        ...prev,
+        doctor_id: 0,
+      }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <section className="max-w-7xl w-full mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col min-h-[600px]">
@@ -208,7 +223,7 @@ export default function ScheduleManagementPage() {
               })}
             </select>
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleOpenModal}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow-md flex items-center justify-center gap-2"
             >
               <span className="text-xl leading-none">+</span> Tạo Lịch
@@ -238,7 +253,7 @@ export default function ScheduleManagementPage() {
                   Chưa có lịch làm việc nào trong ngày {selectedDate}
                 </p>
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={handleOpenModal}
                   className="text-blue-500 text-sm hover:underline mt-2"
                 >
                   Tạo lịch ngay
@@ -352,8 +367,9 @@ export default function ScheduleManagementPage() {
                   Bác sĩ <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-gray-100 disabled:text-gray-500"
                   value={newSlot.doctor_id}
+                  disabled={selectedDoctorId !== "all"}
                   onChange={(e) =>
                     setNewSlot({
                       ...newSlot,
