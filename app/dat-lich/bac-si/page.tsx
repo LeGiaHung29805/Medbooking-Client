@@ -443,7 +443,7 @@ export default function DoctorBookingPage() {
                                     <h4 className="font-semibold mb-2 text-gray-700">Chọn giờ khám</h4>
                                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
                                         {slotsOnDate.length > 0 ? slotsOnDate.map((slot) => {
-                                            const timeStr = ((slot.StartTime || slot.startTime || "").split(" ")[1] || "").substring(0, 5); // 08:00
+                                            const timeStr = (((slot as any).StartTime || (slot as any).startTime || "").split(" ")[1] || "").substring(0, 5); // 08:00
                                             return (
                                                 <button
                                                     key={slot.SlotID}

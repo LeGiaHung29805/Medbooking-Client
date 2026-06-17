@@ -255,7 +255,7 @@ export default function LichHenKhamLai() {
                     <label className="block text-sm font-bold text-gray-700 mb-2">Chọn giờ:</label>
                     <div className="grid grid-cols-4 gap-2">
                       {slotsOnDate.map(slot => {
-                        const timeStr = ((slot.StartTime || slot.startTime || "").split(" ")[1] || "").substring(0, 5);
+                        const timeStr = (((slot as any).StartTime || (slot as any).startTime || "").split(" ")[1] || "").substring(0, 5);
                         return (
                           <button
                             key={slot.SlotID}
