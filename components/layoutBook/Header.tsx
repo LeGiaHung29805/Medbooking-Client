@@ -68,7 +68,7 @@ export default function Header() {
                     {/* Banner */}
                     <div className="flex justify-center">
                         <Image
-                            src="/image/vi-suc-khoe-toan-dan.jpg"
+                            src="/image/Vi-suc-khoe-toan-dan.jpg"
                             alt="Vì sức khỏe nhân dân - Đồng hành trọn đời sức khỏe"
                             width={400}
                             height={50}
