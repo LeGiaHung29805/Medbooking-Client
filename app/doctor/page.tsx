@@ -122,7 +122,7 @@ export default function DoctorDashboardPage() {
         });
 
         console.log("[DEBUG] Danh sách Appointments sau khi map:", appointmentsList);
-        // setAppointments(appointmentsList);
+        setAppointments(appointmentsList as unknown as Appointment[]);
       } else {
         console.warn("[DEBUG] Danh sách khám RỖNG hoặc API thất bại!");
         setAppointments([]);

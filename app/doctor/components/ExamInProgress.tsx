@@ -22,7 +22,7 @@ export default function ExamInProgress({
   getPriorityText,
   handleStartExam
 }: ExamInProgressProps) {
-  const inProgressAppointments = appointments.filter(appt => appt.status === "InProcess")
+  const inProgressAppointments = appointments.filter(appt => appt.status === "in_progress")
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl shadow-lg border-2 border-blue-300 p-4 mb-6 transform hover:scale-[1.01] transition-all duration-200">

@@ -97,11 +97,10 @@ export default function TodayAppointments({
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Tất cả trạng thái</option>
-            <option value="Pending">Đang chờ</option>
-            <option value="Confirmed">Đã xác nhận</option>
-            <option value="CheckedIn">Đã check-in</option>
-            <option value="InProcess">Đang khám</option>
-            <option value="Completed">Đã khám</option>
+            <option value="waiting">Đang chờ / Đã xác nhận</option>
+            <option value="checked_in">Đã check-in</option>
+            <option value="in_progress">Đang khám</option>
+            <option value="completed">Đã khám</option>
           </select>
         </div>
       </div>
@@ -130,8 +129,8 @@ export default function TodayAppointments({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold ${appt.status === "CheckedIn" ? "bg-green-500" :
-                      appt.status === "InProcess" ? "bg-blue-500" :
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold ${appt.status === "checked_in" ? "bg-green-500" :
+                      appt.status === "in_progress" ? "bg-blue-500" :
                         "bg-gray-400"
                       }`}>
                       {appt.patientName?.charAt(0) || "?"}
@@ -173,7 +172,7 @@ export default function TodayAppointments({
                       )}
                     </div>
 
-                    {(appt.status === "CheckedIn" || appt.status === "Pending" || appt.status === "Confirmed") && (
+                    {(appt.status === "checked_in" || appt.status === "waiting") && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

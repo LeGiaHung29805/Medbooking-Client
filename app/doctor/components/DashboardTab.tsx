@@ -195,16 +195,27 @@ export default function DashboardTab({
   };
 
   // Tính toán các giá trị cần thiết 
-  const inProgressCount = appointments.filter(a => a.status === "InProcess").length;
-  const today = new Date().toISOString().split('T')[0];
+  const inProgressCount = appointments.filter(a => a.status === "in_progress").length;
+  
+  const getLocalDateString = (dateInput: any) => {
+    if (!dateInput) return "";
+    try {
+      const date = new Date(dateInput);
+      if (isNaN(date.getTime())) return "";
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return "";
+    }
+  };
+
+  const today = getLocalDateString(new Date());
   const todayAppointments = appointments.filter(appt => {
     if (!appt.appointmentTime) return false;
-    try {
-      const apptDate = new Date(appt.appointmentTime).toISOString().split('T')[0];
-      return apptDate === today;
-    } catch {
-      return false;
-    }
+    const apptDate = getLocalDateString(appt.appointmentTime);
+    return apptDate === today;
   });
 
   // Tính paginated appointments 

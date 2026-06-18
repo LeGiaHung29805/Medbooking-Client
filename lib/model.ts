@@ -90,7 +90,7 @@ export interface Appointment {
   SlotID: number | null;
   ServiceID: number;
   StartTime: string;
-  Status: "Pending" | "Confirmed" | "Completed" | "Cancelled" | "CheckedIn";
+  Status: "Pending" | "Confirmed" | "Completed" | "Cancelled" | "CheckedIn" | string;
   InitialSymptoms: string | null;
   CancellationReason: string | null;
   file_path: string | null;
@@ -293,7 +293,7 @@ export interface Appointment {
   patientPhone: string
   symptoms: string
   appointmentTime: string
-  status: AppointmentStatus  
+  status: AppointmentStatus | string  
   checkInTime: string
   doctorId?: number
   notes?: string
@@ -308,7 +308,7 @@ export interface Patient {
   phone: string
   symptoms: string
   appointmentTime: string
-  status: AppointmentStatus  
+  status: AppointmentStatus | string  
   initialSymptoms: string
   checkInTime: string
   priority: PriorityLevel 
