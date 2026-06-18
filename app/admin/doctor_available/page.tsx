@@ -25,11 +25,12 @@ export default function ScheduleManagementPage() {
   const [slots, setSlots] = useState<Model.AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [newSlot, setNewSlot] = useState<NewSlotForm>({
     doctor_id: 0,
     date: new Date().toISOString().split("T")[0],
@@ -45,30 +46,48 @@ export default function ScheduleManagementPage() {
           const u = doc.user || doc.User || {};
           const fName = u.FirstName || u.firstName || "";
           const lName = u.LastName || u.lastName || "";
-          const fullName = (fName + " " + lName).trim() || u.FullName || u.fullName || u.name || "Chưa cập nhật";
+          const fullName =
+            (fName + " " + lName).trim() ||
+            u.FullName ||
+            u.fullName ||
+            u.name ||
+            "Chưa cập nhật";
           return {
             ...doc,
             DoctorID: doc.DoctorID || doc.doctorId,
-            SpecialtyID: doc.SpecialtyID || doc.specialtyId || doc.specialty?.specialtyId || doc.specialty?.SpecialtyID,
+            SpecialtyID:
+              doc.SpecialtyID ||
+              doc.specialtyId ||
+              doc.specialty?.specialtyId ||
+              doc.specialty?.SpecialtyID,
             Degree: doc.Degree || doc.degree,
             YearsOfExperience: doc.YearsOfExperience || doc.yearsOfExperience,
-            ProfileDescription: doc.ProfileDescription || doc.profileDescription,
-            imageURL: doc.imageURL || doc.imageUrl || u.avatar_url || u.avatarURL,
-            user: doc.user || doc.User ? {
-              ...(doc.user || doc.User),
-              UserID: u.UserID || u.userId,
-              FullName: fullName,
-              Email: u.Email || u.email,
-              Username: u.Username || u.username,
-              PhoneNumber: u.PhoneNumber || u.phoneNumber,
-              Status: u.Status || u.status,
-              avatar_url: u.avatar_url || u.avatarURL
-            } : null,
-            specialty: doc.specialty ? {
-              ...doc.specialty,
-              SpecialtyID: doc.specialty.SpecialtyID || doc.specialty.specialtyId,
-              SpecialtyName: doc.specialty.SpecialtyName || doc.specialty.specialtyName,
-            } : null
+            ProfileDescription:
+              doc.ProfileDescription || doc.profileDescription,
+            imageURL:
+              doc.imageURL || doc.imageUrl || u.avatar_url || u.avatarURL,
+            user:
+              doc.user || doc.User
+                ? {
+                    ...(doc.user || doc.User),
+                    UserID: u.UserID || u.userId,
+                    FullName: fullName,
+                    Email: u.Email || u.email,
+                    Username: u.Username || u.username,
+                    PhoneNumber: u.PhoneNumber || u.phoneNumber,
+                    Status: u.Status || u.status,
+                    avatar_url: u.avatar_url || u.avatarURL,
+                  }
+                : null,
+            specialty: doc.specialty
+              ? {
+                  ...doc.specialty,
+                  SpecialtyID:
+                    doc.specialty.SpecialtyID || doc.specialty.specialtyId,
+                  SpecialtyName:
+                    doc.specialty.SpecialtyName || doc.specialty.specialtyName,
+                }
+              : null,
           };
         });
         setDoctors(normalized);
@@ -144,10 +163,12 @@ export default function ScheduleManagementPage() {
   };
 
   const handleAddSlot = async () => {
+    if (isSaving) return; // Chặn click nếu đang gửi
     if (!newSlot.doctor_id) {
       alert("Vui lòng chọn bác sĩ!");
       return;
     }
+    setIsSaving(true);
     try {
       const startDateTime = `${newSlot.date} ${newSlot.start_time}:00`;
       const endDateTime = `${newSlot.date} ${newSlot.end_time}:00`;
@@ -162,10 +183,13 @@ export default function ScheduleManagementPage() {
       }
     } catch (error) {
       handleError(error, "Thêm mới thất bại");
+    } finally {
+      setIsSaving(false); // Mở khóa nút sau khi xong
     }
   };
 
-  const getDoctorInfo = (id: number) => doctors.find((d) => (d.DoctorID || (d as any).doctorId) === id);
+  const getDoctorInfo = (id: number) =>
+    doctors.find((d) => (d.DoctorID || (d as any).doctorId) === id);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -213,8 +237,15 @@ export default function ScheduleManagementPage() {
                 const u = d.user || d.User || {};
                 const fName = u.FirstName || u.firstName || "";
                 const lName = u.LastName || u.lastName || "";
-                const docName = (fName + " " + lName).trim() || d.user?.FullName || d.user?.fullName || d.user?.name || "Chưa cập nhật";
-                const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
+                const docName =
+                  (fName + " " + lName).trim() ||
+                  d.user?.FullName ||
+                  d.user?.fullName ||
+                  d.user?.name ||
+                  "Chưa cập nhật";
+                const specName = d.specialty
+                  ? d.specialty.SpecialtyName || d.specialty.specialtyName
+                  : "";
                 return (
                   <option key={docId} value={docId}>
                     {docName} {specName ? `(${specName})` : ""}
@@ -264,11 +295,29 @@ export default function ScheduleManagementPage() {
                 {currentSlots.map((slotItem) => {
                   const slot = slotItem as any;
                   const slotId = slot.SlotID || slot.slotId;
-                  const doc = getDoctorInfo(slot.DoctorID || slot.doctorId) as any;
-                  const startTime = (slot.StartTime || slot.startTime || "").split(" ")[1]?.slice(0, 5);
-                  const endTime = (slot.EndTime || slot.endTime || "").split(" ")[1]?.slice(0, 5);
-                  const docName = doc ? (((doc.user?.FirstName || doc.user?.firstName || "") + " " + (doc.user?.LastName || doc.user?.lastName || "")).trim() || doc.user?.FullName || doc.user?.fullName || doc.user?.name || "N/A") : "N/A";
-                  const specName = doc?.specialty ? (doc.specialty.SpecialtyName || doc.specialty.specialtyName) : "---";
+                  const doc = getDoctorInfo(
+                    slot.DoctorID || slot.doctorId,
+                  ) as any;
+                  const startTime = (slot.StartTime || slot.startTime || "")
+                    .split(" ")[1]
+                    ?.slice(0, 5);
+                  const endTime = (slot.EndTime || slot.endTime || "")
+                    .split(" ")[1]
+                    ?.slice(0, 5);
+                  const docName = doc
+                    ? (
+                        (doc.user?.FirstName || doc.user?.firstName || "") +
+                        " " +
+                        (doc.user?.LastName || doc.user?.lastName || "")
+                      ).trim() ||
+                      doc.user?.FullName ||
+                      doc.user?.fullName ||
+                      doc.user?.name ||
+                      "N/A"
+                    : "N/A";
+                  const specName = doc?.specialty
+                    ? doc.specialty.SpecialtyName || doc.specialty.specialtyName
+                    : "---";
                   const slotStatus = slot.Status || slot.status || "Available";
                   return (
                     <div
@@ -283,9 +332,7 @@ export default function ScheduleManagementPage() {
                           <p className="font-bold text-gray-800 text-sm">
                             {docName}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            {specName}
-                          </p>
+                          <p className="text-xs text-gray-500">{specName}</p>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">
                               {startTime} - {endTime}
@@ -305,9 +352,7 @@ export default function ScheduleManagementPage() {
                         )}
                         {slotStatus === "Available" && (
                           <button
-                            onClick={() =>
-                              handleDeleteSlot(slotId, slotStatus)
-                            }
+                            onClick={() => handleDeleteSlot(slotId, slotStatus)}
                             className="text-red-400 hover:text-red-600 text-xs font-medium hover:underline"
                           >
                             Xóa
@@ -384,8 +429,15 @@ export default function ScheduleManagementPage() {
                     const u = d.user || d.User || {};
                     const fName = u.FirstName || u.firstName || "";
                     const lName = u.LastName || u.lastName || "";
-                    const docName = (fName + " " + lName).trim() || d.user?.FullName || d.user?.fullName || d.user?.name || "Chưa cập nhật";
-                    const specName = d.specialty ? (d.specialty.SpecialtyName || d.specialty.specialtyName) : "";
+                    const docName =
+                      (fName + " " + lName).trim() ||
+                      d.user?.FullName ||
+                      d.user?.fullName ||
+                      d.user?.name ||
+                      "Chưa cập nhật";
+                    const specName = d.specialty
+                      ? d.specialty.SpecialtyName || d.specialty.specialtyName
+                      : "";
                     return (
                       <option key={docId} value={docId}>
                         {docName} {specName ? `- ${specName}` : ""}
@@ -445,9 +497,36 @@ export default function ScheduleManagementPage() {
               </button>
               <button
                 onClick={handleAddSlot}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md transition"
+                disabled={isSaving}
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Lưu Lịch Trình
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Đang lưu...
+                  </span>
+                ) : (
+                  <>Lưu Lịch Trình</>
+                )}
               </button>
             </div>
           </div>
