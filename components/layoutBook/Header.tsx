@@ -171,7 +171,7 @@ export default function Header() {
                                     <Link href="/Users/quan-ly-gia-dinh">Quản lý gia đình</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/Users/ket-qua-benh-kham">Kết quả bệnh khám</Link>
+                                    <Link href="/Users/ket-qua-kham-benh">Kết quả bệnh khám</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/Users/lich-hen-kham-lai">Lịch hẹn khám lại</Link>
@@ -186,7 +186,7 @@ export default function Header() {
                                     <Link href="/Users/thong-bao">Thông báo</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/Users/thay-doi-mat-khau">Thay đổi mật khẩu</Link>
+                                    <Link href="/Users/profile">Thay đổi mật khẩu</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout}>
