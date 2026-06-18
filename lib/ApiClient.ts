@@ -98,7 +98,8 @@ export const login = async (data: {
   }
 
   // Map to Vietnamese version
-  let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" = "BenhNhan";
+  let frontendRole: "BenhNhan" | "BacSi" | "NhanVien" | "QuanTriVien" =
+    "BenhNhan";
   const upperRole = (rawRole || "").toUpperCase();
   if (
     upperRole.includes("ADMIN") ||
@@ -130,7 +131,8 @@ export const login = async (data: {
     Username: user.Username || user.username || rawData.username || "",
     Role: frontendRole,
     Email: user.Email || user.email || rawData.email || null,
-    PhoneNumber: user.PhoneNumber || user.phoneNumber || rawData.phoneNumber || "",
+    PhoneNumber:
+      user.PhoneNumber || user.phoneNumber || rawData.phoneNumber || "",
     FirstName: user.FirstName || user.firstName || rawData.firstName || "",
     LastName: user.LastName || user.lastName || rawData.lastName || "",
     Status: user.Status || user.status || rawData.status || "Active",
@@ -156,16 +158,16 @@ export const logout = async () => {
   } catch (error) {
     console.error("Lỗi khi gọi API logout, vẫn tiếp tục xóa local:", error);
   }
-  
+
   // Dọn dẹp sạch sẽ
   localStorage.removeItem("api_token");
   localStorage.removeItem("user_role");
   localStorage.removeItem("user"); // Thêm dòng này
   localStorage.clear(); // Quét sạch mọi cache cũ
   sessionStorage.clear();
-  
+
   // Vũ khí tối thượng: Ép tải lại trang để tiêu diệt mọi State cũ
-  window.location.href = '/auth/login';
+  window.location.href = "/login";
 };
 
 // ==================== NHÓM CÔNG KHAI (PUBLIC) ====================
