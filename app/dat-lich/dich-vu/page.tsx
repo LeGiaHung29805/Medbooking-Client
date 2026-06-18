@@ -111,7 +111,7 @@ export default function ServiceBookingPage() {
     const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value;
         if (value === "ADD_NEW_MEMBER") {
-            router.push("/Users/quan-li-gia-dinh");
+            router.push("/users/quan-ly-gia-dinh");
             return;
         }
         const selectedId = Number(value);
