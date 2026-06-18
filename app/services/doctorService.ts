@@ -26,21 +26,16 @@ export interface QueueResponse {
   data: Patient[];
 }
 export interface UserProfileResponse {
-  id: number;
-  FullName: string;
-  Email: string;
-  PhoneNumber: string;
-  Role: string;
-  doctor: { 
-    DoctorID: number;
-    SpecialtyID: number;
-    Degree: string | null;
-    YearsOfExperience: string | number | null;
-    ProfileDescription: string | null;
-    specialty?: {
-      SpecialtyName: string;
-    };
-  };
+  id?: number;
+  FullName?: string;
+  Email?: string;
+  PhoneNumber?: string;
+  Role?: string;
+  SpecialtyName?: string;
+  SpecialtyID?: number;
+  YearsOfExperience?: string | number;
+  Degree?: string;
+  ProfileDescription?: string;
 }
 export interface ScheduleResponse {
   success: boolean;
@@ -64,16 +59,7 @@ export interface DoctorProfileDetail {
   };
 }
 
-// Định nghĩa dữ liệu trả về từ API (UserProfile)
-export interface UserProfileResponse {
-  id: number;
-  FullName: string;
-  Email: string;
-  PhoneNumber: string;
-  Role: string;
-  // Cấu trúc lồng nhau gây ra lỗi ở Hình 1 và 2
-  doctor_profile: DoctorProfileDetail; 
-}
+// Định nghĩa dữ liệu trả về từ API (UserProfile) - Đã được làm phẳng
 // export interface DoctorProfile {
 //   id: number;
 //   FullName: string;
@@ -290,34 +276,29 @@ class DoctorService {
   }
 
   // ==================== PROFILE MANAGEMENT ====================
-  async getMyProfile() {
-  try {
-    const response = await apiClient.get("/doctor/profile");
-    const d = response.data.data;
-    console.log("Dữ liệu gốc: ",d);
-    const profileSource = d.doctor_profile || d.doctor;
-    return {
-      success: true, 
-      data: {
-        FullName: d.FullName,
-        Email: d.Email,
-        PhoneNumber: d.PhoneNumber,
-        doctor_profile: {
-          DoctorID: profileSource?.DoctorID,
-          SpecialtyID: profileSource?.SpecialtyID,
-          Degree: profileSource?.Degree || "Chưa cập nhật",
-          YearsOfExperience: profileSource?.YearsOfExperience || 0,
-          ProfileDescription: profileSource?.ProfileDescription || "Chưa có giới thiệu",
-          imageURL: profileSource?.imageURL,
-          specialty: profileSource?.specialty || { SpecialtyName: "Chưa xác định" }
+  async getMyProfile(): Promise<ApiResponse<UserProfileResponse>> {
+    try {
+      const response = await apiClient.get("/doctor/profile");
+      const d = response.data?.data || response.data;
+      console.log("Dữ liệu gốc: ", d);
+      return {
+        success: true,
+        data: {
+          FullName: d.FullName,
+          Email: d.Email,
+          PhoneNumber: d.PhoneNumber,
+          SpecialtyName: d.SpecialtyName || d.specialty?.SpecialtyName || d.doctor_profile?.specialty?.SpecialtyName || "Chưa xác định",
+          SpecialtyID: d.SpecialtyID || d.doctor_profile?.SpecialtyID,
+          YearsOfExperience: d.YearsOfExperience || d.doctor_profile?.YearsOfExperience || 0,
+          Degree: d.Degree || d.doctor_profile?.Degree || "Chưa cập nhật",
+          ProfileDescription: d.ProfileDescription || d.doctor_profile?.ProfileDescription || "Chưa có giới thiệu"
         }
-      }
-    };
-  } catch (error) {
-    console.error("Lỗi getMyProfile:", error);
-    return { success: false, data: null }; // Trả về success: false khi có lỗi
+      };
+    } catch (error) {
+      console.error("Lỗi getMyProfile:", error);
+      return { success: false, message: "Lỗi khi tải thông tin bác sĩ" };
+    }
   }
-}
 
   async updateProfile(data: {
   FullName: string;

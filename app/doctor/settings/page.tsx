@@ -108,9 +108,9 @@ export default function SettingsPage() {
             name: d.FullName || prev.name,
             email: d.Email || prev.email,
             phone: d.PhoneNumber || prev.phone,
-            specialty: d.SpecialtyName || d.specialty?.SpecialtyName || prev.specialty,
+            specialty: d.SpecialtyName || prev.specialty,
             specialtyId: d.SpecialtyID || prev.specialtyId,
-            experience: d.YearsOfExperience || "",
+            experience: d.YearsOfExperience !== undefined ? String(d.YearsOfExperience) : "",
             education: d.Degree || "",
             bio: d.ProfileDescription || ""
           }));

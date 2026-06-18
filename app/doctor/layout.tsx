@@ -39,6 +39,7 @@ export default function DoctorLayout({
           FullName: parsed.FullName || "Bác sĩ",
           specialty: {
             SpecialtyName:
+              parsed.SpecialtyName ||
               parsed.doctor_profile?.specialty?.SpecialtyName ||
               "Bác sĩ chuyên khoa",
           },
@@ -66,7 +67,7 @@ export default function DoctorLayout({
           FullName: d.FullName || "Bác sĩ",
           specialty: {
             SpecialtyName:
-              d.doctor_profile?.specialty?.SpecialtyName || "Chưa xác định",
+              d.SpecialtyName || "Chưa xác định",
           },
           email: d.Email,
           phone: d.PhoneNumber,
