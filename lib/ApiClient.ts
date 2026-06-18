@@ -151,9 +151,21 @@ export const login = async (data: {
 };
 
 export const logout = async () => {
-  await apiClient.post("/auth/logout");
+  try {
+    await apiClient.post("/auth/logout");
+  } catch (error) {
+    console.error("Lỗi khi gọi API logout, vẫn tiếp tục xóa local:", error);
+  }
+  
+  // Dọn dẹp sạch sẽ
   localStorage.removeItem("api_token");
   localStorage.removeItem("user_role");
+  localStorage.removeItem("user"); // Thêm dòng này
+  localStorage.clear(); // Quét sạch mọi cache cũ
+  sessionStorage.clear();
+  
+  // Vũ khí tối thượng: Ép tải lại trang để tiêu diệt mọi State cũ
+  window.location.href = '/auth/login';
 };
 
 // ==================== NHÓM CÔNG KHAI (PUBLIC) ====================

@@ -102,18 +102,17 @@ export default function SettingsPage() {
         const res = await doctorService.getMyProfile();
         if (res.success && res.data) {
           const d = res.data;
-          const p = d.doctor_profile;
 
           setDoctorInfo(prev => ({
             ...prev,
             name: d.FullName || prev.name,
             email: d.Email || prev.email,
             phone: d.PhoneNumber || prev.phone,
-            specialty: p?.specialty?.SpecialtyName || prev.specialty,
-            specialtyId: p?.SpecialtyID || prev.specialtyId,
-            experience: p?.YearsOfExperience || "",
-            education: p?.Degree || "",
-            bio: p?.ProfileDescription || ""
+            specialty: d.SpecialtyName || d.specialty?.SpecialtyName || prev.specialty,
+            specialtyId: d.SpecialtyID || prev.specialtyId,
+            experience: d.YearsOfExperience || "",
+            education: d.Degree || "",
+            bio: d.ProfileDescription || ""
           }));
         }
       } catch (err) {
