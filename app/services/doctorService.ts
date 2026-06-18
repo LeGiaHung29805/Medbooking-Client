@@ -119,8 +119,8 @@ class DoctorService {
 
   async getQueue(): Promise<QueueResponse> {
     try {
-      const response = await apiClient.get("/doctor/queue");
-      const appointmentList = response.data.data || [];
+      const response = await apiClient.get("/doctor/appointments/my-day");
+      const appointmentList = Array.isArray(response.data) ? response.data : (response.data?.data || []);
 
       const mappedPatients: Patient[] = appointmentList.map((appt: any) => {
         // Lấy object bệnh nhân
@@ -131,7 +131,7 @@ class DoctorService {
           name: p.FullName || p.name || "Không tên",
           phone: p.PhoneNumber || p.phone || "",
 
-          age: calculateAge(p.Birthday || p.DoB),
+          age: calculateAge(p.Birthday || p.DoB || p.DateOfBirth),
 
           gender: p.Gender || p.gender || 'other',
 
@@ -164,10 +164,23 @@ class DoctorService {
   }
 
   // SCHEDULE
-  async getSchedule(): Promise<ScheduleResponse> {
+  async getSchedule(from?: string, to?: string): Promise<ScheduleResponse> {
+    const today = new Date();
+    const defaultFrom = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const defaultTo = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
-    const response = await apiClient.get("/doctor/schedule");
-    return response.data;
+    const params = {
+      from: from || defaultFrom,
+      to: to || defaultTo
+    };
+    
+    const response = await apiClient.get("/doctor/appointments", { params });
+    const arrayData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+    
+    return {
+      success: true,
+      data: arrayData
+    };
   }
 
   // APPOINTMENT STATUS UPDATES 
