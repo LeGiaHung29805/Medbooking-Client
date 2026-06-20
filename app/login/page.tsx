@@ -65,6 +65,8 @@ export default function LoginPage() {
           localStorage.removeItem("saved_username");
         }
 
+        localStorage.setItem('isLoggedIn', new Date().toISOString());
+
         const role = response.user.Role;
         switch (role) {
           case "QuanTriVien":
