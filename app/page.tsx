@@ -23,7 +23,7 @@ import {
 import { FaCalendarAlt } from "react-icons/fa";
 export default function HomePage() {
   const [banners] = useState<string[]>([
-    "/image/banner1.jpg",
+    "/image/banner-clinic.jpg",
     "/image/banner-doctor1.jpg",
     "/image/banner2.jpg",
   ]);
