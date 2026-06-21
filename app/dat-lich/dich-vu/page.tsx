@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, ChangeEventHandler } from "react";
+import React, { useState, useEffect, useMemo, ChangeEventHandler, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,7 +21,7 @@ interface AggregatedService extends Model.Service {
     SpecialtyName: string;
 }
 
-export default function ServiceBookingPage() {
+function ServiceBookingPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlServiceId = searchParams.get('serviceId');
@@ -543,5 +543,13 @@ export default function ServiceBookingPage() {
                 </div>
             )}
         </LayoutBook>
+    );
+}
+
+export default function ServiceBookingPage() {
+    return (
+        <Suspense fallback={<div className="text-center p-10 font-medium text-gray-600">Đang tải dữ liệu...</div>}>
+            <ServiceBookingPageContent />
+        </Suspense>
     );
 }

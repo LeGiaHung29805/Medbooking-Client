@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -18,7 +18,7 @@ import * as Api from "@/lib/ApiClient";
 import * as Model from "@/lib/model";
 import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
-export default function DoctorBookingPage() {
+function DoctorBookingPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlDoctorId = searchParams.get('doctorId');
@@ -527,5 +527,13 @@ export default function DoctorBookingPage() {
                 </div>
             )}
         </LayoutBook>
+    );
+}
+
+export default function DoctorBookingPage() {
+    return (
+        <Suspense fallback={<div className="text-center p-10 font-medium text-gray-600">Đang tải dữ liệu...</div>}>
+            <DoctorBookingPageContent />
+        </Suspense>
     );
 }
