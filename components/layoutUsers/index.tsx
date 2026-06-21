@@ -49,16 +49,16 @@ export default function LayoutUser({ children }: LayoutUserProps) {
     }, [router]);
 
     const menuItems = [
-        { name: "Hồ sơ cá nhân", icon: <FaUser />, path: "/users/profile" },
-        { name: "Quản lý gia đình", icon: <FaUsers />, path: "/users/quan-ly-gia-dinh" },
-        { name: "Lịch sử đặt lịch khám", icon: <FaCalendarAlt />, path: "/users/lich-su-dat-lich-kham" },
-        { name: "Kết quả khám bệnh", icon: <FaFileMedical />, path: "/users/ket-qua-kham-benh" },
-        { name: "Lịch hẹn khám lại", icon: <FaStethoscope />, path: "/users/lich-hen-kham-lai" },
-        { name: "Bác sĩ của tôi", icon: <FaUser />, path: "/users/bac-si-cua-toi" },
-        // { name: "Giấy chuyển tuyến", icon: <FaFilePrescription />, path: "/users/giay-chuyen-tuyen" },
-        // { name: "Bảo hiểm y tế", icon: <FaShieldAlt />, path: "/users/bao-hiem-y-te" },
-        { name: "Nhận xét, Góp ý", icon: <FaUser />, path: "/users/nhan-xet" },
-        { name: "Thông báo", icon: <FaBell />, path: "/users/thong-bao" },
+        { name: "Hồ sơ cá nhân", icon: <FaUser />, path: "/user/profile" },
+        { name: "Quản lý gia đình", icon: <FaUsers />, path: "/user/quan-ly-gia-dinh" },
+        { name: "Lịch sử đặt lịch khám", icon: <FaCalendarAlt />, path: "/user/lich-su-dat-lich-kham" },
+        { name: "Kết quả khám bệnh", icon: <FaFileMedical />, path: "/user/ket-qua-kham-benh" },
+        { name: "Lịch hẹn khám lại", icon: <FaStethoscope />, path: "/user/lich-hen-kham-lai" },
+        { name: "Bác sĩ của tôi", icon: <FaUser />, path: "/user/bac-si-cua-toi" },
+        // { name: "Giấy chuyển tuyến", icon: <FaFilePrescription />, path: "/user/giay-chuyen-tuyen" },
+        // { name: "Bảo hiểm y tế", icon: <FaShieldAlt />, path: "/user/bao-hiem-y-te" },
+        { name: "Nhận xét, Góp ý", icon: <FaUser />, path: "/user/nhan-xet" },
+        { name: "Thông báo", icon: <FaBell />, path: "/user/thong-bao" },
     ];
 
     if (loading) {

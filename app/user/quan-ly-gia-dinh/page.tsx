@@ -33,6 +33,8 @@ export default function QuanLyGiaDinh() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('api_token');
+    if (!token) return;
     loadData();
   }, [loadData]);
 

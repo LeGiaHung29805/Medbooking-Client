@@ -35,6 +35,8 @@ export default function ProfilePage() {
     };
     //Load dữ liệu từ API khi vào trang
     useEffect(() => {
+        const token = localStorage.getItem('api_token');
+        if (!token) return;
         const fetchProfile = async () => {
             try {
                 const userData = await Api.getMe();

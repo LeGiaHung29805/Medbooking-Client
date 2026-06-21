@@ -74,7 +74,7 @@ export default function BookingPage() {
         const value = e.target.value;
 
         if (value === "ADD_NEW_MEMBER") {
-            router.push("/users/quan-ly-gia-dinh");
+            router.push("/user/quan-ly-gia-dinh");
             return;
         }
         setSelectedPerson(value);

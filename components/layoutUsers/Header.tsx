@@ -146,7 +146,7 @@ export default function Header() {
                   <span
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push("/users/profile");
+                      router.push("/user/profile");
                     }}
                     className="hover:underline cursor-pointer"
                   >
@@ -158,25 +158,25 @@ export default function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link href="/users/profile">Hồ sơ cá nhân</Link>
+                  <Link href="/user/profile">Hồ sơ cá nhân</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/users/quan-ly-gia-dinh">Quản lý gia đình</Link>
+                  <Link href="/user/quan-ly-gia-dinh">Quản lý gia đình</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/users/ket-qua-kham-benh">Kết quả bệnh khám</Link>
+                  <Link href="/user/ket-qua-kham-benh">Kết quả bệnh khám</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/users/lich-hen-kham-lai">Lịch hẹn khám lại</Link>
+                  <Link href="/user/lich-hen-kham-lai">Lịch hẹn khám lại</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/users/bac-si-cua-toi">Bác sĩ của tôi</Link>
+                  <Link href="/user/bac-si-cua-toi">Bác sĩ của tôi</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/users/nhan-xet">Nhận xét, góp ý</Link>
+                  <Link href="/user/nhan-xet">Nhận xét, góp ý</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/users/thong-bao">Thông báo</Link>
+                  <Link href="/user/thong-bao">Thông báo</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
