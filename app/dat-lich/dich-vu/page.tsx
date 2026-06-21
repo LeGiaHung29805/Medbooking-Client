@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, ChangeEventHandler } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
 import {
     Pagination,
@@ -23,6 +23,18 @@ interface AggregatedService extends Model.Service {
 
 export default function ServiceBookingPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const urlServiceId = searchParams.get('serviceId');
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        const token = localStorage.getItem('api_token');
+        if (!token) {
+            alert("Vui lòng đăng nhập để đặt lịch!");
+            router.push('/login');
+        }
+    }, [router]);
 
     //State dữ liệu API & cache
     const [services, setServices] = useState<AggregatedService[]>([]);
@@ -55,6 +67,34 @@ export default function ServiceBookingPage() {
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
+    // 2. XỬ LÝ KHI BẤM VÀO DỊCH VỤ (MỞ SHEET CHỌN LỊCH)
+    const handleViewService = async (service: AggregatedService) => {
+        setViewingService(service);
+        setSelectedDate("");
+        setSelectedSlotId(null);
+        setSlotsCache(new Map()); // Reset cache khi chọn dịch vụ mới
+
+        try {
+            // Gọi API lấy lịch trống (Dùng API theo Chuyên khoa của dịch vụ đó)
+            const slots = await Api.getSpecialtyAvailability(service.SpecialtyID);
+
+            const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
+
+            // Lưu vào cache tạm thời
+            const newCache = new Map();
+            newCache.set(service.ServiceID, validSlots);
+            setSlotsCache(newCache);
+
+            // Tự động chọn ngày đầu tiên có lịch
+            if (validSlots.length > 0) {
+                const firstDate = validSlots[0].StartTime.split(" ")[0];
+                setSelectedDate(firstDate);
+            }
+        } catch (error) {
+            alert("Không tải được lịch khám trống.");
+        }
+    };
+
     //LOAD DỮ LIỆU BAN ĐẦU
     useEffect(() => {
         const fetchData = async () => {
@@ -78,6 +118,14 @@ export default function ServiceBookingPage() {
                 })) as AggregatedService[];
 
                 setServices(aggregatedServices);
+                if (urlServiceId) {
+                    const foundService = aggregatedServices.find(s => s.ServiceID === Number(urlServiceId));
+                    if (foundService) {
+                        setSelectedService(foundService);
+                        setShowServiceSheet(true);
+                        await handleViewService(foundService);
+                    }
+                }
                 setSpecialties(specsData);
                 setFamilyMembers(familyData);
                 if (userData) {
@@ -129,33 +177,6 @@ export default function ServiceBookingPage() {
         setSelectedPerson(name);
         // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
         localStorage.setItem("booking_for_person", name);
-    };
-    // 2. XỬ LÝ KHI BẤM VÀO DỊCH VỤ (MỞ SHEET CHỌN LỊCH)
-    const handleViewService = async (service: AggregatedService) => {
-        setViewingService(service);
-        setSelectedDate("");
-        setSelectedSlotId(null);
-        setSlotsCache(new Map()); // Reset cache khi chọn dịch vụ mới
-
-        try {
-            // Gọi API lấy lịch trống (Dùng API theo Chuyên khoa của dịch vụ đó)
-            const slots = await Api.getSpecialtyAvailability(service.SpecialtyID);
-
-            const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
-
-            // Lưu vào cache tạm thời
-            const newCache = new Map();
-            newCache.set(service.ServiceID, validSlots);
-            setSlotsCache(newCache);
-
-            // Tự động chọn ngày đầu tiên có lịch
-            if (validSlots.length > 0) {
-                const firstDate = validSlots[0].StartTime.split(" ")[0];
-                setSelectedDate(firstDate);
-            }
-        } catch (error) {
-            alert("Không tải được lịch khám trống.");
-        }
     };
 
     //LOGIC TÍNH TOÁN NGÀY GIỜ (Lấy từ Cache hoặc State)
@@ -225,6 +246,8 @@ export default function ServiceBookingPage() {
             setBookingLoading(false);
         }
     };
+
+    if (!isMounted) return null;
 
     return (
         <LayoutBook>

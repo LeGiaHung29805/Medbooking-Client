@@ -7,6 +7,7 @@ import {
   RefreshCw, Key, Smartphone, Monitor, Moon, Sun, FileText
 } from "lucide-react";
 import { doctorService } from "../../services/doctorService";
+import * as Api from "@/lib/ApiClient";
 
 export default function SettingsPage() {
   // STATES 
@@ -217,8 +218,11 @@ export default function SettingsPage() {
     try {
       setSaveStatus("saving");
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await Api.changePassword({
+        currentPassword: securitySettings.currentPassword,
+        newPassword: securitySettings.newPassword,
+        confirmPassword: securitySettings.confirmPassword
+      });
 
       alert("Đổi mật khẩu thành công!");
 
@@ -233,9 +237,9 @@ export default function SettingsPage() {
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
 
-    } catch (err) {
-      console.error(" Lỗi khi đổi mật khẩu:", err);
-      alert(" Đổi mật khẩu thất bại. Vui lòng thử lại.");
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Lỗi: Mật khẩu hiện tại không đúng hoặc có lỗi hệ thống!");
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }

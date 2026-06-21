@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import LayoutBook from "@/components/layoutBook";
 import {
     Pagination,
@@ -20,6 +20,18 @@ import DataThumbnail from "@/components/thumnail/DataThumbnail";
 
 export default function DoctorBookingPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const urlDoctorId = searchParams.get('doctorId');
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        const token = localStorage.getItem('api_token');
+        if (!token) {
+            alert("Vui lòng đăng nhập để đặt lịch!");
+            router.push('/login');
+        }
+    }, [router]);
 
     //state dữ liệu
     const [doctors, setDoctors] = useState<Model.Doctor[]>([]);
@@ -50,6 +62,31 @@ export default function DoctorBookingPage() {
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
+    // Mở sheet chọn bác sĩ
+    // Gọi API lấy lịch ngay
+    const handleViewDoctor = async (doctor: Model.Doctor) => {
+        setViewingDoctor(doctor);
+        setSelectedDate(""); // Reset ngày đã chọn
+        setSelectedSlotId(null);
+        setAvailabilities([]); // Xóa lịch cũ
+
+        try {
+            // Gọi API lấy lịch trống
+            const slots = await Api.getDoctorAvailability(doctor.DoctorID);
+            // Lọc slot tương lai & Available
+            const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
+            setAvailabilities(validSlots);
+
+            // Tự động chọn ngày đầu tiên nếu có lịch
+            if (validSlots.length > 0) {
+                const firstDate = validSlots[0].StartTime.split(" ")[0]; // YYYY-MM-DD
+                setSelectedDate(firstDate);
+            }
+        } catch (error) {
+            console.error("Lỗi lấy lịch:", error);
+        }
+    };
+
     //LOAD DỮ LIỆU
     useEffect(() => {
         const fetchData = async () => {
@@ -63,6 +100,14 @@ export default function DoctorBookingPage() {
                 ]);
 
                 setDoctors(docsData);
+                if (urlDoctorId) {
+                    const foundDoctor = docsData.find(doc => doc.DoctorID === Number(urlDoctorId));
+                    if (foundDoctor) {
+                        setSelectedDoctor(foundDoctor);
+                        setShowDoctorSheet(true);
+                        await handleViewDoctor(foundDoctor);
+                    }
+                }
                 setSpecialties(specsData);
                 setFamilyMembers(familyData);
                 if (userData) {
@@ -114,31 +159,6 @@ export default function DoctorBookingPage() {
         // Lưu lại lựa chọn mới nếu người dùng đổi ý tại trang này
         localStorage.setItem("booking_for_person", name);
     };
-    // Mở sheet chọn bác sĩ
-    // Gọi API lấy lịch ngay
-    const handleViewDoctor = async (doctor: Model.Doctor) => {
-        setViewingDoctor(doctor);
-        setSelectedDate(""); // Reset ngày đã chọn
-        setSelectedSlotId(null);
-        setAvailabilities([]); // Xóa lịch cũ
-
-        try {
-            // Gọi API lấy lịch trống
-            const slots = await Api.getDoctorAvailability(doctor.DoctorID);
-            // Lọc slot tương lai & Available
-            const validSlots = slots.filter(s => s.Status === 'Available' && new Date(s.StartTime) > new Date());
-            setAvailabilities(validSlots);
-
-            // Tự động chọn ngày đầu tiên nếu có lịch
-            if (validSlots.length > 0) {
-                const firstDate = validSlots[0].StartTime.split(" ")[0]; // YYYY-MM-DD
-                setSelectedDate(firstDate);
-            }
-        } catch (error) {
-            console.error("Lỗi lấy lịch:", error);
-        }
-    };
-
     // Xử lí ngày giờ trong API
     // Lấy danh sách ngày duy nhất
     const uniqueDates = useMemo(() => {
@@ -202,6 +222,8 @@ export default function DoctorBookingPage() {
             setBookingLoading(false);
         }
     };
+
+    if (!isMounted) return null;
 
     return (
         <LayoutBook>

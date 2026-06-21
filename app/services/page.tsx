@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Layout from "@/components/layout";
-import { FaClipboardList, FaLightbulb, FaSearch, FaStar, FaUserMd } from "react-icons/fa";
+import {
+  FaClipboardList,
+  FaLightbulb,
+  FaSearch,
+  FaStar,
+  FaUserMd,
+} from "react-icons/fa";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
+const API_BASE_URL =
+  (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api";
 const SERVICES_PER_PAGE = 6;
 const PRICE_RANGES = {
   LOW: 200000,
@@ -27,7 +35,7 @@ interface ServiceFromApi {
   } | null;
 }
 
-// Dữ liệu dùng cho UI 
+// Dữ liệu dùng cho UI
 interface Service {
   id: number;
   name: string;
@@ -52,18 +60,12 @@ interface CategoryFilter {
 }
 
 export default function ServicesPage() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    date: "",
-    time: "",
-  });
 
   // dữ liệu dịch vụ từ backend
   const [services, setServices] = useState<Service[]>([]);
@@ -83,12 +85,15 @@ export default function ServicesPage() {
         id: name,
         name: name,
         count: count,
-      })
+      }),
     );
 
     categoriesList.sort((a, b) => a.name.localeCompare(b.name)); // Sắp xếp theo tên
 
-    return [{ id: "all", name: "Tất cả", count: services.length }, ...categoriesList];
+    return [
+      { id: "all", name: "Tất cả", count: services.length },
+      ...categoriesList,
+    ];
   }, [services]);
 
   // Hàm tải dịch vụ từ backend
@@ -126,8 +131,7 @@ export default function ServicesPage() {
                 ? `${s.EstimatedDuration} phút`
                 : "—",
             doctor: `Đội ngũ bác sĩ chuyên khoa ${categoryName}`,
-            preparation:
-              "Vui lòng làm theo hướng dẫn của bác sĩ khi đến khám.",
+            preparation: "Vui lòng làm theo hướng dẫn của bác sĩ khi đến khám.",
             rating: 4.7,
             reviews: 100 + index * 3,
             popular: index < 5, // 5 dịch vụ đầu tiên là phổ biến
@@ -167,12 +171,14 @@ export default function ServicesPage() {
       if (service.price <= 0) {
         matchesPrice = true;
       } else if (priceRange !== "all") {
-        if (priceRange === "low") matchesPrice = service.price < PRICE_RANGES.LOW;
+        if (priceRange === "low")
+          matchesPrice = service.price < PRICE_RANGES.LOW;
         else if (priceRange === "medium")
           matchesPrice =
             service.price >= PRICE_RANGES.MEDIUM_MIN &&
             service.price <= PRICE_RANGES.MEDIUM_MAX;
-        else if (priceRange === "high") matchesPrice = service.price > PRICE_RANGES.HIGH;
+        else if (priceRange === "high")
+          matchesPrice = service.price > PRICE_RANGES.HIGH;
       }
 
       return matchesSearch && matchesCategory && matchesPrice;
@@ -185,7 +191,7 @@ export default function ServicesPage() {
   const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
   const paginatedServices = filteredServices.slice(
     startIndex,
-    startIndex + SERVICES_PER_PAGE
+    startIndex + SERVICES_PER_PAGE,
   );
 
   // Đặt lại trang khi bộ lọc thay đổi
@@ -194,50 +200,6 @@ export default function ServicesPage() {
   }, [selectedCategory, searchTerm, priceRange]);
 
   // Modal đặt lịch
-  const openModal = useCallback((service: Service) => {
-    setSelectedService(service);
-    setIsModalOpen(true);
-    setFormData({ name: "", phone: "", date: "", time: "" });
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedService(null);
-  }, []);
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
-    },
-    [formData]
-  );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !formData.name.trim() ||
-      !formData.phone ||
-      !formData.date ||
-      !formData.time
-    ) {
-      alert("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
-
-    if (!/^\+?[0-9]{10,12}$/.test(formData.phone)) {
-      alert("Vui lòng nhập số điện thoại hợp lệ!");
-      return;
-    }
-
-    alert(
-      `Đặt lịch thành công!\n\nDịch vụ: ${selectedService?.name}\nHọ tên: ${formData.name}\nSĐT: ${formData.phone}\nNgày: ${formData.date}\nGiờ: ${formData.time}\n\nCảm ơn bạn đã đặt lịch!`
-    );
-    closeModal();
-  };
 
   const resetFilters = useCallback(() => {
     setSelectedCategory("all");
@@ -274,7 +236,8 @@ export default function ServicesPage() {
               Dịch vụ khám & chữa bệnh
             </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto mb-12">
-              Chọn dịch vụ phù hợp, xem chi tiết và đặt lịch nhanh trong vài bước.
+              Chọn dịch vụ phù hợp, xem chi tiết và đặt lịch nhanh trong vài
+              bước.
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
@@ -364,9 +327,16 @@ export default function ServicesPage() {
                 className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               >
                 <option value="all">Tất cả giá</option>
-                <option value="low">Dưới {PRICE_RANGES.LOW.toLocaleString("vi-VN")} đ</option>
-                <option value="medium">{PRICE_RANGES.MEDIUM_MIN.toLocaleString("vi-VN")} đ - {PRICE_RANGES.MEDIUM_MAX.toLocaleString("vi-VN")} đ</option>
-                <option value="high">Trên {PRICE_RANGES.HIGH.toLocaleString("vi-VN")} đ</option>
+                <option value="low">
+                  Dưới {PRICE_RANGES.LOW.toLocaleString("vi-VN")} đ
+                </option>
+                <option value="medium">
+                  {PRICE_RANGES.MEDIUM_MIN.toLocaleString("vi-VN")} đ -{" "}
+                  {PRICE_RANGES.MEDIUM_MAX.toLocaleString("vi-VN")} đ
+                </option>
+                <option value="high">
+                  Trên {PRICE_RANGES.HIGH.toLocaleString("vi-VN")} đ
+                </option>
               </select>
 
               {/* Reset Button */}
@@ -403,7 +373,8 @@ export default function ServicesPage() {
                     </span>{" "}
                     dịch vụ
                     {selectedCategory !== "all" &&
-                      ` trong ${categories.find((c) => c.id === selectedCategory)?.name
+                      ` trong ${
+                        categories.find((c) => c.id === selectedCategory)?.name
                       }`}
                   </h2>
 
@@ -461,7 +432,6 @@ export default function ServicesPage() {
 
                         {/* Rating */}
                         <div className="flex items-center gap-2 mb-4">
-
                           <span className="flex items-center gap-1 text-yellow-500">
                             {service.rating.toFixed(1)}
                           </span>
@@ -496,7 +466,11 @@ export default function ServicesPage() {
                         <div className="flex gap-3">
                           {/* Đặt lịch ngay */}
                           <button
-                            onClick={() => openModal(service)}
+                            onClick={() =>
+                              router.push(
+                                `/dat-lich/dich-vu?serviceId=${service.id}`,
+                              )
+                            }
                             className="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
                           >
                             Đặt lịch ngay
@@ -504,7 +478,11 @@ export default function ServicesPage() {
 
                           {/* Chi tiết – giờ cũng mở modal */}
                           <button
-                            onClick={() => openModal(service)}
+                            onClick={() =>
+                              router.push(
+                                `/dat-lich/dich-vu?serviceId=${service.id}`,
+                              )
+                            }
                             className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-green-500 hover:text-green-600 transition-colors"
                           >
                             Chi tiết
@@ -542,16 +520,13 @@ export default function ServicesPage() {
                   </button>
 
                   <div className="text-gray-600 font-semibold">
-                    Trang{" "}
-                    <span className="text-green-600">{currentPage}</span> /{" "}
-                    <span className="text-gray-800">{totalPages}</span>
+                    Trang <span className="text-green-600">{currentPage}</span>{" "}
+                    / <span className="text-gray-800">{totalPages}</span>
                   </div>
 
                   <button
                     onClick={() =>
-                      setCurrentPage((prev) =>
-                        Math.min(prev + 1, totalPages)
-                      )
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
                     className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:border-green-500 hover:text-green-600 transition-colors"
@@ -581,134 +556,6 @@ export default function ServicesPage() {
       </div>
 
       {/* Đặt lịch*/}
-      {isModalOpen && selectedService && (
-        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-slideUp">
-            <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-8 rounded-t-2xl relative">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
-              <h3 className="text-2xl font-bold mb-2 flex items-center gap-3">
-                <FaClipboardList className="mt- text-green-600 shrink-0" />
-                Đặt lịch: {selectedService.name}
-              </h3>
-              <p className="text-green-100 opacity-90">
-                Giá: {selectedService.displayPrice} • Thời lượng:{" "}
-                {selectedService.duration} • Bác sĩ: {selectedService.doctor}
-              </p>
-            </div>
-
-            <div className="p-8">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-                <p className="text-green-800 flex items-start gap-3">
-                  <span className="text-lg">
-                    <FaLightbulb className="mt-1 text-yellow-500 shrink-0 text-base" />
-                  </span>
-                  <span>
-                    <strong>Chi tiết:</strong>{" "}
-                    {selectedService.desc.length > 150 ? selectedService.desc.substring(0, 150) + "..." : selectedService.desc}
-                  </span>
-                </p>
-                <p className="text-green-800 flex items-start gap-3 mt-3">
-                  <FaClipboardList className="mt- text-green-600 shrink-0" />
-                  <span>
-                    <strong>Chuẩn bị:</strong>{" "}
-                    {selectedService.preparation}
-                  </span>
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Form điền thông tin*/}
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <span></span>
-                    Họ & tên
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="Nhập họ và tên đầy đủ"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <span></span>
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    pattern="\+?[0-9]{10,12}"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <FaClipboardList className="mt- text-green-600 shrink-0" />
-                    Ngày hẹn
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    required
-                    min={new Date().toISOString().split("T")[0]}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
-                    <FaClipboardList className="mt- text-green-600 shrink-0" />
-                    Khung giờ
-                  </label>
-                  <select
-                    name="time"
-                    value={formData.time}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all appearance-none bg-white"
-                  >
-                    <option value="">Chọn khung giờ phù hợp</option>
-                    <option value="08:00">08:00 - 09:00</option>
-                    <option value="09:00">09:00 - 10:00</option>
-                    <option value="10:00">10:00 - 11:00</option>
-                    <option value="13:00">13:00 - 14:00</option>
-                    <option value="14:00">14:00 - 15:00</option>
-                    <option value="15:00">15:00 - 16:00</option>
-                  </select>
-                </div>
-
-                <div className="flex gap-3 pt-6 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-red-500 hover:text-red-600 transition-colors"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
-                  >
-                    Xác nhận đặt lịch
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }
